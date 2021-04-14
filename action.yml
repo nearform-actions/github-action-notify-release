@@ -1,0 +1,13 @@
+name: 'Notify for pending release'
+description: 'Create an issue if there is a release pending'
+inputs:
+  github-token:
+    description: 'GitHub token'
+    required: true
+  days-to-stale-release:
+    description: 'The number of days after which notification should trigger after last unreleased commit'
+    required: true
+    default: 7
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
