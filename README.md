@@ -1,7 +1,7 @@
 # github-action-notify-release
 
 ## Usage
-Configure this action in your workflows providing the inputs described below in order to get notified in `x` days after teh repo has been updated but no npm release has happened.
+Configure this action in your workflows providing the inputs described below in order to get notified in `x` days after the repo has been updated but no npm release has happened.
 
 ### `github-token`
 **Required** A GitHub token. See below for additional information.
