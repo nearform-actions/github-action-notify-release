@@ -5,26 +5,28 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src --license licenses.txt",
-    "lint": "eslint ."
+    "test": "tap"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/estherixz/github-action-notify-release.git"
+    "url": "git+https://github.com/nearform/github-action-notify-release.git"
   },
-  "author": "Esther Saimpou",
+  "author": "Sameer Srivastava",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/estherixz/github-action-notify-release/issues"
+    "url": "https://github.com/nearform/github-action-notify-release/issues"
   },
-  "homepage": "https://github.com/estherixz/github-action-notify-release#readme",
+  "homepage": "https://github.com/nearform/github-action-notify-release#readme",
   "dependencies": {
     "@actions/core": "^1.2.7",
     "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
-    "date-fns": "^2.21.1"
+    "date-fns": "^2.21.1",
+    "ncc": "^0.3.6"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.28.3",
-    "eslint": "^7.24.0"
+    "eslint": "^7.24.0",
+    "tap": "^15.0.5"
   }
 }

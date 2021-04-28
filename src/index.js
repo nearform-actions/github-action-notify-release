@@ -1,36 +1,51 @@
 'use strict'
 
-const core = require('@actions/core')
-const differenceInDays = require('date-fns/differenceInDays')
-const { logInfo, logError } = require('./log')
-const { getLastReleaseDate } = require('./getLastReleaseDate')
-const { getLastRepoUpdate } = require('./getLastRepoUpdate')
-const { createIssue } = require('./createIssue')
+const core = require('@actions/core');
+const { logInfo } = require('./log');
+const { getLatestRelease, getUnreleasedCommits } = require('./release');
+const { createIssue } = require('./utils');
 
 async function run() {
   try {
-    const daysToStaleRelease = core.getInput('days-to-stale-release')
+    logInfo('========Starting to run the stale release github action ============');
 
-    const { lastReleaseDate, npmError, npmPckNotFound } = await getLastReleaseDate()
+    const token = core.getInput('github-token', { required: true });
 
-    if (npmPckNotFound) return logError('npm package not found')
+    const daysToIgnore = core.getInput('days-to-ignore');
 
-    if (npmError) return logError(npmError)
+    logInfo(`Days since last release: ${daysToIgnore}`);
+    logInfo(`Fetching latest release......`);
 
-    const lastRepoUpdate = await getLastRepoUpdate()
+    const latestRelease = await getLatestRelease(token);
 
-    const daysSinceRelease = differenceInDays(lastRepoUpdate, lastReleaseDate)
+    logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
+Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
 
-    logInfo(`${daysSinceRelease} Days since last release`)
+    const unreleasedCommits = await getUnreleasedCommits(token, latestRelease, daysToIgnore);
 
-    const shouldCreateIssue = daysToStaleRelease < daysSinceRelease
+    logInfo(JSON.stringify(unreleasedCommits));
 
-    if (shouldCreateIssue) {
-      createIssue(daysSinceRelease)
+    if (unreleasedCommits.length) {
+      let commitStr = '';
+      for (const commit of unreleasedCommits) {
+        commitStr = commitStr +
+          `Issue: ${commit.message},   Author: ${commit.author}`
+          + '\n';
+      }
+      const issueBody = `Unreleased commits have been found which are pending since ${daysToIgnore} days, please publish the changes.
+  
+  **Following are the commits:**
+  ${commitStr}`;
+      const issueTitle = 'Release pending!';
+      const issueNo = await createIssue(token, issueTitle, issueBody);
+      logInfo(`New issue has been created. Issue No. - ${JSON.stringify(issueNo.data.number)}`);
+    } else {
+      logInfo('No pending commits found');
     }
+
   } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed(error.message);
   }
 }
 
-run()
+run();

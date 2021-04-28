@@ -1,11 +1,11 @@
-name: 'Notify for pending release'
+name: 'Notification for pending release'
 description: 'Create an issue if there is a release pending'
 inputs:
   github-token:
     description: 'GitHub token'
     required: true
-  days-to-stale-release:
-    description: 'The number of days after which notification should trigger after last unreleased commit'
+  days-to-ignore:
+    description: 'Unreleased commits older than the no. of days mentioned in this setting shall be reported'
     required: true
     default: 7
 runs:
