@@ -6,7 +6,7 @@ Configure this action in your workflows providing the inputs described below in 
 ### `github-token`
 **Required** A GitHub token. See below for additional information.
 
-### `days-to-stale-release`
+### `days-to-ignore: 0`
 _Optional_ The number of days after which unreleased commits should be considered stale and should notify for a release. Default is `7`.
 
 ## Notes
@@ -28,15 +28,10 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.2.0
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Check if there's a release pending
+      - name: Notify pending release
         id: notify
-        uses: estherixz/github-action-notify-release@main
+        uses: nearform/github-action-notify-release@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          days-to-stale-release: 7
-
+          days-to-ignore: 7
 ```
