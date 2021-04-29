@@ -1,6 +1,6 @@
-'use strict'
-
-const { debug, error, info, warning } = require('@actions/core')
+const {
+  debug, error, info, warning,
+} = require('@actions/core');
 
 const log = (logger) => (message) => logger(JSON.stringify(message));
 

@@ -1,17 +1,16 @@
-'use strict'
-
-const github = require("@actions/github");
+const github = require('@actions/github');
 
 async function getLatestRelease(token) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
-  const allReleasesResp = await octokit.request(`GET /repos/{owner}/{repo}/releases`, {
+  const allReleasesResp = await octokit.request('GET /repos/{owner}/{repo}/releases', {
     owner,
-    repo
+    repo,
   });
 
-  const latestRelease = (allReleasesResp && allReleasesResp.data && allReleasesResp.data.length) ? allReleasesResp.data[0] : null;
+  const latestRelease = (allReleasesResp && allReleasesResp.data && allReleasesResp.data.length)
+    ? allReleasesResp.data[0] : null;
   if (!latestRelease) throw new Error('Cannot find the latest release');
 
   return latestRelease;
@@ -24,11 +23,12 @@ async function getUnreleasedCommits(token, latestRelease, daysToIgnore) {
   // TODO: extract this
   const allCommitsResp = await octokit.request('GET /repos/{owner}/{repo}/commits', {
     owner,
-    repo
+    repo,
   });
 
   if (!allCommitsResp || !allCommitsResp.data || !allCommitsResp.data.length) throw new Error('Error fetching commits');
   if (!latestRelease || !latestRelease.created_at) throw new Error('Latest release doesnt have a created_at date');
+  // eslint-disable-next-line no-param-reassign
   if (!daysToIgnore) daysToIgnore = 0;
 
   const unreleasedCommits = [];
@@ -40,11 +40,12 @@ async function getUnreleasedCommits(token, latestRelease, daysToIgnore) {
 
   for (const commit of allCommitsResp.data) {
     const commitDate = new Date(commit.commit.author.date).getTime();
-
     if (lastReleaseDate < commitDate && commitDate < staleDate) {
       unreleasedCommits.push({
-        message: commit.commit.message, author: commit.commit.author.name,
-        date: commitDate, url: commit.url
+        message: commit.commit.message,
+        author: commit.commit.author.name,
+        date: commitDate,
+        url: commit.url,
       });
     }
   }
@@ -54,5 +55,5 @@ async function getUnreleasedCommits(token, latestRelease, daysToIgnore) {
 
 module.exports = {
   getLatestRelease,
-  getUnreleasedCommits
-}
+  getUnreleasedCommits,
+};

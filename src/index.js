@@ -1,11 +1,7 @@
-'use strict'
-
 const core = require('@actions/core');
 const { logInfo } = require('./log');
 const { getLatestRelease, getUnreleasedCommits } = require('./release');
 const { createIssue } = require('./utils');
-
-
 
 async function run() {
   try {
@@ -30,9 +26,9 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     if (unreleasedCommits.length) {
       let commitStr = '';
       for (const commit of unreleasedCommits) {
-        commitStr = commitStr +
-          `Issue: ${commit.message},   Author: ${commit.author}`
-          + '\n';
+        commitStr = commitStr
+          + `Issue: ${commit.message}\n`
+          + `Author: ${commit.author}\n\n`;
       }
       const issueBody = `Unreleased commits have been found which are pending since ${daysToIgnore} days, please publish the changes.
   
@@ -44,7 +40,6 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     } else {
       logInfo('No pending commits found');
     }
-
   } catch (error) {
     core.setFailed(error.message);
   }
