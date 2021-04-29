@@ -5,6 +5,8 @@ const { logInfo } = require('./log');
 const { getLatestRelease, getUnreleasedCommits } = require('./release');
 const { createIssue } = require('./utils');
 
+
+
 async function run() {
   try {
     logInfo('========Starting to run the stale release github action ============');
@@ -14,7 +16,7 @@ async function run() {
     const daysToIgnore = core.getInput('days-to-ignore');
 
     logInfo(`Days since last release: ${daysToIgnore}`);
-    logInfo(`Fetching latest release......`);
+    logInfo('Fetching latest release......');
 
     const latestRelease = await getLatestRelease(token);
 
