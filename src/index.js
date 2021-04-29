@@ -26,10 +26,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     if (unreleasedCommits.length) {
       let commitStr = '';
       for (const commit of unreleasedCommits) {
-        commitStr += `Issue: ${commit.message}  
-Author: ${commit.author}  
-
-`;
+        commitStr += `Issue: ${commit.message}<br>Author: ${commit.author}<br><br>`;
       }
       const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
   
