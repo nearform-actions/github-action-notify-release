@@ -30,7 +30,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
           + `Issue: ${commit.message}\n`
           + `Author: ${commit.author}\n\n`;
       }
-      const issueBody = `Unreleased commits have been found which are pending since ${daysToIgnore} days, please publish the changes.
+      const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
   
   **Following are the commits:**
   ${commitStr}`;
