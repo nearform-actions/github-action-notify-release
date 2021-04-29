@@ -23,7 +23,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     );
 
     if (unreleasedCommits.length) {
-      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.message},  
+      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.message}  
 Author: ${commit.author}  
 
 `).join('');
