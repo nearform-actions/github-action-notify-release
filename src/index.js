@@ -23,7 +23,10 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     );
 
     if (unreleasedCommits.length) {
-      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.message},\\ Author: ${commit.author}`).join('\\\\');
+      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.message},  
+Author: ${commit.author}  
+
+`).join('');
       const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
   
   **Following are the commits:**
@@ -35,6 +38,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
       logInfo('No pending commits found');
     }
   } catch (error) {
+    logInfo(error.message);
     core.setFailed(error.message);
   }
 }
