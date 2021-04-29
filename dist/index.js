@@ -5922,34 +5922,30 @@ async function getLatestRelease(token) {
     repo,
   });
 
-  const latestRelease = (allReleasesResp && allReleasesResp.data && allReleasesResp.data.length)
-    ? allReleasesResp.data[0] : null;
-  if (!latestRelease) throw new Error('Cannot find the latest release');
-
+  const latestRelease = allReleasesResp.data.length ? allReleasesResp.data[0] : null;
+  if (!latestRelease) {
+    throw new Error('Cannot find the latest release');
+  }
   return latestRelease;
 }
 
-async function getUnreleasedCommits(token, latestRelease, daysToIgnore) {
+async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore = 0) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
-  // TODO: extract this
   const allCommitsResp = await octokit.request('GET /repos/{owner}/{repo}/commits', {
     owner,
     repo,
+    since: latestReleaseDate,
   });
 
-  if (!allCommitsResp || !allCommitsResp.data || !allCommitsResp.data.length) throw new Error('Error fetching commits');
-  if (!latestRelease || !latestRelease.created_at) throw new Error('Latest release doesnt have a created_at date');
-  // eslint-disable-next-line no-param-reassign
-  if (!daysToIgnore) daysToIgnore = 0;
+  if (!allCommitsResp.data.length) {
+    throw new Error('Error fetching commits');
+  }
 
   const unreleasedCommits = [];
-  const lastReleaseDate = new Date(latestRelease.created_at).getTime();
-  let staleDate = new Date().getTime();
-  if (daysToIgnore > 0) {
-    staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
-  }
+  const lastReleaseDate = new Date(latestReleaseDate).getTime();
+  const staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
 
   for (const commit of allCommitsResp.data) {
     const commitDate = new Date(commit.commit.author.date).getTime();
@@ -5977,25 +5973,16 @@ module.exports = {
 /***/ 608:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const core = __nccwpck_require__(186);
 const github = __nccwpck_require__(438);
-const { logInfo } = __nccwpck_require__(653);
 
 async function createIssue(token, issueTitle, issueBody) {
-  try {
-    const octokit = github.getOctokit(token);
+  const octokit = github.getOctokit(token);
 
-    logInfo(issueBody);
-
-    return await octokit.issues.create({
-      ...github.context.repo,
-      title: issueTitle,
-      body: issueBody,
-    });
-  } catch (error) {
-    core.setFailed(error.message);
-  }
-  return null;
+  return octokit.issues.create({
+    ...github.context.repo,
+    title: issueTitle,
+    body: issueBody,
+  });
 }
 
 module.exports = {
@@ -6163,29 +6150,25 @@ const { createIssue } = __nccwpck_require__(608);
 
 async function run() {
   try {
-    logInfo('========Starting to run the stale release github action ============');
-
     const token = core.getInput('github-token', { required: true });
 
     const daysToIgnore = core.getInput('days-to-ignore');
-
-    logInfo(`Days since last release: ${daysToIgnore}`);
-    logInfo('Fetching latest release......');
-
     const latestRelease = await getLatestRelease(token);
 
     logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
 Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
 
-    const unreleasedCommits = await getUnreleasedCommits(token, latestRelease, daysToIgnore);
-
-    logInfo(JSON.stringify(unreleasedCommits));
+    if (!latestRelease.created_at) {
+      throw new Error('Invalid latest release');
+    }
+    const unreleasedCommits = await getUnreleasedCommits(
+      token,
+      latestRelease.created_at,
+      daysToIgnore,
+    );
 
     if (unreleasedCommits.length) {
-      let commitStr = '';
-      for (const commit of unreleasedCommits) {
-        commitStr += `Issue: ${commit.message}<br>Author: ${commit.author}<br><br>`;
-      }
+      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.message},\\ Author: ${commit.author}`).join('\\\\');
       const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
   
   **Following are the commits:**

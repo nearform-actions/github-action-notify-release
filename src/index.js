@@ -5,29 +5,25 @@ const { createIssue } = require('./utils');
 
 async function run() {
   try {
-    logInfo('========Starting to run the stale release github action ============');
-
     const token = core.getInput('github-token', { required: true });
 
     const daysToIgnore = core.getInput('days-to-ignore');
-
-    logInfo(`Days since last release: ${daysToIgnore}`);
-    logInfo('Fetching latest release......');
-
     const latestRelease = await getLatestRelease(token);
 
     logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
 Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
 
-    const unreleasedCommits = await getUnreleasedCommits(token, latestRelease, daysToIgnore);
-
-    logInfo(JSON.stringify(unreleasedCommits));
+    if (!latestRelease.created_at) {
+      throw new Error('Invalid latest release');
+    }
+    const unreleasedCommits = await getUnreleasedCommits(
+      token,
+      latestRelease.created_at,
+      daysToIgnore,
+    );
 
     if (unreleasedCommits.length) {
-      let commitStr = '';
-      for (const commit of unreleasedCommits) {
-        commitStr += `Issue: ${commit.message}<br>Author: ${commit.author}<br><br>`;
-      }
+      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.message},\\ Author: ${commit.author}`).join('\\\\');
       const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
   
   **Following are the commits:**

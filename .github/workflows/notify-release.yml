@@ -14,3 +14,4 @@ jobs:
         uses: nearform/github-action-notify-release@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          days-to-ignore: 0

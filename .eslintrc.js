@@ -1,6 +1,5 @@
 module.exports = {
   env: {
-    browser: true,
     commonjs: true,
     es2021: true,
   },
@@ -12,6 +11,6 @@ module.exports = {
   },
   rules: {
     'no-restricted-syntax': 'off',
-    'prefer-template': 'off'
+    'prefer-template': 'off',
   },
 };

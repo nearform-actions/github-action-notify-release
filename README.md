@@ -7,7 +7,7 @@ Configure this action in your workflows providing the inputs described below in 
 **Required** A GitHub token. See below for additional information.
 
 ### `days-to-ignore: 0`
-_Optional_ The number of days after which unreleased commits should be considered stale and should notify for a release. Default is `7`.
+_Optional_ The number of days after which unreleased commits should be considered stale and should notify for a release. Default is `0`.
 
 ## Notes
 - Checks and compares npm last modified date and git latest repo update.

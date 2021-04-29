@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/nearform/github-action-notify-release.git"
   },
-  "author": "Sameer Srivastava",
+  "author": "Esther Saimpou",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/nearform/github-action-notify-release/issues"
@@ -28,7 +28,6 @@
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
-    "jest": "^26.6.3",
-    "tap": "^15.0.5"
+    "jest": "^26.6.3"
   }
 }

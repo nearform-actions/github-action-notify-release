@@ -9,34 +9,30 @@ async function getLatestRelease(token) {
     repo,
   });
 
-  const latestRelease = (allReleasesResp && allReleasesResp.data && allReleasesResp.data.length)
-    ? allReleasesResp.data[0] : null;
-  if (!latestRelease) throw new Error('Cannot find the latest release');
-
+  const latestRelease = allReleasesResp.data.length ? allReleasesResp.data[0] : null;
+  if (!latestRelease) {
+    throw new Error('Cannot find the latest release');
+  }
   return latestRelease;
 }
 
-async function getUnreleasedCommits(token, latestRelease, daysToIgnore) {
+async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore = 0) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
-  // TODO: extract this
   const allCommitsResp = await octokit.request('GET /repos/{owner}/{repo}/commits', {
     owner,
     repo,
+    since: latestReleaseDate,
   });
 
-  if (!allCommitsResp || !allCommitsResp.data || !allCommitsResp.data.length) throw new Error('Error fetching commits');
-  if (!latestRelease || !latestRelease.created_at) throw new Error('Latest release doesnt have a created_at date');
-  // eslint-disable-next-line no-param-reassign
-  if (!daysToIgnore) daysToIgnore = 0;
+  if (!allCommitsResp.data.length) {
+    throw new Error('Error fetching commits');
+  }
 
   const unreleasedCommits = [];
-  const lastReleaseDate = new Date(latestRelease.created_at).getTime();
-  let staleDate = new Date().getTime();
-  if (daysToIgnore > 0) {
-    staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
-  }
+  const lastReleaseDate = new Date(latestReleaseDate).getTime();
+  const staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
 
   for (const commit of allCommitsResp.data) {
     const commitDate = new Date(commit.commit.author.date).getTime();
