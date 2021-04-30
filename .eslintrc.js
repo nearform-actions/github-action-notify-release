@@ -12,5 +12,7 @@ module.exports = {
   rules: {
     'no-restricted-syntax': 'off',
     'prefer-template': 'off',
+    'eslint-disable strict': 'off',
+    'eslint-env': 'jest'
   },
 };

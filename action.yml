@@ -6,7 +6,7 @@ inputs:
     required: true
   days-to-ignore:
     description: 'Unreleased commits older than the no. of days mentioned in this setting shall be reported'
-    required: true
+    required: false
     default: 7
 runs:
   using: 'node12'

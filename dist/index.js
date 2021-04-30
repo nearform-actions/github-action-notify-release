@@ -5917,45 +5917,34 @@ async function getLatestRelease(token) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
-  const allReleasesResp = await octokit.request('GET /repos/{owner}/{repo}/releases', {
+  const allReleasesResp = await octokit.request(`GET /repos/{owner}/{repo}/releases`, {
     owner,
     repo,
   });
 
-  const latestRelease = allReleasesResp.data.length ? allReleasesResp.data[0] : null;
-  return latestRelease;
+  return allReleasesResp.data.length ? allReleasesResp.data[0] : null;
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore = 7) {
+async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
-  const allCommitsResp = await octokit.request('GET /repos/{owner}/{repo}/commits', {
+  const allCommitsResp = await octokit.request(`GET /repos/{owner}/{repo}/commits`, {
     owner,
     repo,
     since: latestReleaseDate,
   });
 
-  if (!allCommitsResp.data.length) {
-    return allCommitsResp.data;
-  }
-
-  const unreleasedCommits = [];
   const staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
 
   for (const commit of allCommitsResp.data) {
-    const commitDate = new Date(commit.commit.author.date).getTime();
+    const commitDate = new Date(commit.commit.committer.date).getTime();
     if (commitDate < staleDate) {
-      unreleasedCommits.push({
-        message: commit.commit.message,
-        author: commit.commit.author.name,
-        date: commitDate,
-        url: commit.url,
-      });
+      return allCommitsResp.data;
     }
   }
 
-  return unreleasedCommits;
+  return [];
 }
 
 module.exports = {
@@ -5981,8 +5970,41 @@ async function createIssue(token, issueTitle, issueBody) {
   });
 }
 
+async function getLastOpenPendingIssue(token, latestReleaseDate) {
+  const octokit = github.getOctokit(token);
+  const { owner, repo } = github.context.repo;
+
+  const pendingIssues = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
+    owner,
+    repo,
+    since: latestReleaseDate,
+    author: 'app/github-actions',
+    state: 'open',
+    sort: 'created',
+    direction: 'desc'
+  });
+
+  return pendingIssues.data.length ? pendingIssues.data[0] : null;
+}
+
+async function updateLastOpenPendingIssue(token, issueTitle, issueBody, issueNo) {
+  const octokit = github.getOctokit(token);
+  const { owner, repo } = github.context.repo;
+
+  const updatedIssue = await octokit.request(`PATCH /repos/{owner}/{repo}/issues/${issueNo}`, {
+    owner,
+    repo,
+    title: issueTitle,
+    body: issueBody
+  });
+
+  return updatedIssue.data.length ? updatedIssue.data[0] : null;
+}
+
 module.exports = {
   createIssue,
+  getLastOpenPendingIssue,
+  updateLastOpenPendingIssue,
 };
 
 
@@ -6142,13 +6164,13 @@ var __webpack_exports__ = {};
 const core = __nccwpck_require__(186);
 const { logInfo } = __nccwpck_require__(653);
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(26);
-const { createIssue } = __nccwpck_require__(608);
+const { createIssue, getLastOpenPendingIssue, updateLastOpenPendingIssue } = __nccwpck_require__(608);
 
 async function run() {
   try {
     const token = core.getInput('github-token', { required: true });
-
-    const daysToIgnore = core.getInput('days-to-ignore');
+    const daysInput = core.getInput('days-to-ignore');
+    const daysToIgnore = Number(daysInput);
     const latestRelease = await getLatestRelease(token);
 
     if (!latestRelease) {
@@ -6159,9 +6181,6 @@ async function run() {
     logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
 Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
 
-    if (!latestRelease.created_at) {
-      throw new Error('Invalid latest release');
-    }
     const unreleasedCommits = await getUnreleasedCommits(
       token,
       latestRelease.created_at,
@@ -6169,8 +6188,8 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     );
 
     if (unreleasedCommits.length) {
-      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.message}  
-Author: ${commit.author}  
+      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.commit.message}  
+Author: ${commit.commit.author.name}  
 
 `).join('');
       const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
@@ -6178,8 +6197,17 @@ Author: ${commit.author}
   **Following are the commits:**
   ${commitStr}`;
       const issueTitle = 'Release pending!';
-      const issueNo = await createIssue(token, issueTitle, issueBody);
-      logInfo(`New issue has been created. Issue No. - ${JSON.stringify(issueNo.data.number)}`);
+
+      const lastPendingIssue = await getLastOpenPendingIssue(token, lastReleaseDate);
+
+      if (lastPendingIssue) {
+        await updateLastOpenPendingIssue(token, issueTitle, issueBody, lastPendingIssue.number);
+        logInfo(`Issue ${lastPendingIssue.number} has been updated`);
+      } else {
+        const issueNo = await createIssue(token, issueTitle, issueBody);
+        logInfo(`New issue has been created. Issue No. - ${JSON.stringify(issueNo.data.number)}`);
+      }
+
     } else {
       logInfo('No pending commits found');
     }
