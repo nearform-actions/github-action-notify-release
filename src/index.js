@@ -35,7 +35,7 @@ Author: ${commit.commit.author.name}
   ${commitStr}`;
       const issueTitle = 'Release pending!';
 
-      const lastPendingIssue = await getLastOpenPendingIssue(token, lastReleaseDate);
+      const lastPendingIssue = await getLastOpenPendingIssue(token, latestRelease.created_at);
 
       if (lastPendingIssue) {
         await updateLastOpenPendingIssue(token, issueTitle, issueBody, lastPendingIssue.number);
