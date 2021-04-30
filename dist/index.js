@@ -5926,7 +5926,7 @@ async function getLatestRelease(token) {
   return latestRelease;
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore = 0) {
+async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore = 7) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
