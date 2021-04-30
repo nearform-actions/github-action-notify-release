@@ -10,9 +10,6 @@ async function getLatestRelease(token) {
   });
 
   const latestRelease = allReleasesResp.data.length ? allReleasesResp.data[0] : null;
-  if (!latestRelease) {
-    throw new Error('Cannot find the latest release');
-  }
   return latestRelease;
 }
 
@@ -27,16 +24,15 @@ async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore = 0) 
   });
 
   if (!allCommitsResp.data.length) {
-    throw new Error('Error fetching commits');
+    return allCommitsResp.data;
   }
 
   const unreleasedCommits = [];
-  const lastReleaseDate = new Date(latestReleaseDate).getTime();
   const staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
 
   for (const commit of allCommitsResp.data) {
     const commitDate = new Date(commit.commit.author.date).getTime();
-    if (lastReleaseDate < commitDate && commitDate < staleDate) {
+    if (commitDate < staleDate) {
       unreleasedCommits.push({
         message: commit.commit.message,
         author: commit.commit.author.name,

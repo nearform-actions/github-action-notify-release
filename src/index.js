@@ -10,6 +10,11 @@ async function run() {
     const daysToIgnore = core.getInput('days-to-ignore');
     const latestRelease = await getLatestRelease(token);
 
+    if (!latestRelease) {
+      logInfo('Could not find latest release');
+      return;
+    }
+
     logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
 Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
 

@@ -42,7 +42,7 @@ test('Gets the unreleased commits with days-to-ignore as 0', async () => {
 
 test('Gets the unreleased commits with days-to-ignore as non zero', async () => {
   getOctokit.mockImplementation(() => ({ request: async () => allCommits }));
-  const daysToIgnore = 2;
+  const daysToIgnore = 3;
   const latestReleaseDate = allReleases.data[0].created_at;
   const allCommitsResponse = await getUnreleasedCommits(token, latestReleaseDate, daysToIgnore);
   expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1);
