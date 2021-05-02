@@ -1,0 +1,22 @@
+name: CI
+
+on: pull_request
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Run CI, Eslint and tests
+        run: npm ci
+        run: npm run lint
+        run: npm test

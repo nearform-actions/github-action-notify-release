@@ -5894,6 +5894,8 @@ function wrappy (fn, cb) {
 /***/ 653:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
+"use strict";
+
 const {
   debug, error, info, warning,
 } = __nccwpck_require__(186);
@@ -5911,6 +5913,8 @@ exports.logWarning = log(warning);
 /***/ 26:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+"use strict";
+
 const github = __nccwpck_require__(438);
 
 async function getLatestRelease(token) {
@@ -5925,7 +5929,7 @@ async function getLatestRelease(token) {
   return allReleasesResp.data.length ? allReleasesResp.data[0] : null;
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore) {
+async function getUnreleasedCommits(token, latestReleaseDate, staleDays) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
@@ -5935,7 +5939,7 @@ async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore) {
     since: latestReleaseDate,
   });
 
-  const staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
+  const staleDate = new Date().getTime() - (staleDays * 24 * 60 * 60 * 1000);
 
   for (const commit of allCommitsResp.data) {
     const commitDate = new Date(commit.commit.committer.date).getTime();
@@ -5957,6 +5961,8 @@ module.exports = {
 
 /***/ 608:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
 
 const github = __nccwpck_require__(438);
 
@@ -6159,8 +6165,10 @@ module.exports = require("zlib");;
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";/************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
+"use strict";
+
 const core = __nccwpck_require__(186);
 const { logInfo } = __nccwpck_require__(653);
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(26);
@@ -6169,13 +6177,11 @@ const { createIssue, getLastOpenPendingIssue, updateLastOpenPendingIssue } = __n
 async function run() {
   try {
     const token = core.getInput('github-token', { required: true });
-    const daysInput = core.getInput('days-to-ignore');
-    const daysToIgnore = Number(daysInput);
+    const staleDays = Number(core.getInput('stale-days'));
     const latestRelease = await getLatestRelease(token);
 
     if (!latestRelease) {
-      logInfo('Could not find latest release');
-      return;
+      return logInfo('Could not find latest release');
     }
 
     logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
@@ -6184,7 +6190,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     const unreleasedCommits = await getUnreleasedCommits(
       token,
       latestRelease.created_at,
-      daysToIgnore,
+      staleDays,
     );
 
     if (unreleasedCommits.length) {

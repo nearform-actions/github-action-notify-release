@@ -1,3 +1,4 @@
+'use strict'
 const {
   debug, error, info, warning,
 } = require('@actions/core');

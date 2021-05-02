@@ -1,4 +1,4 @@
-name: notify-pending-release
+name: notify-release
 on:
   workflow_dispatch:
     branches:
@@ -14,4 +14,4 @@ jobs:
         uses: nearform/github-action-notify-release@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          days-to-ignore: 0
+          stale-days: 0

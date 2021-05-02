@@ -1,3 +1,4 @@
+'use strict'
 const { getOctokit } = require('@actions/github');
 const { getLatestRelease, getUnreleasedCommits } = require('../src/release');
 const { createIssue, updateLastOpenPendingIssue, getLastOpenPendingIssue } = require('../src/utils');
@@ -27,7 +28,7 @@ test('Retuns null if no releases found', async () => {
   await expect(getLatestRelease(token)).resolves.toBe(null);
 });
 
-test('Gets the unreleased commits with days-to-ignore as 0', async () => {
+test('Gets the unreleased commits with stale-days as 0', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits });
   const daysToIgnore = 0;
   const latestReleaseDate = allReleases.data[0].created_at;
@@ -35,7 +36,7 @@ test('Gets the unreleased commits with days-to-ignore as 0', async () => {
   expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1);
 });
 
-test('Gets the unreleased commits with days-to-ignore as non zero', async () => {
+test('Gets the unreleased commits with stale-days as non zero', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits });
   const daysToIgnore = 3;
   const latestReleaseDate = allReleases.data[0].created_at;
@@ -43,7 +44,7 @@ test('Gets the unreleased commits with days-to-ignore as non zero', async () => 
   expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1);
 });
 
-test('Gets the unreleased commits and uses default value of days-to-ignore', async () => {
+test('Gets the unreleased commits and uses default value of stale-days', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits });
   const daysToIgnore = undefined;
   const latestReleaseDate = allReleases.data[0].created_at;

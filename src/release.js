@@ -1,3 +1,4 @@
+'use strict'
 const github = require('@actions/github');
 
 async function getLatestRelease(token) {
@@ -12,7 +13,7 @@ async function getLatestRelease(token) {
   return allReleasesResp.data.length ? allReleasesResp.data[0] : null;
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore) {
+async function getUnreleasedCommits(token, latestReleaseDate, staleDays) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
@@ -22,7 +23,7 @@ async function getUnreleasedCommits(token, latestReleaseDate, daysToIgnore) {
     since: latestReleaseDate,
   });
 
-  const staleDate = new Date().getTime() - (daysToIgnore * 24 * 60 * 60 * 1000);
+  const staleDate = new Date().getTime() - (staleDays * 24 * 60 * 60 * 1000);
 
   for (const commit of allCommitsResp.data) {
     const commitDate = new Date(commit.commit.committer.date).getTime();

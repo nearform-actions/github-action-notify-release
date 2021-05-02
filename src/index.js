@@ -1,3 +1,4 @@
+'use strict'
 const core = require('@actions/core');
 const { logInfo } = require('./log');
 const { getLatestRelease, getUnreleasedCommits } = require('./release');
@@ -6,13 +7,11 @@ const { createIssue, getLastOpenPendingIssue, updateLastOpenPendingIssue } = req
 async function run() {
   try {
     const token = core.getInput('github-token', { required: true });
-    const daysInput = core.getInput('days-to-ignore');
-    const daysToIgnore = Number(daysInput);
+    const staleDays = Number(core.getInput('stale-days'));
     const latestRelease = await getLatestRelease(token);
 
     if (!latestRelease) {
-      logInfo('Could not find latest release');
-      return;
+      return logInfo('Could not find latest release');
     }
 
     logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
@@ -21,7 +20,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     const unreleasedCommits = await getUnreleasedCommits(
       token,
       latestRelease.created_at,
-      daysToIgnore,
+      staleDays,
     );
 
     if (unreleasedCommits.length) {

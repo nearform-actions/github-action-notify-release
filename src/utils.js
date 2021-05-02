@@ -1,3 +1,4 @@
+'use strict'
 const github = require('@actions/github');
 
 async function createIssue(token, issueTitle, issueBody) {
