@@ -3,15 +3,14 @@ name: CI
 on: pull_request
 
 jobs:
-  run-linters:
-    name: Run linters
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: 12
