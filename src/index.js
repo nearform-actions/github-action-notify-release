@@ -25,13 +25,13 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     );
 
     if (unreleasedCommits.length) {
-      const commitStr = unreleasedCommits.map((commit) => `Issue: ${commit.commit.message}  
+      const commitStr = unreleasedCommits.map((commit) => `Commit: ${commit.commit.message}  
 Author: ${commit.commit.author.name}  
 
 `).join('');
       const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
   
-  **Following are the commits:**
+  ### Commits since the last release
   ${commitStr}`;
       const issueTitle = 'Release pending!';
 
