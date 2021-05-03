@@ -5966,17 +5966,18 @@ module.exports = {
 
 const github = __nccwpck_require__(438);
 
-async function createIssue(token, issueTitle, issueBody) {
+async function createIssue(token, issueTitle, issueBody, label) {
   const octokit = github.getOctokit(token);
 
   return octokit.issues.create({
     ...github.context.repo,
     title: issueTitle,
     body: issueBody,
+    labels: [label],
   });
 }
 
-async function getLastOpenPendingIssue(token, latestReleaseDate) {
+async function getLastOpenPendingIssue(token, latestReleaseDate, label) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
@@ -5987,7 +5988,8 @@ async function getLastOpenPendingIssue(token, latestReleaseDate) {
     creator: 'app/github-actions',
     state: 'open',
     sort: 'created',
-    direction: 'desc'
+    direction: 'desc',
+    labels: label
   });
 
   return pendingIssues.data.length ? pendingIssues.data[0] : null;
@@ -6179,6 +6181,7 @@ async function run() {
     const token = core.getInput('github-token', { required: true });
     const staleDays = Number(core.getInput('stale-days'));
     const latestRelease = await getLatestRelease(token);
+    const label = 'notify-release';
 
     if (!latestRelease) {
       return logInfo('Could not find latest release');
@@ -6204,13 +6207,13 @@ Author: ${commit.commit.author.name}
   ${commitStr}`;
       const issueTitle = 'Release pending!';
 
-      const lastPendingIssue = await getLastOpenPendingIssue(token, latestRelease.created_at, issueTitle);
+      const lastPendingIssue = await getLastOpenPendingIssue(token, latestRelease.created_at, label);
 
       if (lastPendingIssue) {
         await updateLastOpenPendingIssue(token, issueTitle, issueBody, lastPendingIssue.number);
         logInfo(`Issue ${lastPendingIssue.number} has been updated`);
       } else {
-        const issueNo = await createIssue(token, issueTitle, issueBody);
+        const issueNo = await createIssue(token, issueTitle, issueBody, label);
         logInfo(`New issue has been created. Issue No. - ${JSON.stringify(issueNo.data.number)}`);
       }
 

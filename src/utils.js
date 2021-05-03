@@ -1,17 +1,18 @@
 'use strict'
 const github = require('@actions/github');
 
-async function createIssue(token, issueTitle, issueBody) {
+async function createIssue(token, issueTitle, issueBody, label) {
   const octokit = github.getOctokit(token);
 
   return octokit.issues.create({
     ...github.context.repo,
     title: issueTitle,
     body: issueBody,
+    labels: [label],
   });
 }
 
-async function getLastOpenPendingIssue(token, latestReleaseDate) {
+async function getLastOpenPendingIssue(token, latestReleaseDate, label) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
@@ -22,7 +23,8 @@ async function getLastOpenPendingIssue(token, latestReleaseDate) {
     creator: 'app/github-actions',
     state: 'open',
     sort: 'created',
-    direction: 'desc'
+    direction: 'desc',
+    labels: label
   });
 
   return pendingIssues.data.length ? pendingIssues.data[0] : null;

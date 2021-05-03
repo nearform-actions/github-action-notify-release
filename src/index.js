@@ -9,6 +9,7 @@ async function run() {
     const token = core.getInput('github-token', { required: true });
     const staleDays = Number(core.getInput('stale-days'));
     const latestRelease = await getLatestRelease(token);
+    const label = 'notify-release';
 
     if (!latestRelease) {
       return logInfo('Could not find latest release');
@@ -34,13 +35,13 @@ Author: ${commit.commit.author.name}
   ${commitStr}`;
       const issueTitle = 'Release pending!';
 
-      const lastPendingIssue = await getLastOpenPendingIssue(token, latestRelease.created_at);
+      const lastPendingIssue = await getLastOpenPendingIssue(token, latestRelease.created_at, label);
 
       if (lastPendingIssue) {
         await updateLastOpenPendingIssue(token, issueTitle, issueBody, lastPendingIssue.number);
         logInfo(`Issue ${lastPendingIssue.number} has been updated`);
       } else {
-        const issueNo = await createIssue(token, issueTitle, issueBody);
+        const issueNo = await createIssue(token, issueTitle, issueBody, label);
         logInfo(`New issue has been created. Issue No. - ${JSON.stringify(issueNo.data.number)}`);
       }
 
