@@ -19,7 +19,7 @@ async function getLastOpenPendingIssue(token, latestReleaseDate) {
     owner,
     repo,
     since: latestReleaseDate,
-    author: 'app/github-actions',
+    creator: 'app/github-actions',
     state: 'open',
     sort: 'created',
     direction: 'desc'

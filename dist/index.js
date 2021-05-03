@@ -5984,7 +5984,7 @@ async function getLastOpenPendingIssue(token, latestReleaseDate) {
     owner,
     repo,
     since: latestReleaseDate,
-    author: 'app/github-actions',
+    creator: 'app/github-actions',
     state: 'open',
     sort: 'created',
     direction: 'desc'
@@ -6204,7 +6204,7 @@ Author: ${commit.commit.author.name}
   ${commitStr}`;
       const issueTitle = 'Release pending!';
 
-      const lastPendingIssue = await getLastOpenPendingIssue(token, latestRelease.created_at);
+      const lastPendingIssue = await getLastOpenPendingIssue(token, latestRelease.created_at, issueTitle);
 
       if (lastPendingIssue) {
         await updateLastOpenPendingIssue(token, issueTitle, issueBody, lastPendingIssue.number);
