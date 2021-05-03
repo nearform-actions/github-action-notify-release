@@ -1,4 +1,4 @@
-name: notify-pending-release
+name: notify-release
 on:
   workflow_dispatch:
     branches:
@@ -9,12 +9,9 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.2.0
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
       - name: Check if there's a release pending
         id: notify
-        uses: estherixz/github-action-notify-release@main
+        uses: nearform/github-action-notify-release@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-days: 0
