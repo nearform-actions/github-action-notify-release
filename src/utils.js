@@ -44,8 +44,20 @@ async function updateLastOpenPendingIssue(token, issueTitle, issueBody, issueNo)
   return updatedIssue.data.length ? updatedIssue.data[0] : null;
 }
 
+function formatCommitMessage(fullCommitMessage, numberOfLines) {
+  if (!numberOfLines || numberOfLines < 0) {
+    return fullCommitMessage;
+  }
+  return fullCommitMessage
+    .split('\n')
+    .slice(0, numberOfLines)
+    .join('\n')
+    .trim();
+}
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
+  formatCommitMessage,
 };
