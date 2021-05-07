@@ -2,12 +2,13 @@
 const core = require('@actions/core');
 const { logInfo } = require('./log');
 const { getLatestRelease, getUnreleasedCommits } = require('./release');
-const { createIssue, getLastOpenPendingIssue, updateLastOpenPendingIssue } = require('./utils');
+const { createIssue, getLastOpenPendingIssue, updateLastOpenPendingIssue, formatCommitMessage } = require('./utils');
 
 async function run() {
   try {
     const token = core.getInput('github-token', { required: true });
     const staleDays = Number(core.getInput('stale-days'));
+    const commitMessageLines = Number(core.getInput('commit-messages-lines'));
     const latestRelease = await getLatestRelease(token);
     const label = 'notify-release';
 
@@ -25,7 +26,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     );
 
     if (unreleasedCommits.length) {
-      const commitStr = unreleasedCommits.map((commit) => `Commit: ${commit.commit.message}  
+      const commitStr = unreleasedCommits.map((commit) => `Commit: ${formatCommitMessage(commit.commit.message, commitMessageLines)}  
 Author: ${commit.commit.author.name}  
 
 `).join('');

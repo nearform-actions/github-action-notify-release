@@ -6009,10 +6009,22 @@ async function updateLastOpenPendingIssue(token, issueTitle, issueBody, issueNo)
   return updatedIssue.data.length ? updatedIssue.data[0] : null;
 }
 
+function formatCommitMessage(fullCommitMessage, numberOfLines) {
+  if (!numberOfLines || numberOfLines < 0) {
+    return fullCommitMessage;
+  }
+  return fullCommitMessage
+    .split('\n')
+    .slice(0, numberOfLines)
+    .join('\n')
+    .trim();
+}
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
+  formatCommitMessage,
 };
 
 
@@ -6174,12 +6186,13 @@ var __webpack_exports__ = {};
 const core = __nccwpck_require__(186);
 const { logInfo } = __nccwpck_require__(653);
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(26);
-const { createIssue, getLastOpenPendingIssue, updateLastOpenPendingIssue } = __nccwpck_require__(608);
+const { createIssue, getLastOpenPendingIssue, updateLastOpenPendingIssue, formatCommitMessage } = __nccwpck_require__(608);
 
 async function run() {
   try {
     const token = core.getInput('github-token', { required: true });
     const staleDays = Number(core.getInput('stale-days'));
+    const commitMessageLines = Number(core.getInput('commit-messages-lines'));
     const latestRelease = await getLatestRelease(token);
     const label = 'notify-release';
 
@@ -6197,7 +6210,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     );
 
     if (unreleasedCommits.length) {
-      const commitStr = unreleasedCommits.map((commit) => `Commit: ${commit.commit.message}  
+      const commitStr = unreleasedCommits.map((commit) => `Commit: ${formatCommitMessage(commit.commit.message, commitMessageLines)}  
 Author: ${commit.commit.author.name}  
 
 `).join('');
