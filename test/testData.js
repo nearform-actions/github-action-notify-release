@@ -147,7 +147,13 @@ const allReleasesData = {
       created_at: '2021-04-27T07:37:09Z',
       Tag: '2.0',
       author: 'sameer'
-    }
+    },
+    {
+      name: 'Release 1.0',
+      created_at: '2021-04-20T07:37:09Z',
+      Tag: '1.0',
+      author: 'gilach'
+    },
   ]
 }
 
@@ -297,10 +303,16 @@ const allReleasesNoData = {
   data: []
 }
 
+const pendingIssues = [{
+  number: '1',
+  updated_at: '2021-04-26T07:37:09Z'
+}]
+
 module.exports = {
   allCommitsData,
   allReleasesData,
   unreleasedCommitsData0,
   unreleasedCommitsData1,
-  allReleasesNoData
+  allReleasesNoData,
+  pendingIssues
 }

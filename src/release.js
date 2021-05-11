@@ -5,12 +5,12 @@ async function getLatestRelease(token) {
   const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
-  const allReleasesResp = await octokit.request(`GET /repos/{owner}/{repo}/releases`, {
+  const allReleasesResp = await octokit.request(`GET /repos/{owner}/{repo}/releases/latest`, {
     owner,
     repo,
   });
 
-  return allReleasesResp.data.length ? allReleasesResp.data[0] : null;
+  return allReleasesResp.data;
 }
 
 async function getUnreleasedCommits(token, latestReleaseDate, staleDays) {
