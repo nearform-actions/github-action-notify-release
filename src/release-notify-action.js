@@ -11,13 +11,13 @@ async function runAction(token, staleDays, commitMessageLines) {
     return logInfo('Could not find latest release');
   }
 
-  logInfo(`Latest release - name:${latestRelease.name}, created:${latestRelease.created_at},
+  logInfo(`Latest release - name:${latestRelease.name}, published:${latestRelease.published_at},
 Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
 
   let pendingIssue = await getLastOpenPendingIssue(token);
   const unreleasedCommits = await getUnreleasedCommits(
     token,
-    latestRelease.created_at,
+    latestRelease.published_at,
     staleDays,
   );
 
@@ -25,7 +25,7 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
     await createOrUpdateIssue(token, unreleasedCommits, pendingIssue, latestRelease, commitMessageLines);
   } else {
     logInfo('No pending commits found');
-    if (pendingIssue && Date.parse(latestRelease.created_at) > Date.parse(pendingIssue.updated_at)) {
+    if (pendingIssue && Date.parse(latestRelease.published_at) > Date.parse(pendingIssue.updated_at)) {
       await closeIssue(token, pendingIssue.number);
     }
   }
