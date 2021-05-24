@@ -2,10 +2,42 @@
 const github = require('@actions/github');
 const { logInfo } = require('./log');
 
+const fs = require('fs');
+const path = require('path');
+const { promisify } = require('util');
+const readFile = promisify(fs.readFile);
+const handlebars = require('handlebars');
+
 const ISSUE_LABEL = 'notify-release';
 const ISSUE_TITLE = 'Release pending!';
 const STATE_OPEN = 'open';
 const STATE_CLOSED = 'closed';
+
+function registerHandlebarHelpers(config) {
+  const {
+    commitMessageLines
+  } = config;
+  handlebars.registerHelper('commitMessage', function(content) {
+    if (!commitMessageLines || commitMessageLines < 0) {
+      return content;
+    }
+    return content
+      .split('\n')
+      .slice(0, commitMessageLines)
+      .join('\n')
+      .trim();
+  });
+  handlebars.registerHelper('substring', function(content, characters) {
+    return (content || "").substring(0, characters);
+  });
+}
+
+async function renderIssueBody(data) {
+  const templateFilePath = path.resolve(__dirname, 'issue.template.hbs');
+  const templateStringBuffer = await readFile(templateFilePath);
+  const template = handlebars.compile(templateStringBuffer.toString());
+  return template(data);
+}
 
 async function createIssue(token, issueBody) {
   const octokit = github.getOctokit(token);
@@ -50,15 +82,13 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
 }
 
 async function createOrUpdateIssue(token, unreleasedCommits, pendingIssue, latestRelease, commitMessageLines) {
-  const commitStr = unreleasedCommits.map((commit) => `Commit: ${formatCommitMessage(commit.commit.message, commitMessageLines)}  
-Author: ${commit.commit.author.name}  
-
-`).join('');
-  const issueBody = `Unreleased commits have been found which are pending release, please publish the changes.
-  
-  ### Commits since the last release
-  ${commitStr}`;
-
+  registerHandlebarHelpers({
+    commitMessageLines
+  });
+  const issueBody = await renderIssueBody({
+    commits: unreleasedCommits,
+    latestRelease,
+  })
   if (pendingIssue) {
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number);
     logInfo(`Issue ${pendingIssue.number} has been updated`);
@@ -66,17 +96,6 @@ Author: ${commit.commit.author.name}
     const issueNo = await createIssue(token, issueBody);
     logInfo(`New issue has been created. Issue No. - ${issueNo}`);
   }
-}
-
-function formatCommitMessage(fullCommitMessage, numberOfLines) {
-  if (!numberOfLines || numberOfLines < 0) {
-    return fullCommitMessage;
-  }
-  return fullCommitMessage
-    .split('\n')
-    .slice(0, numberOfLines)
-    .join('\n')
-    .trim();
 }
 
 async function closeIssue(token, issueNo) {
@@ -95,7 +114,6 @@ module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
-  formatCommitMessage,
   createOrUpdateIssue,
   closeIssue
 };

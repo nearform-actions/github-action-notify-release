@@ -1,6 +1,7 @@
 'use strict'
 const allCommitsData = {
   data: [{
+    "sha": "000001abcd",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -18,6 +19,7 @@ this message has multiple lines
 `
     },
   }, {
+    "sha": "000002a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -30,6 +32,7 @@ this message has multiple lines
       "message": "stale days changd",
     },
   }, {
+    "sha": "000003a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -42,6 +45,7 @@ this message has multiple lines
       "message": "another fix",
     },
   }, {
+    "sha": "000004a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -54,6 +58,7 @@ this message has multiple lines
       "message": "minor fix",
     },
   }, {
+    "sha": "000005a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -66,6 +71,7 @@ this message has multiple lines
       "message": "changed url",
     },
   }, {
+    "sha": "000006a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -78,6 +84,7 @@ this message has multiple lines
       "message": "action repo url changed",
     },
   }, {
+    "sha": "000007a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -90,6 +97,7 @@ this message has multiple lines
       "message": "added test function",
     },
   }, {
+    "sha": "000008a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -102,6 +110,7 @@ this message has multiple lines
       "message": "dummy function added",
     },
   }, {
+    "sha": "000009a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -114,6 +123,7 @@ this message has multiple lines
       "message": "repo name corrected",
     },
   }, {
+    "sha": "000010a",
     "commit": {
       "author": {
         "name": "Sameer Srivastava",
@@ -163,6 +173,7 @@ const unreleasedCommitsData0 = []
 
 
 const unreleasedCommitsData1 = [{
+  "sha": "000001abcd",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -180,6 +191,7 @@ this message has multiple lines
 `,
   },
 }, {
+  "sha": "000002a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -192,6 +204,7 @@ this message has multiple lines
     "message": "stale days changd",
   },
 }, {
+  "sha": "000003a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -204,6 +217,7 @@ this message has multiple lines
     "message": "another fix",
   },
 }, {
+  "sha": "000004a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -216,6 +230,7 @@ this message has multiple lines
     "message": "minor fix",
   },
 }, {
+  "sha": "000005a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -228,6 +243,7 @@ this message has multiple lines
     "message": "changed url",
   },
 }, {
+  "sha": "000006a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -240,6 +256,7 @@ this message has multiple lines
     "message": "action repo url changed",
   },
 }, {
+  "sha": "000007a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -252,6 +269,7 @@ this message has multiple lines
     "message": "added test function",
   },
 }, {
+  "sha": "000008a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -264,6 +282,7 @@ this message has multiple lines
     "message": "dummy function added",
   },
 }, {
+  "sha": "000009a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
@@ -276,6 +295,7 @@ this message has multiple lines
     "message": "repo name corrected",
   },
 }, {
+  "sha": "000010a",
   "commit": {
     "author": {
       "name": "Sameer Srivastava",
