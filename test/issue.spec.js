@@ -21,24 +21,6 @@ jest.mock('@actions/github', () => ({
   context: { repo: { owner, repo} },
 }));
 
-test('Should limit commit message to only first line', async () => {
-  const formattedCommitMessage = issue.formatCommitMessage(unreleasedCommitsData1[0].commit.message, 1);
-  expect(formattedCommitMessage).toStrictEqual('variable changed');
-});
-
-test('Should return original commit message without changes', async () => {
-  const formattedCommitMessage = issue.formatCommitMessage(unreleasedCommitsData1[0].commit.message, 0);
-  expect(formattedCommitMessage).toStrictEqual(unreleasedCommitsData1[0].commit.message);
-});
-
-test('Should trim start and end of commit message while limiting the lines', async () => {
-  const formattedCommitMessage = issue.formatCommitMessage(unreleasedCommitsData1[0].commit.message, 5);
-  expect(formattedCommitMessage).toStrictEqual(`variable changed
-    
-    
-this message has multiple lines`);
-});
-
 test('Creates an issue', async () => {
   getOctokit.mockReturnValue(
     { issues: { create: async () => ({ data: { number: 9 } }) } });
@@ -110,7 +92,7 @@ test('Create an issue when no existing issue exists', async () => {
   const create = jest.fn()
   getOctokit.mockReturnValue({issues: {create}});
 
-  await issue.createOrUpdateIssue(token, unreleasedCommitsData1, null, 'test-date', 1);
+  await issue.createOrUpdateIssue(token, unreleasedCommitsData1, null, 'test-date');
   expect(create).toHaveBeenCalled();
 });
 
@@ -128,4 +110,14 @@ test('Update an issue when exists', async () => {
     title: expect.any(String),
     body: expect.any(String),
   });
+});
+
+test('Create issue body that contains commits shortened SHA identifiers', async () => {
+  const create = jest.fn()
+  getOctokit.mockReturnValue({issues: {create}});
+
+  await issue.createOrUpdateIssue(token, unreleasedCommitsData1, null, 'test-date');
+  expect(create).toHaveBeenCalledWith(expect.objectContaining({
+    body: expect.stringContaining(unreleasedCommitsData1[0].sha.substring(0, 7))
+  }));
 });
