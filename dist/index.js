@@ -14349,115 +14349,121 @@ function wrappy (fn, cb) {
 
 "use strict";
 
-const github = __nccwpck_require__(5438);
-const { logInfo } = __nccwpck_require__(653);
+const github = __nccwpck_require__(5438)
+const { logInfo } = __nccwpck_require__(653)
 
-const fs = __nccwpck_require__(5747);
-const path = __nccwpck_require__(5622);
-const { promisify } = __nccwpck_require__(1669);
-const readFile = promisify(fs.readFile);
-const handlebars = __nccwpck_require__(7492);
+const fs = __nccwpck_require__(5747)
+const path = __nccwpck_require__(5622)
+const { promisify } = __nccwpck_require__(1669)
+const readFile = promisify(fs.readFile)
+const handlebars = __nccwpck_require__(7492)
 
-const ISSUE_LABEL = 'notify-release';
-const ISSUE_TITLE = 'Release pending!';
-const STATE_OPEN = 'open';
-const STATE_CLOSED = 'closed';
+const ISSUE_LABEL = 'notify-release'
+const ISSUE_TITLE = 'Release pending!'
+const STATE_OPEN = 'open'
+const STATE_CLOSED = 'closed'
 
 function registerHandlebarHelpers(config) {
-  const {
-    commitMessageLines
-  } = config;
-  handlebars.registerHelper('commitMessage', function(content) {
+  const { commitMessageLines } = config
+  handlebars.registerHelper('commitMessage', function (content) {
     if (!commitMessageLines || commitMessageLines < 0) {
-      return content;
+      return content
     }
-    return content
-      .split('\n')
-      .slice(0, commitMessageLines)
-      .join('\n')
-      .trim();
-  });
-  handlebars.registerHelper('substring', function(content, characters) {
-    return (content || "").substring(0, characters);
-  });
+    return content.split('\n').slice(0, commitMessageLines).join('\n').trim()
+  })
+  handlebars.registerHelper('substring', function (content, characters) {
+    return (content || '').substring(0, characters)
+  })
 }
 
 async function renderIssueBody(data) {
-  const templateFilePath = __nccwpck_require__.ab + "issue.template.hbs";
-  const templateStringBuffer = await readFile(__nccwpck_require__.ab + "issue.template.hbs");
-  const template = handlebars.compile(templateStringBuffer.toString());
-  return template(data);
+  const templateFilePath = __nccwpck_require__.ab + "issue.template.hbs"
+  const templateStringBuffer = await readFile(__nccwpck_require__.ab + "issue.template.hbs")
+  const template = handlebars.compile(templateStringBuffer.toString())
+  return template(data)
 }
 
 async function createIssue(token, issueBody) {
-  const octokit = github.getOctokit(token);
+  const octokit = github.getOctokit(token)
 
-  return octokit.issues.create({
+  return octokit.rest.issues.create({
     ...github.context.repo,
     title: ISSUE_TITLE,
     body: issueBody,
     labels: [ISSUE_LABEL],
-  });
+  })
 }
 
 async function getLastOpenPendingIssue(token) {
-  const octokit = github.getOctokit(token);
-  const { owner, repo } = github.context.repo;
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
 
-  const pendingIssues = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
-    owner,
-    repo,
-    creator: 'app/github-actions',
-    state: STATE_OPEN,
-    sort: 'created',
-    direction: 'desc',
-    labels: ISSUE_LABEL
-  });
+  const pendingIssues = await octokit.request(
+    `GET /repos/{owner}/{repo}/issues`,
+    {
+      owner,
+      repo,
+      creator: 'app/github-actions',
+      state: STATE_OPEN,
+      sort: 'created',
+      direction: 'desc',
+      labels: ISSUE_LABEL,
+    }
+  )
 
-  return pendingIssues.data.length ? pendingIssues.data[0] : null;
+  return pendingIssues.data.length ? pendingIssues.data[0] : null
 }
 
 async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
-  const octokit = github.getOctokit(token);
-  const { owner, repo } = github.context.repo;
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
 
-  const updatedIssue = await octokit.request(`PATCH /repos/{owner}/{repo}/issues/${issueNo}`, {
-    owner,
-    repo,
-    title: ISSUE_TITLE,
-    body: issueBody
-  });
+  const updatedIssue = await octokit.request(
+    `PATCH /repos/{owner}/{repo}/issues/${issueNo}`,
+    {
+      owner,
+      repo,
+      title: ISSUE_TITLE,
+      body: issueBody,
+    }
+  )
 
-  return updatedIssue.data.length ? updatedIssue.data[0] : null;
+  return updatedIssue.data.length ? updatedIssue.data[0] : null
 }
 
-async function createOrUpdateIssue(token, unreleasedCommits, pendingIssue, latestRelease, commitMessageLines) {
+async function createOrUpdateIssue(
+  token,
+  unreleasedCommits,
+  pendingIssue,
+  latestRelease,
+  commitMessageLines
+) {
   registerHandlebarHelpers({
-    commitMessageLines
-  });
+    commitMessageLines,
+  })
   const issueBody = await renderIssueBody({
     commits: unreleasedCommits,
     latestRelease,
   })
   if (pendingIssue) {
-    await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number);
-    logInfo(`Issue ${pendingIssue.number} has been updated`);
+    await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
+    logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const issueNo = await createIssue(token, issueBody);
-    logInfo(`New issue has been created. Issue No. - ${issueNo}`);
+    const issueNo = await createIssue(token, issueBody)
+    logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
 }
 
 async function closeIssue(token, issueNo) {
-  const octokit = github.getOctokit(token);
-  const { owner, repo } = github.context.repo;
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
 
   await octokit.request(`PATCH /repos/{owner}/{repo}/issues/${issueNo}`, {
     owner,
     repo,
-    state: STATE_CLOSED
-  });
-  logInfo(`Closed issue no. - ${issueNo}`);
+    state: STATE_CLOSED,
+  })
+  logInfo(`Closed issue no. - ${issueNo}`)
 }
 
 module.exports = {
@@ -14465,8 +14471,8 @@ module.exports = {
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
-  closeIssue
-};
+  closeIssue,
+}
 
 
 /***/ }),
@@ -14476,16 +14482,14 @@ module.exports = {
 
 "use strict";
 
-const {
-  debug, error, info, warning,
-} = __nccwpck_require__(2186);
+const { debug, error, info, warning } = __nccwpck_require__(2186)
 
-const log = (logger) => (message) => logger(JSON.stringify(message));
+const log = (logger) => (message) => logger(JSON.stringify(message))
 
-exports.logDebug = log(debug);
-exports.logError = log(error);
-exports.logInfo = log(info);
-exports.logWarning = log(warning);
+exports.logDebug = log(debug)
+exports.logError = log(error)
+exports.logInfo = log(info)
+exports.logWarning = log(warning)
 
 
 /***/ }),
@@ -14496,40 +14500,54 @@ exports.logWarning = log(warning);
 "use strict";
 
 
-const { logInfo } = __nccwpck_require__(653);
-const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026);
-const { createOrUpdateIssue, getLastOpenPendingIssue, closeIssue } = __nccwpck_require__(5465);
+const { logInfo } = __nccwpck_require__(653)
+const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
+const {
+  createOrUpdateIssue,
+  getLastOpenPendingIssue,
+  closeIssue,
+} = __nccwpck_require__(5465)
 
 async function runAction(token, staleDays, commitMessageLines) {
-  const latestRelease = await getLatestRelease(token);
+  const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
-    return logInfo('Could not find latest release');
+    return logInfo('Could not find latest release')
   }
 
   logInfo(`Latest release - name:${latestRelease.name}, published:${latestRelease.published_at},
-Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`);
+Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`)
 
-  let pendingIssue = await getLastOpenPendingIssue(token);
+  let pendingIssue = await getLastOpenPendingIssue(token)
   const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
-    staleDays,
-  );
+    staleDays
+  )
 
   if (unreleasedCommits.length) {
-    await createOrUpdateIssue(token, unreleasedCommits, pendingIssue, latestRelease, commitMessageLines);
+    await createOrUpdateIssue(
+      token,
+      unreleasedCommits,
+      pendingIssue,
+      latestRelease,
+      commitMessageLines
+    )
   } else {
-    logInfo('No pending commits found');
-    if (pendingIssue && Date.parse(latestRelease.published_at) > Date.parse(pendingIssue.updated_at)) {
-      await closeIssue(token, pendingIssue.number);
+    logInfo('No pending commits found')
+    if (
+      pendingIssue &&
+      Date.parse(latestRelease.published_at) >
+        Date.parse(pendingIssue.updated_at)
+    ) {
+      await closeIssue(token, pendingIssue.number)
     }
   }
 }
 
 module.exports = {
   runAction,
-};
+}
 
 
 /***/ }),
@@ -14539,46 +14557,52 @@ module.exports = {
 
 "use strict";
 
-const github = __nccwpck_require__(5438);
+const github = __nccwpck_require__(5438)
 
 async function getLatestRelease(token) {
-  const octokit = github.getOctokit(token);
-  const { owner, repo } = github.context.repo;
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
 
-  const latestReleaseResponse = await octokit.request(`GET /repos/{owner}/{repo}/releases/latest`, {
-    owner,
-    repo,
-  });
+  const latestReleaseResponse = await octokit.request(
+    `GET /repos/{owner}/{repo}/releases/latest`,
+    {
+      owner,
+      repo,
+    }
+  )
 
-  return latestReleaseResponse.data;
+  return latestReleaseResponse.data
 }
 
 async function getUnreleasedCommits(token, latestReleaseDate, staleDays) {
-  const octokit = github.getOctokit(token);
-  const { owner, repo } = github.context.repo;
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
 
-  const allCommitsResp = await octokit.request(`GET /repos/{owner}/{repo}/commits`, {
-    owner,
-    repo,
-    since: latestReleaseDate,
-  });
+  const allCommitsResp = await octokit.request(
+    `GET /repos/{owner}/{repo}/commits`,
+    {
+      owner,
+      repo,
+      since: latestReleaseDate,
+    }
+  )
 
-  const staleDate = new Date().getTime() - (staleDays * 24 * 60 * 60 * 1000);
+  const staleDate = new Date().getTime() - staleDays * 24 * 60 * 60 * 1000
 
   for (const commit of allCommitsResp.data) {
-    const commitDate = new Date(commit.commit.committer.date).getTime();
+    const commitDate = new Date(commit.commit.committer.date).getTime()
     if (commitDate < staleDate) {
-      return allCommitsResp.data;
+      return allCommitsResp.data
     }
   }
 
-  return [];
+  return []
 }
 
 module.exports = {
   getLatestRelease,
   getUnreleasedCommits,
-};
+}
 
 
 /***/ }),
@@ -14736,25 +14760,25 @@ var __webpack_exports__ = {};
 (() => {
 "use strict";
 
-const core = __nccwpck_require__(2186);
-const { logInfo } = __nccwpck_require__(653);
+const core = __nccwpck_require__(2186)
+const { logInfo } = __nccwpck_require__(653)
 
-const { runAction } = __nccwpck_require__(1254);
+const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
   try {
-    const token = core.getInput('github-token', { required: true });
-    const staleDays = Number(core.getInput('stale-days'));
-    const commitMessageLines = Number(core.getInput('commit-messages-lines'));
+    const token = core.getInput('github-token', { required: true })
+    const staleDays = Number(core.getInput('stale-days'))
+    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-    return await runAction(token, staleDays, commitMessageLines);
+    return await runAction(token, staleDays, commitMessageLines)
   } catch (error) {
-    logInfo(error.message);
-    core.setFailed(error.message);
+    logInfo(error.message)
+    core.setFailed(error.message)
   }
 }
 
-run();
+run()
 
 })();
 
