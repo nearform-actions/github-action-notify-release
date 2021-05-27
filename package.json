@@ -13,9 +13,10 @@
     "type": "git",
     "url": "git+https://github.com/nearform/github-action-notify-release.git"
   },
-  "author": "Esther Saimpou",
+  "author": "Esther Saimpou <esther.saimpou@nearform.com>",
   "contributors": [
-    "Sameer Srivastava <sameer.srivastava@nearform.com>"
+    "Sameer Srivastava <sameer.srivastava@nearform.com>",
+    "Simone Busoli <simone.busoli@nearform.com>"
   ],
   "license": "ISC",
   "bugs": {
@@ -31,12 +32,10 @@
   "devDependencies": {
     "@vercel/ncc": "^0.28.6",
     "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
     "husky": "^6.0.0",
-    "jest": "^27.0.1"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run build && git add dist"
-    }
+    "jest": "^27.0.1",
+    "prettier": "^2.3.0"
   }
 }
