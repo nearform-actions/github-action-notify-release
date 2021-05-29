@@ -7,7 +7,6 @@ const {
   allReleasesData: allReleases,
   unreleasedCommitsData0,
   unreleasedCommitsData1,
-  allReleasesNoData,
 } = require('./testData')
 
 const token = 'dummytoken'
@@ -19,24 +18,28 @@ jest.mock('@actions/github', () => ({
 
 test('Gets the latest release of the repository', async () => {
   getOctokit.mockReturnValue({
-    request: async () => ({ data: allReleases.data[0] }),
+    rest: {
+      repos: { getLatestRelease: async () => allReleases[0] },
+    },
   })
   const latestReleaseResponse = await getLatestRelease(token)
-  expect(latestReleaseResponse).toStrictEqual(allReleases.data[0])
+  expect(latestReleaseResponse).toStrictEqual(allReleases[0])
 })
 
-test('Retuns null if no releases found', async () => {
+test('Throws if no releases found', async () => {
   getOctokit.mockReturnValue({
-    request: async () => ({ data: allReleasesNoData.data[0] }),
+    rest: {
+      repos: { getLatestRelease: () => Promise.reject(new Error()) },
+    },
   })
-  const latestReleaseResponse = await getLatestRelease(token)
-  expect(latestReleaseResponse).toBeUndefined()
+
+  await expect(getLatestRelease(token)).rejects.toBeDefined()
 })
 
 test('Gets the unreleased commits with stale-days as 0', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
   const daysToIgnore = 0
-  const latestReleaseDate = allReleases.data[0].created_at
+  const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,
@@ -48,7 +51,7 @@ test('Gets the unreleased commits with stale-days as 0', async () => {
 test('Gets the unreleased commits with stale-days as non zero', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
   const daysToIgnore = 3
-  const latestReleaseDate = allReleases.data[0].created_at
+  const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,
@@ -60,7 +63,7 @@ test('Gets the unreleased commits with stale-days as non zero', async () => {
 test('Gets the unreleased commits and uses default value of stale-days', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
   const daysToIgnore = undefined
-  const latestReleaseDate = allReleases.data[0].created_at
+  const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,

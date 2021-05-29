@@ -14500,7 +14500,7 @@ exports.logWarning = log(warning)
 "use strict";
 
 
-const { logInfo } = __nccwpck_require__(653)
+const { logInfo, logWarning } = __nccwpck_require__(653)
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
@@ -14509,16 +14509,23 @@ const {
 } = __nccwpck_require__(5465)
 
 async function runAction(token, staleDays, commitMessageLines) {
-  const latestRelease = await getLatestRelease(token)
+  let latestRelease
 
-  if (!latestRelease) {
-    return logInfo('Could not find latest release')
+  try {
+    latestRelease = await getLatestRelease(token)
+  } catch (err) {
+    return logWarning('Could not find latest release')
   }
 
-  logInfo(`Latest release - name:${latestRelease.name}, published:${latestRelease.published_at},
-Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`)
+  logInfo(`Latest release:
+  - name:${latestRelease.name}
+  - published:${latestRelease.published_at}
+  - tag:${latestRelease.tag_name}
+  - author:${latestRelease.author.login}
+`)
 
-  let pendingIssue = await getLastOpenPendingIssue(token)
+  const pendingIssue = await getLastOpenPendingIssue(token)
+
   const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
@@ -14526,22 +14533,22 @@ Tag:${latestRelease.tag_name}, author:${latestRelease.author.login}`)
   )
 
   if (unreleasedCommits.length) {
-    await createOrUpdateIssue(
+    return createOrUpdateIssue(
       token,
       unreleasedCommits,
       pendingIssue,
       latestRelease,
       commitMessageLines
     )
-  } else {
-    logInfo('No pending commits found')
-    if (
-      pendingIssue &&
-      Date.parse(latestRelease.published_at) >
-        Date.parse(pendingIssue.updated_at)
-    ) {
-      await closeIssue(token, pendingIssue.number)
-    }
+  }
+
+  logInfo('No pending commits found')
+
+  if (
+    pendingIssue &&
+    Date.parse(latestRelease.published_at) > Date.parse(pendingIssue.updated_at)
+  ) {
+    return closeIssue(token, pendingIssue.number)
   }
 }
 
@@ -14563,15 +14570,10 @@ async function getLatestRelease(token) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
-  const latestReleaseResponse = await octokit.request(
-    `GET /repos/{owner}/{repo}/releases/latest`,
-    {
-      owner,
-      repo,
-    }
-  )
-
-  return latestReleaseResponse.data
+  return octokit.rest.repos.getLatestRelease({
+    owner,
+    repo,
+  })
 }
 
 async function getUnreleasedCommits(token, latestReleaseDate, staleDays) {
@@ -14761,21 +14763,15 @@ var __webpack_exports__ = {};
 "use strict";
 
 const core = __nccwpck_require__(2186)
-const { logInfo } = __nccwpck_require__(653)
 
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
-  try {
-    const token = core.getInput('github-token', { required: true })
-    const staleDays = Number(core.getInput('stale-days'))
-    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+  const token = core.getInput('github-token', { required: true })
+  const staleDays = Number(core.getInput('stale-days'))
+  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-    return await runAction(token, staleDays, commitMessageLines)
-  } catch (error) {
-    logInfo(error.message)
-    core.setFailed(error.message)
-  }
+  await runAction(token, staleDays, commitMessageLines)
 }
 
 run()

@@ -10,9 +10,7 @@ const {
   pendingIssues,
 } = require('./testData')
 
-jest.mock('../src/log', () => ({
-  logInfo: jest.fn(),
-}))
+jest.mock('../src/log')
 
 jest.mock('../src/release', () => ({
   getLatestRelease: jest.fn(),
@@ -36,7 +34,7 @@ beforeEach(() => {
 const token = 'dummyToken'
 
 test('Create issue for unreleased commits (no existing issues)', async () => {
-  release.getLatestRelease.mockResolvedValue(allReleases.data[0])
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
 
@@ -48,14 +46,14 @@ test('Create issue for unreleased commits (no existing issues)', async () => {
     token,
     unreleasedCommitsData1,
     null,
-    allReleases.data[0],
+    allReleases[0],
     1
   )
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
 
 test('Update issue for unreleased commits (issue already exists)', async () => {
-  release.getLatestRelease.mockResolvedValue(allReleases.data[0])
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
 
@@ -67,14 +65,14 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
     token,
     unreleasedCommitsData1,
     pendingIssues[0],
-    allReleases.data[0],
+    allReleases[0],
     1
   )
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
 
 test('Close issue when there is one pending and no unreleased commits', async () => {
-  release.getLatestRelease.mockResolvedValue(allReleases.data[0])
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue([])
 
@@ -87,7 +85,7 @@ test('Close issue when there is one pending and no unreleased commits', async ()
 })
 
 test('Do nothing when there is one issue pending and no new releases', async () => {
-  release.getLatestRelease.mockResolvedValue(allReleases.data[1])
+  release.getLatestRelease.mockResolvedValue(allReleases[1])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue([])
 
@@ -100,7 +98,7 @@ test('Do nothing when there is one issue pending and no new releases', async () 
 })
 
 test('Do nothing when no releases found', async () => {
-  release.getLatestRelease.mockResolvedValue(null)
+  release.getLatestRelease.mockRejectedValue()
 
   await runAction(token, 1, 1)
 
