@@ -163,24 +163,22 @@ this message has multiple lines
   ],
 }
 
-const allReleasesData = {
-  data: [
-    {
-      name: 'Release 2.0',
-      created_at: '2021-03-27T07:37:09Z',
-      published_at: '2021-04-27T07:37:09Z',
-      Tag: '2.0',
-      author: 'sameer',
-    },
-    {
-      name: 'Release 1.0',
-      created_at: '2021-03-20T07:37:09Z',
-      published_at: '2021-04-20T07:37:09Z',
-      Tag: '1.0',
-      author: 'gilach',
-    },
-  ],
-}
+const allReleasesData = [
+  {
+    name: 'Release 2.0',
+    created_at: '2021-03-27T07:37:09Z',
+    published_at: '2021-04-27T07:37:09Z',
+    Tag: '2.0',
+    author: 'sameer',
+  },
+  {
+    name: 'Release 1.0',
+    created_at: '2021-03-20T07:37:09Z',
+    published_at: '2021-04-20T07:37:09Z',
+    Tag: '1.0',
+    author: 'gilach',
+  },
+]
 
 const unreleasedCommitsData0 = []
 
@@ -346,10 +344,6 @@ this message has multiple lines
   },
 ]
 
-const allReleasesNoData = {
-  data: [],
-}
-
 const pendingIssues = [
   {
     number: '1',
@@ -362,6 +356,5 @@ module.exports = {
   allReleasesData,
   unreleasedCommitsData0,
   unreleasedCommitsData1,
-  allReleasesNoData,
   pendingIssues,
 }
