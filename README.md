@@ -21,12 +21,11 @@ _Optional_ Limit the number of first x lines from commit messages that will be a
 - The example below sets a scheduled job to happen once a day that checks for a stale release. Adjust to the desired frequency.
 
 ## Example
-```
+
+```yaml
 name: notify-release
 on:
   workflow_dispatch:
-    branches:
-      - main
   schedule:
     - cron: '30 8 * * *'
 jobs:
