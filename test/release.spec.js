@@ -19,7 +19,11 @@ jest.mock('@actions/github', () => ({
 test('Gets the latest release of the repository', async () => {
   getOctokit.mockReturnValue({
     rest: {
-      repos: { getLatestRelease: async () => allReleases[0] },
+      repos: {
+        getLatestRelease: async () => ({
+          data: allReleases[0],
+        }),
+      },
     },
   })
   const latestReleaseResponse = await getLatestRelease(token)
