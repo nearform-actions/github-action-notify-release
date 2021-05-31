@@ -11,4 +11,4 @@ async function run() {
   await runAction(token, staleDays, commitMessageLines)
 }
 
-run()
+run().catch((err) => core.setFailed(err))

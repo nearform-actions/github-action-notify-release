@@ -14570,10 +14570,12 @@ async function getLatestRelease(token) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
-  return octokit.rest.repos.getLatestRelease({
+  const { data } = await octokit.rest.repos.getLatestRelease({
     owner,
     repo,
   })
+
+  return data
 }
 
 async function getUnreleasedCommits(token, latestReleaseDate, staleDays) {
@@ -14774,7 +14776,7 @@ async function run() {
   await runAction(token, staleDays, commitMessageLines)
 }
 
-run()
+run().catch((err) => core.setFailed(err))
 
 })();
 
