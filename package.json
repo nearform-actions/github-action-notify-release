@@ -36,6 +36,6 @@
     "eslint-plugin-prettier": "^3.4.0",
     "husky": "^6.0.0",
     "jest": "^27.0.4",
-    "prettier": "^2.3.0"
+    "prettier": "^2.3.1"
   }
 }
