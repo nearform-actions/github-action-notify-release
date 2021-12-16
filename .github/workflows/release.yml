@@ -14,7 +14,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Optionally configure your preferred runtime
+      - name: Node.js runtime on build
         uses: actions/setup-node@v2
         with:
           node-version: 16
