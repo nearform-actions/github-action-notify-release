@@ -25,5 +25,5 @@ jobs:
           semver: ${{ github.event.inputs.semver }}
           sync-semver-tags: true
           build-command: |
-            npm ci --ignore-scripts
+            npm ci
             npm run build
