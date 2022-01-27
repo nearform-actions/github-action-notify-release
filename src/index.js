@@ -15,7 +15,7 @@ async function run() {
         `to:\n\n` +
         `    uses: 'nearform/github-action-notify-release@v0'\n\n` +
         `Alternatively, you can pin to any git tag or git SHA in the ` +
-        `repository.`,
+        `repository.`
     )
   }
   const token = core.getInput('github-token', { required: true })
