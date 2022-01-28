@@ -15833,7 +15833,7 @@ var __webpack_exports__ = {};
 "use strict";
 
 const core = __nccwpck_require__(2186)
-const exec = __nccwpck_require__(1514);
+const exec = __nccwpck_require__(1514)
 
 const { runAction } = __nccwpck_require__(1254)
 
@@ -15871,7 +15871,7 @@ async function getLatestMajorTag() {
     },
     stderr: (data) => {
       error += data.toString()
-    }
+    },
   }
   await exec.exec('git', ['describe', '--abbrev=0', '--tags'], options)
   const latestMajorTag = latestTag.split('.')[0] || ''

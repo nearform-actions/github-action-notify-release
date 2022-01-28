@@ -1,6 +1,6 @@
 'use strict'
 const core = require('@actions/core')
-const exec = require('@actions/exec');
+const exec = require('@actions/exec')
 
 const { runAction } = require('./release-notify-action')
 
@@ -38,7 +38,7 @@ async function getLatestMajorTag() {
     },
     stderr: (data) => {
       error += data.toString()
-    }
+    },
   }
   await exec.exec('git', ['describe', '--abbrev=0', '--tags'], options)
   const latestMajorTag = latestTag.split('.')[0] || ''
