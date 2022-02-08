@@ -5,7 +5,9 @@ const toolkit = require('actions-toolkit')
 const { runAction } = require('./release-notify-action')
 
 async function run() {
-  const warning = toolkit.getActionRefWarning('nearform/github-action-notify-release')
+  const warning = toolkit.getActionRefWarning(
+    'nearform/github-action-notify-release'
+  )
   if (warning) core.warning(warning)
 
   const token = core.getInput('github-token', { required: true })
