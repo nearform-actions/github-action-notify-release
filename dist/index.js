@@ -15012,7 +15012,7 @@ const toolkit = __nccwpck_require__(2020)
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
-  toolkit.logActionRefWarning('nearform/github-action-notify-release')
+  toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
   const staleDays = Number(core.getInput('stale-days'))
