@@ -3871,6 +3871,43 @@ exports.request = request;
 
 /***/ }),
 
+/***/ 2020:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const core = __nccwpck_require__(2186)
+const github = __nccwpck_require__(5438)
+
+/**
+ * Displays warning message if the action reference is pinned to master/main
+ */
+function logActionRefWarning() {
+  const actionRef = process.env.GITHUB_ACTION_REF
+  const repoName = github.context.payload.repository.full_name
+
+  if (actionRef === 'main' || actionRef === 'master') {
+    core.warning(
+      `${repoName} is pinned at HEAD. We strongly ` +
+        `advise against pinning to "@master" as it may be unstable. Please ` +
+        `update your GitHub Action YAML from:\n\n` +
+        `    uses: '${repoName}@${actionRef}'\n\n` +
+        `to:\n\n` +
+        `    uses: '${repoName}@<release/tag version>'\n\n` +
+        `Alternatively, you can pin to any git tag or git SHA in the ` +
+        `repository.`
+    )
+  }
+}
+
+module.exports = {
+  logActionRefWarning
+}
+
+
+/***/ }),
+
 /***/ 3682:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -14970,10 +15007,13 @@ var __webpack_exports__ = {};
 "use strict";
 
 const core = __nccwpck_require__(2186)
+const toolkit = __nccwpck_require__(2020)
 
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
+  toolkit.logActionRefWarning()
+
   const token = core.getInput('github-token', { required: true })
   const staleDays = Number(core.getInput('stale-days'))
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
