@@ -17,7 +17,7 @@ jobs:
       - name: Notify release
         uses: nearform/github-action-notify-release@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ jobs:
 Configure this action in your workflows providing the inputs described below in order to get notified in `x` days after the repo has been updated but no release has happened.
 
 ### `github-token`
-**Required** A GitHub token. See below for additional information.
+**Optional** A GitHub token. See below for additional information.
 
 ### `stale-days: 7`
 _Optional_ The number of days after which unreleased commits should be considered stale and should notify for a release. Default is `7`.

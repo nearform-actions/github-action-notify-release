@@ -3,7 +3,7 @@ description: 'Create an issue if there is a release pending'
 inputs:
   github-token:
     description: 'GitHub token'
-    required: true
+    required: false
   stale-days:
     description: 'Number of days of inactivity before a release becomes stale'
     required: false
