@@ -4,6 +4,7 @@ inputs:
   github-token:
     description: 'GitHub token'
     required: false
+    default: ${{ github.token }}
   stale-days:
     description: 'Number of days of inactivity before a release becomes stale'
     required: false

@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Notify release
         uses: nearform/github-action-notify-release@v1
-        with:
-          github-token: ${{ github.token }}
 ```
 
 ## Usage
