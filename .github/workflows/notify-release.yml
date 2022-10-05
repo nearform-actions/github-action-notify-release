@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
     branches:
       - main
+  release:
+    types: [published]
   schedule:
     - cron: '30 8 * * *'
 jobs:
