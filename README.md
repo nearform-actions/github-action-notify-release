@@ -30,3 +30,40 @@ _Optional_ The number of days after which unreleased commits should be considere
 
 ### `commit-messages-lines: 1`
 _Optional_ Limit the number of first x lines from commit messages that will be added in the issue description. No truncation when set to `0`. Default is `1`.
+
+
+## Auto close issue after release
+If you want to automatically close the issue created for the pending release after the release is successfull then you can configure a workflow as follows:
+
+```yaml
+name: close release issue
+
+on:
+  workflow_run:
+    workflows: [release]
+    branches:
+      - main
+      - master
+    types:
+      - completed
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  REPO: ${{ github.repository }}
+
+jobs:
+  closeIssue:
+      name: Close release issue
+      runs-on: ubuntu-latest
+      steps:
+        - name: Find issues
+          id: release-issue
+          run: |
+            issueNumber="$(gh search issues --repo=$REPO --state=open --label=notify-release --json=number | jq -r '.[0].number')"
+            echo "::set-output name=issue::$issueNumber"
+        - name: Close release issues
+          run: |
+            gh issue close --repo=$REPO "$ISSUE_NUMBER"
+          env:
+            ISSUE_NUMBER: ${{ steps.release-issue.outputs.issue }}
+```
