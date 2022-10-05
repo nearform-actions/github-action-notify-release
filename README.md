@@ -1,6 +1,6 @@
 # github-action-notify-release
 
-GitHub Action that automatically creates an issue with an overview of the commits that are waiting to be released. After creating the release, the issue will be automatically closed during next action run.
+GitHub Action that automatically creates an issue with an overview of the commits that are waiting to be released. After a new release is published, the issue will be automatically closed.
 
 ## Example
 
@@ -8,6 +8,8 @@ GitHub Action that automatically creates an issue with an overview of the commit
 name: notify-release
 on:
   workflow_dispatch:
+  release:
+    types: [published]
   schedule:
     - cron: '30 8 * * *'
 jobs:
