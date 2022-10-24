@@ -6,6 +6,8 @@ const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
+  getLastClosedNotifyIssue,
+  createSnoozeIssue,
 } = require('./issue')
 
 async function runAction(token, staleDays, commitMessageLines) {
@@ -23,6 +25,21 @@ async function runAction(token, staleDays, commitMessageLines) {
   - tag:${latestRelease.tag_name}
   - author:${latestRelease.author.login}
 `)
+
+  const closedNotifyIssue = await getLastClosedNotifyIssue(
+    token,
+    latestRelease.published_at,
+    staleDays
+  )
+
+  if (closedNotifyIssue) {
+    const issueNo = await createSnoozeIssue(
+      token,
+      unreleasedCommits,
+      latestRelease
+    )
+    logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
+  }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
 

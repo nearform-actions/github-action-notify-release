@@ -21,6 +21,7 @@ jest.mock('../src/issue', () => ({
   createOrUpdateIssue: jest.fn(),
   getLastOpenPendingIssue: jest.fn(),
   closeIssue: jest.fn(),
+  getLastClosedNotifyIssue: jest.fn(),
 }))
 
 beforeEach(() => {
@@ -29,6 +30,7 @@ beforeEach(() => {
   issue.createOrUpdateIssue.mockReset()
   issue.getLastOpenPendingIssue.mockReset()
   issue.closeIssue.mockReset()
+  issue.getLastClosedNotifyIssue.mockReset()
 })
 
 const token = 'dummyToken'

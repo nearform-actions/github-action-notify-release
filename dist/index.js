@@ -17858,6 +17858,7 @@ const handlebars = __nccwpck_require__(7492)
 
 const ISSUE_LABEL = 'notify-release'
 const ISSUE_TITLE = 'Release pending!'
+const SNOOZE_ISSUE_TITLE = 'Reminder: Release pending!'
 const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
 
@@ -17881,12 +17882,12 @@ async function renderIssueBody(data) {
   return template(data)
 }
 
-async function createIssue(token, issueBody) {
+async function createIssue(token, issueBody, title = ISSUE_TITLE) {
   const octokit = github.getOctokit(token)
 
   return octokit.rest.issues.create({
     ...github.context.repo,
-    title: ISSUE_TITLE,
+    title,
     body: issueBody,
     labels: [ISSUE_LABEL],
   })
@@ -17952,6 +17953,15 @@ async function createOrUpdateIssue(
   }
 }
 
+async function createSnoozeIssue(token, unreleasedCommits, latestRelease) {
+  const issueBody = await renderIssueBody({
+    commits: unreleasedCommits,
+    latestRelease,
+  })
+  const issueNo = await createIssue(token, issueBody, SNOOZE_ISSUE_TITLE)
+  logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
+}
+
 async function closeIssue(token, issueNo) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
@@ -17964,12 +17974,44 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
+async function getLastClosedNotifyIssue(token, latestReleaseDate, staleDays) {
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+  const closedNotPlannedIssues = await octokit.request(
+    `GET /repos/{owner}/{repo}/issues`,
+    {
+      owner,
+      repo,
+      creator: 'app/github-actions',
+      state: STATE_CLOSED,
+      sort: 'created',
+      state_reason: 'not_planned',
+      direction: 'desc',
+      labels: ISSUE_LABEL,
+      since: latestReleaseDate,
+    }
+  )
+
+  if (!closedNotPlannedIssues.data.length) return
+
+  const notifyCloseDate = new Date(
+    closedNotPlannedIssues.data[0].milestone.closed_at
+  ).getTime()
+
+  const staleDate = new Date().getTime() - staleDays * 24 * 60 * 60 * 1000
+  if (notifyCloseDate < staleDate) {
+    return closedNotPlannedIssues.data[0]
+  }
+}
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
+  getLastClosedNotifyIssue,
+  createSnoozeIssue,
 }
 
 
@@ -18004,6 +18046,8 @@ const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
+  getLastClosedNotifyIssue,
+  createSnoozeIssue,
 } = __nccwpck_require__(5465)
 
 async function runAction(token, staleDays, commitMessageLines) {
@@ -18021,6 +18065,21 @@ async function runAction(token, staleDays, commitMessageLines) {
   - tag:${latestRelease.tag_name}
   - author:${latestRelease.author.login}
 `)
+
+  const closedNotifyIssue = await getLastClosedNotifyIssue(
+    token,
+    latestRelease.published_at,
+    staleDays
+  )
+
+  if (closedNotifyIssue) {
+    const issueNo = await createSnoozeIssue(
+      token,
+      unreleasedCommits,
+      latestRelease
+    )
+    logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
+  }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
 
