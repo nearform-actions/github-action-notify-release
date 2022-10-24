@@ -17995,7 +17995,7 @@ async function getLastClosedNotifyIssue(token, latestReleaseDate, staleDays) {
   if (!closedNotPlannedIssues.data.length) return
 
   const notifyCloseDate = new Date(
-    closedNotPlannedIssues.data[0].milestone.closed_at
+    closedNotPlannedIssues.data[0].closed_at
   ).getTime()
 
   const staleDate = new Date().getTime() - staleDays * 24 * 60 * 60 * 1000
@@ -18066,6 +18066,12 @@ async function runAction(token, staleDays, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
+  const unreleasedCommits = await getUnreleasedCommits(
+    token,
+    latestRelease.published_at,
+    staleDays
+  )
+
   const closedNotifyIssue = await getLastClosedNotifyIssue(
     token,
     latestRelease.published_at,
@@ -18079,15 +18085,10 @@ async function runAction(token, staleDays, commitMessageLines) {
       latestRelease
     )
     logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
+    return
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
-
-  const unreleasedCommits = await getUnreleasedCommits(
-    token,
-    latestRelease.published_at,
-    staleDays
-  )
 
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(

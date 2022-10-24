@@ -26,6 +26,12 @@ async function runAction(token, staleDays, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
+  const unreleasedCommits = await getUnreleasedCommits(
+    token,
+    latestRelease.published_at,
+    staleDays
+  )
+
   const closedNotifyIssue = await getLastClosedNotifyIssue(
     token,
     latestRelease.published_at,
@@ -39,15 +45,10 @@ async function runAction(token, staleDays, commitMessageLines) {
       latestRelease
     )
     logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
+    return
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
-
-  const unreleasedCommits = await getUnreleasedCommits(
-    token,
-    latestRelease.published_at,
-    staleDays
-  )
 
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(

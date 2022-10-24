@@ -351,10 +351,23 @@ const pendingIssues = [
   },
 ]
 
+const closedNotifyIssues = [
+  {
+    id: 1,
+    number: 1347,
+    state: 'closed',
+    title: 'Found a bug',
+    body: "I'm having a problem with this.",
+    closed_at: '2011-04-22T13:33:48Z',
+    state_reason: 'not_planned',
+  },
+]
+
 module.exports = {
   allCommitsData,
   allReleasesData,
   unreleasedCommitsData0,
   unreleasedCommitsData1,
   pendingIssues,
+  closedNotifyIssues,
 }

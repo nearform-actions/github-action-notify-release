@@ -8,6 +8,7 @@ const {
   allReleasesData: allReleases,
   unreleasedCommitsData1,
   pendingIssues,
+  closedNotifyIssues,
 } = require('./testData')
 
 jest.mock('../src/log')
@@ -22,6 +23,7 @@ jest.mock('../src/issue', () => ({
   getLastOpenPendingIssue: jest.fn(),
   closeIssue: jest.fn(),
   getLastClosedNotifyIssue: jest.fn(),
+  createSnoozeIssue: jest.fn(),
 }))
 
 beforeEach(() => {
@@ -106,6 +108,16 @@ test('Do nothing when no releases found', async () => {
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).not.toHaveBeenCalled()
+  expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
+  expect(issue.closeIssue).not.toHaveBeenCalled()
+})
+
+test('Create snooze issue when notify was closed', async () => {
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
+  issue.getLastClosedNotifyIssue.mockResolvedValue(closedNotifyIssues)
+
+  await runAction(token, 1, 1)
+  expect(issue.createSnoozeIssue).toHaveBeenCalled()
   expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })

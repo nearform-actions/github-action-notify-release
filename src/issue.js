@@ -147,7 +147,7 @@ async function getLastClosedNotifyIssue(token, latestReleaseDate, staleDays) {
   if (!closedNotPlannedIssues.data.length) return
 
   const notifyCloseDate = new Date(
-    closedNotPlannedIssues.data[0].milestone.closed_at
+    closedNotPlannedIssues.data[0].closed_at
   ).getTime()
 
   const staleDate = new Date().getTime() - staleDays * 24 * 60 * 60 * 1000

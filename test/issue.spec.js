@@ -4,7 +4,7 @@ const { getOctokit } = require('@actions/github')
 
 const issue = require('../src/issue')
 
-const { unreleasedCommitsData1 } = require('./testData')
+const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
 
 const token = 'dummytoken'
 const owner = 'sameer'
@@ -160,4 +160,77 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
       ),
     })
   )
+})
+
+test('Get last closed notify', async () => {
+  const request = jest.fn()
+
+  request.mockResolvedValue({
+    data: closedNotifyIssues,
+  })
+
+  getOctokit.mockReturnValue({
+    request,
+  })
+  const latestRelease = new Date()
+  const res = await issue.getLastClosedNotifyIssue(token, latestRelease, 1)
+
+  expect(request).toHaveBeenCalledWith(`GET /repos/{owner}/{repo}/issues`, {
+    owner,
+    repo,
+    creator: 'app/github-actions',
+    state: 'closed',
+    sort: 'created',
+    state_reason: 'not_planned',
+    direction: 'desc',
+    labels: 'notify-release',
+    since: latestRelease,
+  })
+
+  expect(res).toStrictEqual(closedNotifyIssues[0])
+})
+
+test('Creates a snooze issue', async () => {
+  const create = jest.fn()
+  getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  await issue.createSnoozeIssue(token, unreleasedCommitsData1, 'test-date')
+  expect(create).toHaveBeenCalled()
+})
+
+test('Does nothing if there is no closed notify issue', async () => {
+  const request = jest.fn()
+
+  request.mockResolvedValue({
+    data: [],
+  })
+  getOctokit.mockReturnValue({
+    request,
+  })
+
+  const res = await issue.getLastClosedNotifyIssue(token, new Date(), 1)
+  expect(res).toStrictEqual(undefined)
+})
+
+test('notify issue closed_at is after stale date', async () => {
+  const request = jest.fn()
+  request.mockResolvedValue({
+    data: [
+      {
+        id: 1,
+        number: 1347,
+        state: 'closed',
+        title: 'Found a bug',
+        body: "I'm having a problem with this.",
+        closed_at: new Date(),
+        state_reason: 'not_planned',
+      },
+    ],
+  })
+
+  getOctokit.mockReturnValue({
+    request,
+  })
+
+  const res = await issue.getLastClosedNotifyIssue(token, new Date(), 7)
+  expect(res).toStrictEqual(undefined)
 })
