@@ -18066,6 +18066,8 @@ async function runAction(token, staleDays, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
+  const pendingIssue = await getLastOpenPendingIssue(token)
+
   const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
@@ -18078,7 +18080,7 @@ async function runAction(token, staleDays, commitMessageLines) {
     staleDays
   )
 
-  if (closedNotifyIssue) {
+  if (closedNotifyIssue && !pendingIssue) {
     const issueNo = await createSnoozeIssue(
       token,
       unreleasedCommits,
@@ -18087,8 +18089,6 @@ async function runAction(token, staleDays, commitMessageLines) {
     logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
     return
   }
-
-  const pendingIssue = await getLastOpenPendingIssue(token)
 
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(

@@ -33,6 +33,7 @@ beforeEach(() => {
   issue.getLastOpenPendingIssue.mockReset()
   issue.closeIssue.mockReset()
   issue.getLastClosedNotifyIssue.mockReset()
+  issue.createSnoozeIssue.mockReset()
 })
 
 const token = 'dummyToken'
@@ -115,9 +116,17 @@ test('Do nothing when no releases found', async () => {
 test('Create snooze issue when notify was closed', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastClosedNotifyIssue.mockResolvedValue(closedNotifyIssues)
-
   await runAction(token, 1, 1)
   expect(issue.createSnoozeIssue).toHaveBeenCalled()
   expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
+})
+
+test('Dont create snooze issue if there are pending issues and the notify is closed', async () => {
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
+  issue.getLastClosedNotifyIssue.mockResolvedValue(closedNotifyIssues)
+  issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
+  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  await runAction(token, 1, 1)
+  expect(issue.createSnoozeIssue).not.toHaveBeenCalled()
 })
