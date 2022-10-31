@@ -17858,9 +17858,9 @@ const handlebars = __nccwpck_require__(7492)
 
 const ISSUE_LABEL = 'notify-release'
 const ISSUE_TITLE = 'Release pending!'
-const SNOOZE_ISSUE_TITLE = 'Reminder: Release pending!'
 const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
+const SNOOZE_ISSUE_TITLE = 'Reminder: Release pending!'
 
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
@@ -17935,7 +17935,8 @@ async function createOrUpdateIssue(
   unreleasedCommits,
   pendingIssue,
   latestRelease,
-  commitMessageLines
+  commitMessageLines,
+  title
 ) {
   registerHandlebarHelpers({
     commitMessageLines,
@@ -17948,18 +17949,9 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const issueNo = await createIssue(token, issueBody)
+    const issueNo = await createIssue(token, issueBody, title)
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
-}
-
-async function createSnoozeIssue(token, unreleasedCommits, latestRelease) {
-  const issueBody = await renderIssueBody({
-    commits: unreleasedCommits,
-    latestRelease,
-  })
-  const issueNo = await createIssue(token, issueBody, SNOOZE_ISSUE_TITLE)
-  logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
 }
 
 async function closeIssue(token, issueNo) {
@@ -18011,7 +18003,7 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   getLastClosedNotifyIssue,
-  createSnoozeIssue,
+  SNOOZE_ISSUE_TITLE,
 }
 
 
@@ -18047,7 +18039,7 @@ const {
   getLastOpenPendingIssue,
   closeIssue,
   getLastClosedNotifyIssue,
-  createSnoozeIssue,
+  SNOOZE_ISSUE_TITLE,
 } = __nccwpck_require__(5465)
 
 async function runAction(token, staleDays, commitMessageLines) {
@@ -18080,14 +18072,15 @@ async function runAction(token, staleDays, commitMessageLines) {
     staleDays
   )
 
-  if (closedNotifyIssue && !pendingIssue) {
-    const issueNo = await createSnoozeIssue(
+  if (closedNotifyIssue) {
+    return createOrUpdateIssue(
       token,
       unreleasedCommits,
-      latestRelease
+      pendingIssue,
+      latestRelease,
+      commitMessageLines,
+      SNOOZE_ISSUE_TITLE
     )
-    logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
-    return
   }
 
   if (unreleasedCommits.length) {

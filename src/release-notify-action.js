@@ -7,7 +7,7 @@ const {
   getLastOpenPendingIssue,
   closeIssue,
   getLastClosedNotifyIssue,
-  createSnoozeIssue,
+  SNOOZE_ISSUE_TITLE,
 } = require('./issue')
 
 async function runAction(token, staleDays, commitMessageLines) {
@@ -40,14 +40,15 @@ async function runAction(token, staleDays, commitMessageLines) {
     staleDays
   )
 
-  if (closedNotifyIssue && !pendingIssue) {
-    const issueNo = await createSnoozeIssue(
+  if (closedNotifyIssue) {
+    return createOrUpdateIssue(
       token,
       unreleasedCommits,
-      latestRelease
+      pendingIssue,
+      latestRelease,
+      commitMessageLines,
+      SNOOZE_ISSUE_TITLE
     )
-    logInfo(`Snooze issue has been created. Issue No. - ${issueNo}`)
-    return
   }
 
   if (unreleasedCommits.length) {

@@ -190,13 +190,6 @@ test('Get last closed notify', async () => {
   expect(res).toStrictEqual(closedNotifyIssues[0])
 })
 
-test('Creates a snooze issue', async () => {
-  const create = jest.fn()
-  getOctokit.mockReturnValue({ rest: { issues: { create } } })
-  await issue.createSnoozeIssue(token, unreleasedCommitsData1, 'test-date')
-  expect(create).toHaveBeenCalled()
-})
-
 test('Does nothing if there is no closed notify issue', async () => {
   const request = jest.fn()
 
@@ -233,4 +226,35 @@ test('notify issue closed_at is after stale date', async () => {
 
   const res = await issue.getLastClosedNotifyIssue(token, new Date(), 7)
   expect(res).toStrictEqual(undefined)
+})
+
+test('Creates a snooze issue when no pending', async () => {
+  const create = jest.fn()
+  getOctokit.mockReturnValue({ rest: { issues: { create } } })
+
+  await issue.createOrUpdateIssue(
+    token,
+    unreleasedCommitsData1,
+    null,
+    'test-date',
+    'snooze'
+  )
+  expect(create).toHaveBeenCalled()
+})
+
+test('Update a snooze issue when pending', async () => {
+  const request = jest.fn()
+  getOctokit.mockReturnValue({ request })
+  request.mockResolvedValue({
+    data: {},
+  })
+
+  await issue.createOrUpdateIssue(
+    token,
+    unreleasedCommitsData1,
+    { number: '1' },
+    'test-date',
+    'snooze'
+  )
+  expect(request).toHaveBeenCalled()
 })
