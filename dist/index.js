@@ -18051,12 +18051,12 @@ async function renderIssueBody(data) {
   return template(data)
 }
 
-async function createIssue(token, issueBody, title = ISSUE_TITLE) {
+async function createIssue(token, issueBody, isSnooze) {
   const octokit = github.getOctokit(token)
 
   return octokit.rest.issues.create({
     ...github.context.repo,
-    title,
+    title: isSnooze ? SNOOZE_ISSUE_TITLE : ISSUE_TITLE,
     body: issueBody,
     labels: [ISSUE_LABEL],
   })
@@ -18105,7 +18105,7 @@ async function createOrUpdateIssue(
   pendingIssue,
   latestRelease,
   commitMessageLines,
-  title
+  isSnooze
 ) {
   registerHandlebarHelpers({
     commitMessageLines,
@@ -18116,10 +18116,18 @@ async function createOrUpdateIssue(
   })
   if (pendingIssue) {
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
-    logInfo(`Issue ${pendingIssue.number} has been updated`)
+    logInfo(
+      `${isSnooze ? 'Snooze issue' : 'Issue'} ${
+        pendingIssue.number
+      } has been updated`
+    )
   } else {
-    const issueNo = await createIssue(token, issueBody, title)
-    logInfo(`New issue has been created. Issue No. - ${issueNo}`)
+    const issueNo = await createIssue(token, issueBody, isSnooze)
+    logInfo(
+      `New ${
+        isSnooze ? 'snooze issue' : 'issue'
+      } has been created. Issue No. - ${issueNo}`
+    )
   }
 }
 
@@ -18158,7 +18166,6 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   getClosedNotifyIssues,
-  SNOOZE_ISSUE_TITLE,
 }
 
 
@@ -18194,7 +18201,6 @@ const {
   getLastOpenPendingIssue,
   closeIssue,
   getClosedNotifyIssues,
-  SNOOZE_ISSUE_TITLE,
 } = __nccwpck_require__(5465)
 const { isCommitStale, isClosedNotifyIssueStale } = __nccwpck_require__(3590)
 
@@ -18233,11 +18239,14 @@ async function runAction(token, staleDate, commitMessageLines) {
       pendingIssue,
       latestRelease,
       commitMessageLines,
-      SNOOZE_ISSUE_TITLE
+      true
     )
   }
 
-  if (isCommitStale(unreleasedCommits, staleDate)) {
+  if (
+    !closedNotifyIssues?.length &&
+    isCommitStale(unreleasedCommits, staleDate)
+  ) {
     return createOrUpdateIssue(
       token,
       unreleasedCommits,
@@ -18247,7 +18256,7 @@ async function runAction(token, staleDate, commitMessageLines) {
     )
   }
 
-  logInfo('No stale commits found')
+  logInfo('No stale commits or stale notify issue found')
 
   if (
     pendingIssue &&

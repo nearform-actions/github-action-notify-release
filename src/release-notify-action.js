@@ -7,7 +7,6 @@ const {
   getLastOpenPendingIssue,
   closeIssue,
   getClosedNotifyIssues,
-  SNOOZE_ISSUE_TITLE,
 } = require('./issue')
 const { isCommitStale, isClosedNotifyIssueStale } = require('./time-utils.js')
 
@@ -46,11 +45,14 @@ async function runAction(token, staleDate, commitMessageLines) {
       pendingIssue,
       latestRelease,
       commitMessageLines,
-      SNOOZE_ISSUE_TITLE
+      true
     )
   }
 
-  if (isCommitStale(unreleasedCommits, staleDate)) {
+  if (
+    !closedNotifyIssues?.length &&
+    isCommitStale(unreleasedCommits, staleDate)
+  ) {
     return createOrUpdateIssue(
       token,
       unreleasedCommits,
@@ -60,7 +62,7 @@ async function runAction(token, staleDate, commitMessageLines) {
     )
   }
 
-  logInfo('No stale commits found')
+  logInfo('No stale commits or stale notify issue found')
 
   if (
     pendingIssue &&

@@ -23,21 +23,17 @@ test('Creates an issue', async () => {
   getOctokit.mockReturnValue({
     rest: { issues: { create: async () => ({ data: { number: 9 } }) } },
   })
-  const issueTitle = 'Release pending!'
   const issueBody = 'issue has been created with pending commits'
 
-  const issueResponse = await issue.createIssue(token, issueTitle, issueBody)
+  const issueResponse = await issue.createIssue(token, issueBody, false)
   expect(issueResponse.data.number).toStrictEqual(9)
 })
 
 test('Throws if something went wrong in creating an issue', async () => {
   getOctokit.mockImplementation(() => null)
-  const issueTitle = 'Release pending!'
   const issueBody = 'issue has been created with pending commits'
 
-  await expect(
-    issue.createIssue(token, issueTitle, issueBody)
-  ).rejects.toThrow()
+  await expect(issue.createIssue(token, issueBody, false)).rejects.toThrow()
 })
 
 test('Updates an issue', async () => {
@@ -151,8 +147,10 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
     token,
     unreleasedCommitsData1,
     null,
-    'test-date'
+    'test-date',
+    1
   )
+
   expect(create).toHaveBeenCalledWith(
     expect.objectContaining({
       body: expect.stringContaining(
@@ -200,7 +198,8 @@ test('Creates a snooze issue when no pending', async () => {
     unreleasedCommitsData1,
     null,
     'test-date',
-    'snooze'
+    'snooze',
+    true
   )
   expect(create).toHaveBeenCalled()
 })
@@ -217,7 +216,8 @@ test('Update a snooze issue when pending', async () => {
     unreleasedCommitsData1,
     { number: '1' },
     'test-date',
-    'snooze'
+    'snooze',
+    true
   )
   expect(request).toHaveBeenCalled()
 })

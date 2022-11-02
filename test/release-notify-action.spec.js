@@ -127,7 +127,7 @@ test('Create snooze issue if notify was closed', async () => {
     null,
     allReleases[0],
     1,
-    issue.SNOOZE_ISSUE_TITLE
+    true
   )
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
