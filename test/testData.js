@@ -351,10 +351,54 @@ const pendingIssues = [
   },
 ]
 
+const closedNotifyIssues = [
+  {
+    id: 1,
+    number: 1347,
+    state: 'closed',
+    title: 'Notify release 1',
+    body: 'Release new feature',
+    closed_at: '2011-04-22T13:33:48Z',
+    state_reason: 'not_planned',
+  },
+  {
+    id: 2,
+    number: 1347,
+    state: 'closed',
+    title: 'Notify release 2',
+    body: 'Release new feature',
+    closed_at: '2200-04-22T13:33:48Z',
+    state_reason: 'not_planned',
+  },
+]
+
+const closedNotifyIssuesNeverStale = [
+  {
+    id: 1,
+    number: 1347,
+    state: 'closed',
+    title: 'Notify release 1',
+    body: 'Release new feature',
+    closed_at: '2201-04-22',
+    state_reason: 'not_planned',
+  },
+  {
+    id: 2,
+    number: 1347,
+    state: 'closed',
+    title: 'Notify release 2',
+    body: 'Release new feature',
+    closed_at: '2200-04-22',
+    state_reason: 'not_planned',
+  },
+]
+
 module.exports = {
   allCommitsData,
   allReleasesData,
   unreleasedCommitsData0,
   unreleasedCommitsData1,
   pendingIssues,
+  closedNotifyIssues,
+  closedNotifyIssuesNeverStale,
 }

@@ -9745,6 +9745,175 @@ exports.isPlainObject = isPlainObject;
 
 /***/ }),
 
+/***/ 900:
+/***/ ((module) => {
+
+/**
+ * Helpers.
+ */
+
+var s = 1000;
+var m = s * 60;
+var h = m * 60;
+var d = h * 24;
+var w = d * 7;
+var y = d * 365.25;
+
+/**
+ * Parse or format the given `val`.
+ *
+ * Options:
+ *
+ *  - `long` verbose formatting [false]
+ *
+ * @param {String|Number} val
+ * @param {Object} [options]
+ * @throws {Error} throw an error if val is not a non-empty string or a number
+ * @return {String|Number}
+ * @api public
+ */
+
+module.exports = function (val, options) {
+  options = options || {};
+  var type = typeof val;
+  if (type === 'string' && val.length > 0) {
+    return parse(val);
+  } else if (type === 'number' && isFinite(val)) {
+    return options.long ? fmtLong(val) : fmtShort(val);
+  }
+  throw new Error(
+    'val is not a non-empty string or a valid number. val=' +
+      JSON.stringify(val)
+  );
+};
+
+/**
+ * Parse the given `str` and return milliseconds.
+ *
+ * @param {String} str
+ * @return {Number}
+ * @api private
+ */
+
+function parse(str) {
+  str = String(str);
+  if (str.length > 100) {
+    return;
+  }
+  var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
+    str
+  );
+  if (!match) {
+    return;
+  }
+  var n = parseFloat(match[1]);
+  var type = (match[2] || 'ms').toLowerCase();
+  switch (type) {
+    case 'years':
+    case 'year':
+    case 'yrs':
+    case 'yr':
+    case 'y':
+      return n * y;
+    case 'weeks':
+    case 'week':
+    case 'w':
+      return n * w;
+    case 'days':
+    case 'day':
+    case 'd':
+      return n * d;
+    case 'hours':
+    case 'hour':
+    case 'hrs':
+    case 'hr':
+    case 'h':
+      return n * h;
+    case 'minutes':
+    case 'minute':
+    case 'mins':
+    case 'min':
+    case 'm':
+      return n * m;
+    case 'seconds':
+    case 'second':
+    case 'secs':
+    case 'sec':
+    case 's':
+      return n * s;
+    case 'milliseconds':
+    case 'millisecond':
+    case 'msecs':
+    case 'msec':
+    case 'ms':
+      return n;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Short format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function fmtShort(ms) {
+  var msAbs = Math.abs(ms);
+  if (msAbs >= d) {
+    return Math.round(ms / d) + 'd';
+  }
+  if (msAbs >= h) {
+    return Math.round(ms / h) + 'h';
+  }
+  if (msAbs >= m) {
+    return Math.round(ms / m) + 'm';
+  }
+  if (msAbs >= s) {
+    return Math.round(ms / s) + 's';
+  }
+  return ms + 'ms';
+}
+
+/**
+ * Long format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function fmtLong(ms) {
+  var msAbs = Math.abs(ms);
+  if (msAbs >= d) {
+    return plural(ms, msAbs, d, 'day');
+  }
+  if (msAbs >= h) {
+    return plural(ms, msAbs, h, 'hour');
+  }
+  if (msAbs >= m) {
+    return plural(ms, msAbs, m, 'minute');
+  }
+  if (msAbs >= s) {
+    return plural(ms, msAbs, s, 'second');
+  }
+  return ms + ' ms';
+}
+
+/**
+ * Pluralization helper.
+ */
+
+function plural(ms, msAbs, n, name) {
+  var isPlural = msAbs >= n * 1.5;
+  return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
+}
+
+
+/***/ }),
+
 /***/ 467:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -17858,6 +18027,7 @@ const handlebars = __nccwpck_require__(7492)
 
 const ISSUE_LABEL = 'notify-release'
 const ISSUE_TITLE = 'Release pending!'
+const SNOOZE_ISSUE_TITLE = 'Reminder: release pending!'
 const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
 
@@ -17881,12 +18051,12 @@ async function renderIssueBody(data) {
   return template(data)
 }
 
-async function createIssue(token, issueBody) {
+async function createIssue(token, issueBody, title = ISSUE_TITLE) {
   const octokit = github.getOctokit(token)
 
   return octokit.rest.issues.create({
     ...github.context.repo,
-    title: ISSUE_TITLE,
+    title,
     body: issueBody,
     labels: [ISSUE_LABEL],
   })
@@ -17934,7 +18104,8 @@ async function createOrUpdateIssue(
   unreleasedCommits,
   pendingIssue,
   latestRelease,
-  commitMessageLines
+  commitMessageLines,
+  title
 ) {
   registerHandlebarHelpers({
     commitMessageLines,
@@ -17947,7 +18118,7 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const issueNo = await createIssue(token, issueBody)
+    const issueNo = await createIssue(token, issueBody, title)
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
 }
@@ -17964,12 +18135,30 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
+async function getClosedNotifyIssues(token, latestReleaseDate) {
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+  const { data } = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
+    owner,
+    repo,
+    creator: 'app/github-actions',
+    state: STATE_CLOSED,
+    sort: 'created',
+    state_reason: 'not_planned',
+    direction: 'desc',
+    labels: ISSUE_LABEL,
+    since: latestReleaseDate,
+  })
+  return data
+}
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
+  getClosedNotifyIssues,
+  SNOOZE_ISSUE_TITLE,
 }
 
 
@@ -18004,9 +18193,12 @@ const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
+  getClosedNotifyIssues,
+  SNOOZE_ISSUE_TITLE,
 } = __nccwpck_require__(5465)
+const { isCommitStale, isClosedNotifyIssueStale } = __nccwpck_require__(3590)
 
-async function runAction(token, staleDays, commitMessageLines) {
+async function runAction(token, staleDate, commitMessageLines) {
   let latestRelease
 
   try {
@@ -18026,11 +18218,26 @@ async function runAction(token, staleDays, commitMessageLines) {
 
   const unreleasedCommits = await getUnreleasedCommits(
     token,
-    latestRelease.published_at,
-    staleDays
+    latestRelease.published_at
   )
 
-  if (unreleasedCommits.length) {
+  const closedNotifyIssues = await getClosedNotifyIssues(
+    token,
+    latestRelease.published_at
+  )
+
+  if (isClosedNotifyIssueStale(closedNotifyIssues, staleDate)) {
+    return createOrUpdateIssue(
+      token,
+      unreleasedCommits,
+      pendingIssue,
+      latestRelease,
+      commitMessageLines,
+      SNOOZE_ISSUE_TITLE
+    )
+  }
+
+  if (isCommitStale(unreleasedCommits, staleDate)) {
     return createOrUpdateIssue(
       token,
       unreleasedCommits,
@@ -18040,7 +18247,7 @@ async function runAction(token, staleDays, commitMessageLines) {
     )
   }
 
-  logInfo('No pending commits found')
+  logInfo('No stale commits found')
 
   if (
     pendingIssue &&
@@ -18076,34 +18283,72 @@ async function getLatestRelease(token) {
   return data
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, staleDays) {
+async function getUnreleasedCommits(token, latestReleaseDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
-  const allCommitsResp = await octokit.request(
-    `GET /repos/{owner}/{repo}/commits`,
-    {
-      owner,
-      repo,
-      since: latestReleaseDate,
-    }
-  )
+  const { data } = await octokit.request(`GET /repos/{owner}/{repo}/commits`, {
+    owner,
+    repo,
+    since: latestReleaseDate,
+  })
 
-  const staleDate = new Date().getTime() - staleDays * 24 * 60 * 60 * 1000
-
-  for (const commit of allCommitsResp.data) {
-    const commitDate = new Date(commit.commit.committer.date).getTime()
-    if (commitDate < staleDate) {
-      return allCommitsResp.data
-    }
-  }
-
-  return []
+  return data
 }
 
 module.exports = {
   getLatestRelease,
   getUnreleasedCommits,
+}
+
+
+/***/ }),
+
+/***/ 3590:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const ms = __nccwpck_require__(900)
+
+function staleDaysToDate(input) {
+  try {
+    const staleDays = Number(input)
+    if (isNaN(staleDays)) {
+      const stringToMs = ms(input)
+      return new Date().getTime() - stringToMs
+    }
+    return new Date().getTime() - daysToMs(staleDays)
+  } catch (error) {
+    return new Date().getTime()
+  }
+}
+
+function isCommitStale(unreleasedCommits, staleDate) {
+  if (!unreleasedCommits || !unreleasedCommits.length) return false
+  return unreleasedCommits.some((commit) => {
+    const commitDate = new Date(commit.commit.committer.date).getTime()
+    return commitDate < staleDate
+  })
+}
+
+function isClosedNotifyIssueStale(closedNotifyIssues, staleDate) {
+  if (!closedNotifyIssues || !closedNotifyIssues.length) return false
+  return closedNotifyIssues.some((issue) => {
+    const issueClosedDate = new Date(issue.closed_at).getTime()
+    return issueClosedDate < staleDate
+  })
+}
+
+function daysToMs(days) {
+  return days * 24 * 60 * 60 * 1000
+}
+
+module.exports = {
+  staleDaysToDate,
+  isCommitStale,
+  daysToMs,
+  isClosedNotifyIssueStale,
 }
 
 
@@ -18290,17 +18535,17 @@ var __webpack_exports__ = {};
 
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
-
+const { staleDaysToDate } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const staleDays = Number(core.getInput('stale-days'))
+  const staleDate = staleDaysToDate(core.getInput('stale-days'))
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-  await runAction(token, staleDays, commitMessageLines)
+  await runAction(token, staleDate, commitMessageLines)
 }
 
 run().catch((err) => core.setFailed(err))

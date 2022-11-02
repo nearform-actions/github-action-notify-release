@@ -8,6 +8,8 @@ const {
   allReleasesData: allReleases,
   unreleasedCommitsData1,
   pendingIssues,
+  closedNotifyIssues,
+  closedNotifyIssuesNeverStale,
 } = require('./testData')
 
 jest.mock('../src/log')
@@ -21,6 +23,8 @@ jest.mock('../src/issue', () => ({
   createOrUpdateIssue: jest.fn(),
   getLastOpenPendingIssue: jest.fn(),
   closeIssue: jest.fn(),
+  createIssue: jest.fn(),
+  getClosedNotifyIssues: jest.fn(),
 }))
 
 beforeEach(() => {
@@ -29,6 +33,8 @@ beforeEach(() => {
   issue.createOrUpdateIssue.mockReset()
   issue.getLastOpenPendingIssue.mockReset()
   issue.closeIssue.mockReset()
+  issue.getClosedNotifyIssues.mockReset()
+  issue.createIssue.mockReset()
 })
 
 const token = 'dummyToken'
@@ -37,9 +43,8 @@ test('Create issue for unreleased commits (no existing issues)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-
-  await runAction(token, 1, 1)
-
+  const staleDate = new Date('2022-04-26T07:37:09Z').getTime()
+  await runAction(token, staleDate, 1)
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
   expect(issue.createOrUpdateIssue).toBeCalledWith(
@@ -56,8 +61,8 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-
-  await runAction(token, 1, 1)
+  const staleDate = new Date('2022-04-26T07:37:09Z').getTime()
+  await runAction(token, staleDate, 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -76,7 +81,7 @@ test('Close issue when there is one pending and no unreleased commits', async ()
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue([])
 
-  await runAction(token, 1, 1)
+  await runAction(token, new Date().getTime(), 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -89,7 +94,7 @@ test('Do nothing when there is one issue pending and no new releases', async () 
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue([])
 
-  await runAction(token, 1, 1)
+  await runAction(token, new Date().getTime(), 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -99,11 +104,42 @@ test('Do nothing when there is one issue pending and no new releases', async () 
 
 test('Do nothing when no releases found', async () => {
   release.getLatestRelease.mockRejectedValue()
-
-  await runAction(token, 1, 1)
+  await runAction(token, new Date().getTime(), 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).not.toHaveBeenCalled()
   expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
+  expect(issue.closeIssue).not.toHaveBeenCalled()
+})
+
+test('Create snooze issue if notify was closed', async () => {
+  issue.getClosedNotifyIssues.mockResolvedValue(closedNotifyIssues)
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
+  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  issue.getLastOpenPendingIssue.mockResolvedValue(null)
+
+  const staleDate = new Date('2012-04-21T13:33:48Z').getTime()
+  await runAction(token, staleDate, 1)
+
+  expect(issue.createOrUpdateIssue).toBeCalledWith(
+    token,
+    unreleasedCommitsData1,
+    null,
+    allReleases[0],
+    1,
+    issue.SNOOZE_ISSUE_TITLE
+  )
+  expect(issue.closeIssue).not.toHaveBeenCalled()
+})
+
+test('Do not create or update snooze issue if closed issue is after stale date', async () => {
+  issue.getClosedNotifyIssues.mockResolvedValue(closedNotifyIssuesNeverStale)
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
+  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  issue.getLastOpenPendingIssue.mockResolvedValue(null)
+
+  const staleDate = new Date('2011-04-21T13:33:48Z').getTime()
+  await runAction(token, staleDate, 1)
+  expect(issue.createOrUpdateIssue).not.toBeCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })

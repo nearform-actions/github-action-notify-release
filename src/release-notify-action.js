@@ -6,9 +6,12 @@ const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
+  getClosedNotifyIssues,
+  SNOOZE_ISSUE_TITLE,
 } = require('./issue')
+const { isCommitStale, isClosedNotifyIssueStale } = require('./time-utils.js')
 
-async function runAction(token, staleDays, commitMessageLines) {
+async function runAction(token, staleDate, commitMessageLines) {
   let latestRelease
 
   try {
@@ -28,11 +31,26 @@ async function runAction(token, staleDays, commitMessageLines) {
 
   const unreleasedCommits = await getUnreleasedCommits(
     token,
-    latestRelease.published_at,
-    staleDays
+    latestRelease.published_at
   )
 
-  if (unreleasedCommits.length) {
+  const closedNotifyIssues = await getClosedNotifyIssues(
+    token,
+    latestRelease.published_at
+  )
+
+  if (isClosedNotifyIssueStale(closedNotifyIssues, staleDate)) {
+    return createOrUpdateIssue(
+      token,
+      unreleasedCommits,
+      pendingIssue,
+      latestRelease,
+      commitMessageLines,
+      SNOOZE_ISSUE_TITLE
+    )
+  }
+
+  if (isCommitStale(unreleasedCommits, staleDate)) {
     return createOrUpdateIssue(
       token,
       unreleasedCommits,
@@ -42,7 +60,7 @@ async function runAction(token, staleDays, commitMessageLines) {
     )
   }
 
-  logInfo('No pending commits found')
+  logInfo('No stale commits found')
 
   if (
     pendingIssue &&

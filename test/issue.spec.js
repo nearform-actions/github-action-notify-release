@@ -4,7 +4,7 @@ const { getOctokit } = require('@actions/github')
 
 const issue = require('../src/issue')
 
-const { unreleasedCommitsData1 } = require('./testData')
+const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
 
 const token = 'dummytoken'
 const owner = 'sameer'
@@ -160,4 +160,64 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
       ),
     })
   )
+})
+
+test('Get closed notify', async () => {
+  const request = jest.fn()
+
+  request.mockResolvedValue({
+    data: closedNotifyIssues,
+  })
+
+  getOctokit.mockReturnValue({
+    request,
+  })
+
+  const latestRelease = new Date()
+  const res = await issue.getClosedNotifyIssues(token, latestRelease)
+
+  expect(request).toHaveBeenCalledWith(`GET /repos/{owner}/{repo}/issues`, {
+    owner,
+    repo,
+    creator: 'app/github-actions',
+    state: 'closed',
+    sort: 'created',
+    state_reason: 'not_planned',
+    direction: 'desc',
+    labels: 'notify-release',
+    since: latestRelease,
+  })
+
+  expect(res).toStrictEqual(closedNotifyIssues)
+})
+
+test('Creates a snooze issue when no pending', async () => {
+  const create = jest.fn()
+  getOctokit.mockReturnValue({ rest: { issues: { create } } })
+
+  await issue.createOrUpdateIssue(
+    token,
+    unreleasedCommitsData1,
+    null,
+    'test-date',
+    'snooze'
+  )
+  expect(create).toHaveBeenCalled()
+})
+
+test('Update a snooze issue when pending', async () => {
+  const request = jest.fn()
+  getOctokit.mockReturnValue({ request })
+  request.mockResolvedValue({
+    data: {},
+  })
+
+  await issue.createOrUpdateIssue(
+    token,
+    unreleasedCommitsData1,
+    { number: '1' },
+    'test-date',
+    'snooze'
+  )
+  expect(request).toHaveBeenCalled()
 })

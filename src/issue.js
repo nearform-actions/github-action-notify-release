@@ -10,6 +10,7 @@ const handlebars = require('handlebars')
 
 const ISSUE_LABEL = 'notify-release'
 const ISSUE_TITLE = 'Release pending!'
+const SNOOZE_ISSUE_TITLE = 'Reminder: release pending!'
 const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
 
@@ -33,12 +34,12 @@ async function renderIssueBody(data) {
   return template(data)
 }
 
-async function createIssue(token, issueBody) {
+async function createIssue(token, issueBody, title = ISSUE_TITLE) {
   const octokit = github.getOctokit(token)
 
   return octokit.rest.issues.create({
     ...github.context.repo,
-    title: ISSUE_TITLE,
+    title,
     body: issueBody,
     labels: [ISSUE_LABEL],
   })
@@ -86,7 +87,8 @@ async function createOrUpdateIssue(
   unreleasedCommits,
   pendingIssue,
   latestRelease,
-  commitMessageLines
+  commitMessageLines,
+  title
 ) {
   registerHandlebarHelpers({
     commitMessageLines,
@@ -99,7 +101,7 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const issueNo = await createIssue(token, issueBody)
+    const issueNo = await createIssue(token, issueBody, title)
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
 }
@@ -116,10 +118,28 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
+async function getClosedNotifyIssues(token, latestReleaseDate) {
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+  const { data } = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
+    owner,
+    repo,
+    creator: 'app/github-actions',
+    state: STATE_CLOSED,
+    sort: 'created',
+    state_reason: 'not_planned',
+    direction: 'desc',
+    labels: ISSUE_LABEL,
+    since: latestReleaseDate,
+  })
+  return data
+}
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
+  getClosedNotifyIssues,
+  SNOOZE_ISSUE_TITLE,
 }
