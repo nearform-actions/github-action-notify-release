@@ -18214,9 +18214,8 @@ async function runAction(token, staleDate, commitMessageLines) {
   if (
     closedNotifyIssues?.length &&
     !isClosedNotifyIssueStale(closedNotifyIssues, staleDate)
-  ) {
+  )
     return
-  }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
 
