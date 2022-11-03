@@ -172,7 +172,7 @@ test('Get closed notify', async () => {
   })
 
   const latestRelease = new Date()
-  const res = await issue.getClosedNotifyIssues(token, latestRelease)
+  const res = await issue.tryGetClosedNotifyIssues(token, latestRelease)
 
   expect(request).toHaveBeenCalledWith(`GET /repos/{owner}/{repo}/issues`, {
     owner,

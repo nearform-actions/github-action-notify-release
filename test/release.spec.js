@@ -1,6 +1,9 @@
 'use strict'
 const { getOctokit } = require('@actions/github')
-const { getLatestRelease, getUnreleasedCommits } = require('../src/release')
+const {
+  tryGetLatestRelease,
+  tryGetUnreleasedCommits,
+} = require('../src/release')
 const { daysToMs } = require('../src/time-utils.js')
 const {
   allCommitsData: allCommits,
@@ -26,7 +29,7 @@ test('Gets the latest release of the repository', async () => {
       },
     },
   })
-  const latestReleaseResponse = await getLatestRelease(token)
+  const latestReleaseResponse = await tryGetLatestRelease(token)
   expect(latestReleaseResponse).toStrictEqual(allReleases[0])
 })
 
@@ -36,14 +39,14 @@ test('return null if no releases found', async () => {
       repos: { getLatestRelease: () => Promise.reject() },
     },
   })
-  expect(await getLatestRelease(token)).toBeFalsy()
+  expect(await tryGetLatestRelease(token)).toBeFalsy()
 })
 
 test('Gets the unreleased commits', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
   const staleDate = Date.now()
   const latestReleaseDate = allReleases[0].created_at
-  const allCommitsResponse = await getUnreleasedCommits(
+  const allCommitsResponse = await tryGetUnreleasedCommits(
     token,
     latestReleaseDate,
     staleDate
@@ -55,7 +58,7 @@ test('Gets the unreleased commits with stale-days as non zero', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
   const staleDate = Date.now() - daysToMs(3)
   const latestReleaseDate = allReleases[0].created_at
-  const allCommitsResponse = await getUnreleasedCommits(
+  const allCommitsResponse = await tryGetUnreleasedCommits(
     token,
     latestReleaseDate,
     staleDate
@@ -67,7 +70,7 @@ test('Gets the unreleased commits and uses default value of stale-days', async (
   getOctokit.mockReturnValue({ request: async () => allCommits })
   const staleDate = new Date('2021-04-25T09:27:24Z').getTime()
   const latestReleaseDate = allReleases[0].created_at
-  const allCommitsResponse = await getUnreleasedCommits(
+  const allCommitsResponse = await tryGetUnreleasedCommits(
     token,
     latestReleaseDate,
     staleDate

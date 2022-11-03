@@ -18133,7 +18133,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function getClosedNotifyIssues(token, latestReleaseDate) {
+async function tryGetClosedNotifyIssues(token, latestReleaseDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
   const { data } = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
@@ -18155,7 +18155,7 @@ module.exports = {
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
-  getClosedNotifyIssues,
+  tryGetClosedNotifyIssues,
 }
 
 
@@ -18185,17 +18185,17 @@ exports.logWarning = log(warning)
 
 
 const { logInfo, logWarning } = __nccwpck_require__(653)
-const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
+const { tryGetLatestRelease, tryGetUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
-  getClosedNotifyIssues,
+  tryGetClosedNotifyIssues,
 } = __nccwpck_require__(5465)
 const { isClosedNotifyIssueStale } = __nccwpck_require__(3590)
 
 async function runAction(token, staleDate, commitMessageLines) {
-  const latestRelease = await getLatestRelease(token)
+  const latestRelease = await tryGetLatestRelease(token)
 
   if (!latestRelease) return logWarning('No latest release found')
 
@@ -18206,20 +18206,22 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const closedNotifyIssues = await getClosedNotifyIssues(
+  const closedNotifyIssues = await tryGetClosedNotifyIssues(
     token,
     latestRelease.published_at
   )
 
+  // exit if there is a closed notify issue but stale days have not passed
   if (
     closedNotifyIssues?.length &&
     !isClosedNotifyIssueStale(closedNotifyIssues, staleDate)
-  )
+  ) {
     return logInfo('Non stale closed notify issue found')
+  }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
 
-  const unreleasedCommits = await getUnreleasedCommits(
+  const unreleasedCommits = await tryGetUnreleasedCommits(
     token,
     latestRelease.published_at,
     staleDate
@@ -18260,7 +18262,7 @@ module.exports = {
 const github = __nccwpck_require__(5438)
 const { isCommitStale } = __nccwpck_require__(3590)
 
-async function getLatestRelease(token) {
+async function tryGetLatestRelease(token) {
   try {
     const octokit = github.getOctokit(token)
     const { owner, repo } = github.context.repo
@@ -18276,7 +18278,7 @@ async function getLatestRelease(token) {
   }
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
+async function tryGetUnreleasedCommits(token, latestReleaseDate, staleDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -18292,8 +18294,8 @@ async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
 }
 
 module.exports = {
-  getLatestRelease,
-  getUnreleasedCommits,
+  tryGetLatestRelease,
+  tryGetUnreleasedCommits,
 }
 
 

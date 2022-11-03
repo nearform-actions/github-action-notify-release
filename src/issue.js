@@ -116,7 +116,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function getClosedNotifyIssues(token, latestReleaseDate) {
+async function tryGetClosedNotifyIssues(token, latestReleaseDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
   const { data } = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
@@ -138,5 +138,5 @@ module.exports = {
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
-  getClosedNotifyIssues,
+  tryGetClosedNotifyIssues,
 }
