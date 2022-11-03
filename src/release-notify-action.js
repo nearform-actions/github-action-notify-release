@@ -13,7 +13,7 @@ const { isClosedNotifyIssueStale } = require('./time-utils.js')
 async function runAction(token, staleDate, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
-  if (!latestRelease) return logWarning('Could not find latest release')
+  if (!latestRelease) return logWarning('No latest release found')
 
   logInfo(`Latest release:
   - name:${latestRelease.name}
@@ -31,7 +31,7 @@ async function runAction(token, staleDate, commitMessageLines) {
     closedNotifyIssues?.length &&
     !isClosedNotifyIssueStale(closedNotifyIssues, staleDate)
   )
-    return
+    return logInfo('Non stale closed notify issue found')
 
   const pendingIssue = await getLastOpenPendingIssue(token)
 
