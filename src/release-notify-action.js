@@ -8,16 +8,12 @@ const {
   closeIssue,
   getClosedNotifyIssues,
 } = require('./issue')
-const { isCommitStale, isClosedNotifyIssueStale } = require('./time-utils.js')
+const { isClosedNotifyIssueStale } = require('./time-utils.js')
 
 async function runAction(token, staleDate, commitMessageLines) {
-  let latestRelease
+  const latestRelease = await getLatestRelease(token)
 
-  try {
-    latestRelease = await getLatestRelease(token)
-  } catch (err) {
-    return logWarning('Could not find latest release')
-  }
+  if (!latestRelease) return logWarning('Could not find latest release')
 
   logInfo(`Latest release:
   - name:${latestRelease.name}
@@ -26,33 +22,27 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const pendingIssue = await getLastOpenPendingIssue(token)
-
-  const unreleasedCommits = await getUnreleasedCommits(
-    token,
-    latestRelease.published_at
-  )
-
   const closedNotifyIssues = await getClosedNotifyIssues(
     token,
     latestRelease.published_at
   )
 
-  if (isClosedNotifyIssueStale(closedNotifyIssues, staleDate)) {
-    return createOrUpdateIssue(
-      token,
-      unreleasedCommits,
-      pendingIssue,
-      latestRelease,
-      commitMessageLines,
-      true
-    )
+  if (
+    closedNotifyIssues?.length &&
+    !isClosedNotifyIssueStale(closedNotifyIssues, staleDate)
+  ) {
+    return
   }
 
-  if (
-    !closedNotifyIssues?.length &&
-    isCommitStale(unreleasedCommits, staleDate)
-  ) {
+  const pendingIssue = await getLastOpenPendingIssue(token)
+
+  const unreleasedCommits = await getUnreleasedCommits(
+    token,
+    latestRelease.published_at,
+    staleDate
+  )
+
+  if (unreleasedCommits.length) {
     return createOrUpdateIssue(
       token,
       unreleasedCommits,
@@ -62,7 +52,7 @@ async function runAction(token, staleDate, commitMessageLines) {
     )
   }
 
-  logInfo('No stale commits or stale notify issue found')
+  logInfo('No stale commits or stale closed notify issue found')
 
   if (
     pendingIssue &&

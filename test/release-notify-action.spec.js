@@ -103,7 +103,7 @@ test('Do nothing when there is one issue pending and no new releases', async () 
 })
 
 test('Do nothing when no releases found', async () => {
-  release.getLatestRelease.mockRejectedValue()
+  release.getLatestRelease.mockResolvedValue()
   await runAction(token, new Date().getTime(), 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
@@ -126,8 +126,7 @@ test('Create snooze issue if notify was closed', async () => {
     unreleasedCommitsData1,
     null,
     allReleases[0],
-    1,
-    true
+    1
   )
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })

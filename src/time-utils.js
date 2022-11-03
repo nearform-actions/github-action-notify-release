@@ -23,7 +23,6 @@ function isCommitStale(unreleasedCommits, staleDate) {
 }
 
 function isClosedNotifyIssueStale(closedNotifyIssues, staleDate) {
-  if (!closedNotifyIssues || !closedNotifyIssues.length) return false
   const issueClosedDate = new Date(closedNotifyIssues[0].closed_at).getTime()
   return issueClosedDate < staleDate
 }

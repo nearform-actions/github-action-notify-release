@@ -198,8 +198,7 @@ test('Creates a snooze issue when no pending', async () => {
     unreleasedCommitsData1,
     null,
     'test-date',
-    'snooze',
-    true
+    'snooze'
   )
   expect(create).toHaveBeenCalled()
 })
@@ -216,8 +215,7 @@ test('Update a snooze issue when pending', async () => {
     unreleasedCommitsData1,
     { number: '1' },
     'test-date',
-    'snooze',
-    true
+    'snooze'
   )
   expect(request).toHaveBeenCalled()
 })

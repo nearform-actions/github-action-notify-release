@@ -49,8 +49,6 @@ test('there are closed notify before stale date', () => {
   )
   expect(noStaleIssues).toBe(false)
 
-  expect(isClosedNotifyIssueStale([], Date.now())).toBe(false)
-
   const stale = isClosedNotifyIssueStale(
     closedNotifyIssues,
     new Date().getTime()
