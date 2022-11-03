@@ -25,7 +25,7 @@ test('Creates an issue', async () => {
   })
   const issueBody = 'issue has been created with pending commits'
 
-  const issueResponse = await issue.createIssue(token, issueBody, false)
+  const issueResponse = await issue.createIssue(token, issueBody)
   expect(issueResponse.data.number).toStrictEqual(9)
 })
 
@@ -33,7 +33,7 @@ test('Throws if something went wrong in creating an issue', async () => {
   getOctokit.mockImplementation(() => null)
   const issueBody = 'issue has been created with pending commits'
 
-  await expect(issue.createIssue(token, issueBody, false)).rejects.toThrow()
+  await expect(issue.createIssue(token, issueBody)).rejects.toThrow()
 })
 
 test('Updates an issue', async () => {
