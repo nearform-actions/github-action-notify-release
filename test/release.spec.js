@@ -30,7 +30,7 @@ test('Gets the latest release of the repository', async () => {
   expect(latestReleaseResponse).toStrictEqual(allReleases[0])
 })
 
-test('return [] if no releases found', async () => {
+test('throws if no releases found', async () => {
   getOctokit.mockReturnValue({
     rest: {
       repos: { getLatestRelease: () => Promise.reject(new Error()) },
