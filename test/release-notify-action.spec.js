@@ -58,8 +58,7 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-  const staleDate = new Date('2022-04-26T07:37:09Z').getTime()
-  await runAction(token, staleDate, 1)
+  await runAction(token, Date.now(), 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -112,7 +111,7 @@ test('Create snooze issue if notify was closed', async () => {
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
 
-  const staleDate = new Date('2012-04-21T13:33:48Z').getTime()
+  const staleDate = new Date('2000').getTime()
   await runAction(token, staleDate, 1)
 
   expect(issue.createOrUpdateIssue).toBeCalledWith(

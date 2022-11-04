@@ -45,12 +45,11 @@ test('return [] if no releases found', async () => {
 
 test('Gets the unreleased commits', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
-  const staleDate = Date.now()
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,
-    staleDate
+    Date.now()
   )
   expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1)
 })

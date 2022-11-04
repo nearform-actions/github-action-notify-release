@@ -128,8 +128,7 @@ test('Update an issue when exists', async () => {
     token,
     unreleasedCommitsData1,
     { number: '1' },
-    'test-date',
-    1
+    'test-date'
   )
   expect(request).toHaveBeenCalledWith('PATCH /repos/{owner}/{repo}/issues/1', {
     owner,
@@ -147,10 +146,8 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
     token,
     unreleasedCommitsData1,
     null,
-    'test-date',
-    1
+    'test-date'
   )
-
   expect(create).toHaveBeenCalledWith(
     expect.objectContaining({
       body: expect.stringContaining(
@@ -171,9 +168,8 @@ test('Get closed notify', async () => {
     request,
   })
 
-  const staleDate = Date.now()
   const latestRelease = new Date()
-  const staleIssue = await issue.isSnoozed(token, latestRelease, staleDate)
+  const staleIssue = await issue.isSnoozed(token, latestRelease, Date.now())
 
   expect(request).toHaveBeenCalledWith(`GET /repos/{owner}/{repo}/issues`, {
     owner,
@@ -208,9 +204,8 @@ test('', async () => {
   getOctokit.mockReturnValue({
     request,
   })
-  const staleDate = Date.now()
   const latestRelease = new Date()
-  const res = await issue.isSnoozed(token, latestRelease, staleDate)
+  const res = await issue.isSnoozed(token, latestRelease, Date.now())
   expect(res).toBe(false)
 })
 

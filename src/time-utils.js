@@ -17,8 +17,7 @@ function isSomeCommitStale(commits, staleDate) {
 }
 
 function isStale(date, staleDate) {
-  const issueClosedDate = new Date(date).getTime()
-  return issueClosedDate < staleDate
+  return new Date(date).getTime() < staleDate
 }
 
 function daysToMs(days) {
