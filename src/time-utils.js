@@ -1,17 +1,13 @@
 'use strict'
 const ms = require('ms')
 
-function staleDaysToDate(input) {
-  try {
-    const staleDays = Number(input)
-    if (isNaN(staleDays)) {
-      const stringToMs = ms(input)
-      return new Date().getTime() - stringToMs
-    }
-    return new Date().getTime() - daysToMs(staleDays)
-  } catch (error) {
-    return new Date().getTime()
+function staleDaysToMs(input) {
+  const staleDays = Number(input)
+  if (isNaN(staleDays)) {
+    const stringToMs = ms(input)
+    return new Date().getTime() - stringToMs
   }
+  return new Date().getTime() - daysToMs(staleDays)
 }
 
 function isCommitStale(unreleasedCommits, staleDate) {
@@ -30,7 +26,7 @@ function daysToMs(days) {
 }
 
 module.exports = {
-  staleDaysToDate,
+  staleDaysToMs,
   isCommitStale,
   daysToMs,
   isStale,

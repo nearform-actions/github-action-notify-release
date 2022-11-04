@@ -18311,17 +18311,13 @@ module.exports = {
 
 const ms = __nccwpck_require__(900)
 
-function staleDaysToDate(input) {
-  try {
-    const staleDays = Number(input)
-    if (isNaN(staleDays)) {
-      const stringToMs = ms(input)
-      return new Date().getTime() - stringToMs
-    }
-    return new Date().getTime() - daysToMs(staleDays)
-  } catch (error) {
-    return new Date().getTime()
+function staleDaysToMs(input) {
+  const staleDays = Number(input)
+  if (isNaN(staleDays)) {
+    const stringToMs = ms(input)
+    return new Date().getTime() - stringToMs
   }
+  return new Date().getTime() - daysToMs(staleDays)
 }
 
 function isCommitStale(unreleasedCommits, staleDate) {
@@ -18340,7 +18336,7 @@ function daysToMs(days) {
 }
 
 module.exports = {
-  staleDaysToDate,
+  staleDaysToMs,
   isCommitStale,
   daysToMs,
   isStale,
@@ -18530,14 +18526,14 @@ var __webpack_exports__ = {};
 
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
-const { staleDaysToDate } = __nccwpck_require__(3590)
+const { staleDaysToMs } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const staleDate = staleDaysToDate(core.getInput('stale-days'))
+  const staleDate = staleDaysToMs(core.getInput('stale-days'))
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
   await runAction(token, staleDate, commitMessageLines)

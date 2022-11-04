@@ -1,7 +1,7 @@
 'use strict'
 
 const {
-  staleDaysToDate,
+  staleDaysToMs,
   isCommitStale,
   isStale,
   daysToMs,
@@ -17,13 +17,13 @@ test('convert stale days correctly', () => {
   const now = new Date()
   const spy = jest.spyOn(global, 'Date').mockImplementation(() => now)
 
-  const sevenDaysAgo = staleDaysToDate(7)
+  const sevenDaysAgo = staleDaysToMs(7)
   expect(sevenDaysAgo).toEqual(now.getTime() - daysToMs(7))
 
-  const defaultStaleDate = staleDaysToDate()
-  expect(defaultStaleDate).toEqual(now.getTime())
+  const defaultStaleDate = () => staleDaysToMs()
+  expect(defaultStaleDate).toThrow()
 
-  const oneHourAgo = staleDaysToDate('1 hour')
+  const oneHourAgo = staleDaysToMs('1 hour')
   expect(oneHourAgo).toEqual(now.getTime() - 60 * 60 * 1000)
   spy.mockRestore()
 })
