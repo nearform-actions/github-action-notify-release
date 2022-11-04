@@ -116,7 +116,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function closedSnoozeIssue(token, latestReleaseDate, staleDate) {
+async function isSnoozed(token, latestReleaseDate, staleDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
   const { data: closedNotifyIssues } = await octokit.request(
@@ -135,10 +135,14 @@ async function closedSnoozeIssue(token, latestReleaseDate, staleDate) {
   )
 
   if (!closedNotifyIssues?.length) {
-    return true
+    return false
   }
 
-  return isStale(closedNotifyIssues[0].closed_at, staleDate)
+  if (isStale(closedNotifyIssues[0].closed_at, staleDate)) {
+    return false
+  }
+
+  return true
 }
 
 module.exports = {
@@ -147,5 +151,5 @@ module.exports = {
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
-  closedSnoozeIssue,
+  isSnoozed,
 }

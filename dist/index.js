@@ -18133,7 +18133,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function closedSnoozeIssue(token, latestReleaseDate, staleDate) {
+async function isSnoozed(token, latestReleaseDate, staleDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
   const { data: closedNotifyIssues } = await octokit.request(
@@ -18152,10 +18152,14 @@ async function closedSnoozeIssue(token, latestReleaseDate, staleDate) {
   )
 
   if (!closedNotifyIssues?.length) {
-    return true
+    return false
   }
 
-  return isStale(closedNotifyIssues[0].closed_at, staleDate)
+  if (isStale(closedNotifyIssues[0].closed_at, staleDate)) {
+    return false
+  }
+
+  return true
 }
 
 module.exports = {
@@ -18164,7 +18168,7 @@ module.exports = {
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
-  closedSnoozeIssue,
+  isSnoozed,
 }
 
 
@@ -18199,7 +18203,7 @@ const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
-  closedSnoozeIssue,
+  isSnoozed,
 } = __nccwpck_require__(5465)
 
 async function runAction(token, staleDate, commitMessageLines) {
@@ -18216,14 +18220,10 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const isClosedSnoozeIssueStale = await closedSnoozeIssue(
-    token,
-    latestRelease.published_at,
-    staleDate
-  )
+  const snoozed = await isSnoozed(token, latestRelease.published_at, staleDate)
 
-  if (!isClosedSnoozeIssueStale) {
-    return logInfo('Non stale closed notify issue found')
+  if (snoozed) {
+    return logInfo('Release Notify has been snoozed')
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)

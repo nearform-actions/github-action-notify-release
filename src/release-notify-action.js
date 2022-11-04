@@ -6,7 +6,7 @@ const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
-  closedSnoozeIssue,
+  isSnoozed,
 } = require('./issue')
 
 async function runAction(token, staleDate, commitMessageLines) {
@@ -23,14 +23,10 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const isClosedSnoozeIssueStale = await closedSnoozeIssue(
-    token,
-    latestRelease.published_at,
-    staleDate
-  )
+  const snoozed = await isSnoozed(token, latestRelease.published_at, staleDate)
 
-  if (!isClosedSnoozeIssueStale) {
-    return logInfo('Non stale closed notify issue found')
+  if (snoozed) {
+    return logInfo('Release Notify has been snoozed')
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
