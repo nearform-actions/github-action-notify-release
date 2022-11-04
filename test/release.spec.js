@@ -68,7 +68,7 @@ test('Gets the unreleased commits with stale-days as non zero', async () => {
 
 test('Gets the unreleased commits and uses default value of stale-days', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
-  const staleDate = new Date('2021-04-25T09:27:24Z').getTime()
+  const staleDate = new Date('2000').getTime()
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,

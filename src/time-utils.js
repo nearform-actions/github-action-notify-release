@@ -5,9 +5,9 @@ function staleDaysToMs(input) {
   const staleDays = Number(input)
   if (isNaN(staleDays)) {
     const stringToMs = ms(input)
-    return new Date().getTime() - stringToMs
+    return Date.now() - stringToMs
   }
-  return new Date().getTime() - daysToMs(staleDays)
+  return Date.now() - daysToMs(staleDays)
 }
 
 function isSomeCommitStale(commits, staleDate) {
