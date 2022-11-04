@@ -15,15 +15,13 @@ function staleDaysToDate(input) {
 }
 
 function isCommitStale(unreleasedCommits, staleDate) {
-  if (!unreleasedCommits || !unreleasedCommits.length) return false
   return unreleasedCommits.some((commit) => {
-    const commitDate = new Date(commit.commit.committer.date).getTime()
-    return commitDate < staleDate
+    return isStale(commit.commit.committer.date, staleDate)
   })
 }
 
-function isClosedNotifyIssueStale(closedNotifyIssues, staleDate) {
-  const issueClosedDate = new Date(closedNotifyIssues[0].closed_at).getTime()
+function isStale(date, staleDate) {
+  const issueClosedDate = new Date(date).getTime()
   return issueClosedDate < staleDate
 }
 
@@ -35,5 +33,5 @@ module.exports = {
   staleDaysToDate,
   isCommitStale,
   daysToMs,
-  isClosedNotifyIssueStale,
+  isStale,
 }

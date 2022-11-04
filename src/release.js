@@ -2,23 +2,19 @@
 const github = require('@actions/github')
 const { isCommitStale } = require('./time-utils.js')
 
-async function tryGetLatestRelease(token) {
-  try {
-    const octokit = github.getOctokit(token)
-    const { owner, repo } = github.context.repo
+async function getLatestRelease(token) {
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
 
-    const { data } = await octokit.rest.repos.getLatestRelease({
-      owner,
-      repo,
-    })
+  const { data } = await octokit.rest.repos.getLatestRelease({
+    owner,
+    repo,
+  })
 
-    return data
-  } catch (error) {
-    return
-  }
+  return data
 }
 
-async function tryGetUnreleasedCommits(token, latestReleaseDate, staleDate) {
+async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -34,6 +30,6 @@ async function tryGetUnreleasedCommits(token, latestReleaseDate, staleDate) {
 }
 
 module.exports = {
-  tryGetLatestRelease,
-  tryGetUnreleasedCommits,
+  getLatestRelease,
+  getUnreleasedCommits,
 }

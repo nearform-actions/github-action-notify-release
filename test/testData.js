@@ -367,7 +367,7 @@ const closedNotifyIssues = [
     state: 'closed',
     title: 'Notify release 2',
     body: 'Release new feature',
-    closed_at: '2200-04-22T13:33:48Z',
+    closed_at: '2011-04-22T13:33:48Z',
     state_reason: 'not_planned',
   },
 ]

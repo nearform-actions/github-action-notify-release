@@ -18018,7 +18018,7 @@ function wrappy (fn, cb) {
 
 const github = __nccwpck_require__(5438)
 const { logInfo } = __nccwpck_require__(653)
-
+const { isStale } = __nccwpck_require__(3590)
 const fs = __nccwpck_require__(7147)
 const path = __nccwpck_require__(1017)
 const { promisify } = __nccwpck_require__(3837)
@@ -18133,29 +18133,38 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function tryGetClosedNotifyIssues(token, latestReleaseDate) {
+async function closedSnoozeIssue(token, latestReleaseDate, staleDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
-  const { data } = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
-    owner,
-    repo,
-    creator: 'app/github-actions',
-    state: STATE_CLOSED,
-    sort: 'created',
-    state_reason: 'not_planned',
-    direction: 'desc',
-    labels: ISSUE_LABEL,
-    since: latestReleaseDate,
-  })
-  return data
+  const { data: closedNotifyIssues } = await octokit.request(
+    `GET /repos/{owner}/{repo}/issues`,
+    {
+      owner,
+      repo,
+      creator: 'app/github-actions',
+      state: STATE_CLOSED,
+      sort: 'created',
+      state_reason: 'not_planned',
+      direction: 'desc',
+      labels: ISSUE_LABEL,
+      since: latestReleaseDate,
+    }
+  )
+
+  if (!closedNotifyIssues?.length) {
+    return true
+  }
+
+  return isStale(closedNotifyIssues[0].closed_at, staleDate)
 }
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
-  tryGetClosedNotifyIssues,
+  closedSnoozeIssue,
 }
 
 
@@ -18185,19 +18194,20 @@ exports.logWarning = log(warning)
 
 
 const { logInfo, logWarning } = __nccwpck_require__(653)
-const { tryGetLatestRelease, tryGetUnreleasedCommits } = __nccwpck_require__(2026)
+const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
-  tryGetClosedNotifyIssues,
+  closedSnoozeIssue,
 } = __nccwpck_require__(5465)
-const { isClosedNotifyIssueStale } = __nccwpck_require__(3590)
 
 async function runAction(token, staleDate, commitMessageLines) {
-  const latestRelease = await tryGetLatestRelease(token)
+  const latestRelease = await getLatestRelease(token)
 
-  if (!latestRelease) return logWarning('No latest release found')
+  if (!latestRelease) {
+    return logWarning('No latest release found')
+  }
 
   logInfo(`Latest release:
   - name:${latestRelease.name}
@@ -18206,22 +18216,19 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const closedNotifyIssues = await tryGetClosedNotifyIssues(
+  const isClosedSnoozeIssueStale = await closedSnoozeIssue(
     token,
-    latestRelease.published_at
+    latestRelease.published_at,
+    staleDate
   )
 
-  // exit if there is a closed notify issue but stale days have not passed
-  if (
-    closedNotifyIssues?.length &&
-    !isClosedNotifyIssueStale(closedNotifyIssues, staleDate)
-  ) {
+  if (!isClosedSnoozeIssueStale) {
     return logInfo('Non stale closed notify issue found')
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
 
-  const unreleasedCommits = await tryGetUnreleasedCommits(
+  const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
     staleDate
@@ -18262,23 +18269,19 @@ module.exports = {
 const github = __nccwpck_require__(5438)
 const { isCommitStale } = __nccwpck_require__(3590)
 
-async function tryGetLatestRelease(token) {
-  try {
-    const octokit = github.getOctokit(token)
-    const { owner, repo } = github.context.repo
+async function getLatestRelease(token) {
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
 
-    const { data } = await octokit.rest.repos.getLatestRelease({
-      owner,
-      repo,
-    })
+  const { data } = await octokit.rest.repos.getLatestRelease({
+    owner,
+    repo,
+  })
 
-    return data
-  } catch (error) {
-    return
-  }
+  return data
 }
 
-async function tryGetUnreleasedCommits(token, latestReleaseDate, staleDate) {
+async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -18294,8 +18297,8 @@ async function tryGetUnreleasedCommits(token, latestReleaseDate, staleDate) {
 }
 
 module.exports = {
-  tryGetLatestRelease,
-  tryGetUnreleasedCommits,
+  getLatestRelease,
+  getUnreleasedCommits,
 }
 
 
@@ -18322,15 +18325,13 @@ function staleDaysToDate(input) {
 }
 
 function isCommitStale(unreleasedCommits, staleDate) {
-  if (!unreleasedCommits || !unreleasedCommits.length) return false
   return unreleasedCommits.some((commit) => {
-    const commitDate = new Date(commit.commit.committer.date).getTime()
-    return commitDate < staleDate
+    return isStale(commit.commit.committer.date, staleDate)
   })
 }
 
-function isClosedNotifyIssueStale(closedNotifyIssues, staleDate) {
-  const issueClosedDate = new Date(closedNotifyIssues[0].closed_at).getTime()
+function isStale(date, staleDate) {
+  const issueClosedDate = new Date(date).getTime()
   return issueClosedDate < staleDate
 }
 
@@ -18342,7 +18343,7 @@ module.exports = {
   staleDaysToDate,
   isCommitStale,
   daysToMs,
-  isClosedNotifyIssueStale,
+  isStale,
 }
 
 

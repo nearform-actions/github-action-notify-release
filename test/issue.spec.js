@@ -170,9 +170,9 @@ test('Get closed notify', async () => {
   getOctokit.mockReturnValue({
     request,
   })
-
+  const staleDate = Date.now()
   const latestRelease = new Date()
-  const res = await issue.tryGetClosedNotifyIssues(token, latestRelease)
+  const res = await issue.closedSnoozeIssue(token, latestRelease, staleDate)
 
   expect(request).toHaveBeenCalledWith(`GET /repos/{owner}/{repo}/issues`, {
     owner,
@@ -186,7 +186,23 @@ test('Get closed notify', async () => {
     since: latestRelease,
   })
 
-  expect(res).toStrictEqual(closedNotifyIssues)
+  expect(res).toBe(true)
+})
+
+test('Not closed notify issue return true', async () => {
+  const request = jest.fn()
+
+  request.mockResolvedValue({
+    data: [],
+  })
+
+  getOctokit.mockReturnValue({
+    request,
+  })
+  const staleDate = Date.now()
+  const latestRelease = new Date()
+  const res = await issue.closedSnoozeIssue(token, latestRelease, staleDate)
+  expect(res).toBe(true)
 })
 
 test('Creates a snooze issue when no pending', async () => {

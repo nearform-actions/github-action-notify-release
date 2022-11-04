@@ -1,19 +1,20 @@
 'use strict'
 
 const { logInfo, logWarning } = require('./log')
-const { tryGetLatestRelease, tryGetUnreleasedCommits } = require('./release')
+const { getLatestRelease, getUnreleasedCommits } = require('./release')
 const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
-  tryGetClosedNotifyIssues,
+  closedSnoozeIssue,
 } = require('./issue')
-const { isClosedNotifyIssueStale } = require('./time-utils.js')
 
 async function runAction(token, staleDate, commitMessageLines) {
-  const latestRelease = await tryGetLatestRelease(token)
+  const latestRelease = await getLatestRelease(token)
 
-  if (!latestRelease) return logWarning('No latest release found')
+  if (!latestRelease) {
+    return logWarning('No latest release found')
+  }
 
   logInfo(`Latest release:
   - name:${latestRelease.name}
@@ -22,22 +23,19 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const closedNotifyIssues = await tryGetClosedNotifyIssues(
+  const isClosedSnoozeIssueStale = await closedSnoozeIssue(
     token,
-    latestRelease.published_at
+    latestRelease.published_at,
+    staleDate
   )
 
-  // exit if there is a closed notify issue but stale days have not passed
-  if (
-    closedNotifyIssues?.length &&
-    !isClosedNotifyIssueStale(closedNotifyIssues, staleDate)
-  ) {
+  if (!isClosedSnoozeIssueStale) {
     return logInfo('Non stale closed notify issue found')
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
 
-  const unreleasedCommits = await tryGetUnreleasedCommits(
+  const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
     staleDate

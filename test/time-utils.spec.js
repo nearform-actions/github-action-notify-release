@@ -3,7 +3,7 @@
 const {
   staleDaysToDate,
   isCommitStale,
-  isClosedNotifyIssueStale,
+  isStale,
   daysToMs,
 } = require('../src/time-utils.js')
 
@@ -43,16 +43,14 @@ test('there are commits before stale date', () => {
 })
 
 test('there are closed notify before stale date', () => {
-  const noStaleIssues = isClosedNotifyIssueStale(
+  const noStaleIssues = isStale(
     closedNotifyIssuesNeverStale,
     new Date('2000-04-26').getTime()
   )
+
   expect(noStaleIssues).toBe(false)
 
-  const stale = isClosedNotifyIssueStale(
-    closedNotifyIssues,
-    new Date().getTime()
-  )
+  const stale = isStale(closedNotifyIssues[0].closed_at, Date.now())
 
   expect(stale).toBe(true)
 })

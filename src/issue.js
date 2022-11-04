@@ -1,7 +1,7 @@
 'use strict'
 const github = require('@actions/github')
 const { logInfo } = require('./log')
-
+const { isStale } = require('./time-utils.js')
 const fs = require('fs')
 const path = require('path')
 const { promisify } = require('util')
@@ -116,27 +116,36 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function tryGetClosedNotifyIssues(token, latestReleaseDate) {
+async function closedSnoozeIssue(token, latestReleaseDate, staleDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
-  const { data } = await octokit.request(`GET /repos/{owner}/{repo}/issues`, {
-    owner,
-    repo,
-    creator: 'app/github-actions',
-    state: STATE_CLOSED,
-    sort: 'created',
-    state_reason: 'not_planned',
-    direction: 'desc',
-    labels: ISSUE_LABEL,
-    since: latestReleaseDate,
-  })
-  return data
+  const { data: closedNotifyIssues } = await octokit.request(
+    `GET /repos/{owner}/{repo}/issues`,
+    {
+      owner,
+      repo,
+      creator: 'app/github-actions',
+      state: STATE_CLOSED,
+      sort: 'created',
+      state_reason: 'not_planned',
+      direction: 'desc',
+      labels: ISSUE_LABEL,
+      since: latestReleaseDate,
+    }
+  )
+
+  if (!closedNotifyIssues?.length) {
+    return true
+  }
+
+  return isStale(closedNotifyIssues[0].closed_at, staleDate)
 }
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
   updateLastOpenPendingIssue,
   createOrUpdateIssue,
   closeIssue,
-  tryGetClosedNotifyIssues,
+  closedSnoozeIssue,
 }
