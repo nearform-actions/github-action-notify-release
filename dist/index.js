@@ -18197,7 +18197,7 @@ exports.logWarning = log(warning)
 "use strict";
 
 
-const { logInfo } = __nccwpck_require__(653)
+const { logInfo, logWarning } = __nccwpck_require__(653)
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
@@ -18210,7 +18210,7 @@ async function runAction(token, staleDate, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
-    return
+    return logWarning('No latest release found')
   }
 
   logInfo(`Latest release:
@@ -18268,7 +18268,6 @@ module.exports = {
 
 const github = __nccwpck_require__(5438)
 const { isSomeCommitStale } = __nccwpck_require__(3590)
-const { logWarning } = __nccwpck_require__(653)
 
 async function getLatestRelease(token) {
   try {
@@ -18279,10 +18278,9 @@ async function getLatestRelease(token) {
       owner,
       repo,
     })
-
     return data
   } catch (error) {
-    logWarning('No latest release found')
+    // no release found
   }
 }
 

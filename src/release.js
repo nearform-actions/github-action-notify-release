@@ -1,7 +1,6 @@
 'use strict'
 const github = require('@actions/github')
 const { isSomeCommitStale } = require('./time-utils.js')
-const { logWarning } = require('./log')
 
 async function getLatestRelease(token) {
   try {
@@ -12,10 +11,9 @@ async function getLatestRelease(token) {
       owner,
       repo,
     })
-
     return data
   } catch (error) {
-    logWarning('No latest release found')
+    // no release found
   }
 }
 

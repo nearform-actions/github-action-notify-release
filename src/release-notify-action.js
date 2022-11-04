@@ -1,6 +1,6 @@
 'use strict'
 
-const { logInfo } = require('./log')
+const { logInfo, logWarning } = require('./log')
 const { getLatestRelease, getUnreleasedCommits } = require('./release')
 const {
   createOrUpdateIssue,
@@ -13,7 +13,7 @@ async function runAction(token, staleDate, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
-    return
+    return logWarning('No latest release found')
   }
 
   logInfo(`Latest release:
