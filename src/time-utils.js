@@ -3,11 +3,12 @@ const ms = require('ms')
 
 function staleDaysToMs(input) {
   const staleDays = Number(input)
+  const now = Date.now()
   if (isNaN(staleDays)) {
     const stringToMs = ms(input)
-    return Date.now() - stringToMs
+    return now - stringToMs
   }
-  return Date.now() - daysToMs(staleDays)
+  return now - daysToMs(staleDays)
 }
 
 function isSomeCommitStale(commits, staleDate) {
