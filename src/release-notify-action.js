@@ -26,7 +26,7 @@ async function runAction(token, staleDate, commitMessageLines) {
   const snoozed = await isSnoozed(token, latestRelease.published_at, staleDate)
 
   if (snoozed) {
-    return logInfo('Release Notify has been snoozed')
+    return logInfo('Release notify has been snoozed')
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)
