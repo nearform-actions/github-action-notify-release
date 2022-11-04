@@ -10,8 +10,8 @@ function staleDaysToMs(input) {
   return new Date().getTime() - daysToMs(staleDays)
 }
 
-function isCommitStale(unreleasedCommits, staleDate) {
-  return unreleasedCommits.some((commit) => {
+function isSomeCommitStale(commits, staleDate) {
+  return commits.some((commit) => {
     return isStale(commit.commit.committer.date, staleDate)
   })
 }
@@ -27,7 +27,7 @@ function daysToMs(days) {
 
 module.exports = {
   staleDaysToMs,
-  isCommitStale,
+  isSomeCommitStale,
   daysToMs,
   isStale,
 }

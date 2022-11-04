@@ -2,7 +2,7 @@
 
 const {
   staleDaysToMs,
-  isCommitStale,
+  isSomeCommitStale,
   isStale,
   daysToMs,
 } = require('../src/time-utils.js')
@@ -29,15 +29,15 @@ test('convert stale days correctly', () => {
 })
 
 test('there are commits before stale date', () => {
-  const noStaleCommit = isCommitStale(
+  const noStaleCommit = isSomeCommitStale(
     allCommits.data,
     new Date('2000-04-26').getTime()
   )
   expect(noStaleCommit).toBe(false)
 
-  expect(isCommitStale([], Date.now())).toBe(false)
+  expect(isSomeCommitStale([], Date.now())).toBe(false)
 
-  const stale = isCommitStale(allCommits.data, new Date().getTime())
+  const stale = isSomeCommitStale(allCommits.data, new Date().getTime())
 
   expect(stale).toBe(true)
 })

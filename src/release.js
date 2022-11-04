@@ -1,6 +1,6 @@
 'use strict'
 const github = require('@actions/github')
-const { isCommitStale } = require('./time-utils.js')
+const { isSomeCommitStale } = require('./time-utils.js')
 
 async function getLatestRelease(token) {
   const octokit = github.getOctokit(token)
@@ -26,7 +26,9 @@ async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
       since: latestReleaseDate,
     }
   )
-  return isCommitStale(unreleasedCommits, staleDate) ? unreleasedCommits : []
+  return isSomeCommitStale(unreleasedCommits, staleDate)
+    ? unreleasedCommits
+    : []
 }
 
 module.exports = {

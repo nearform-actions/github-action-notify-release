@@ -18267,7 +18267,7 @@ module.exports = {
 "use strict";
 
 const github = __nccwpck_require__(5438)
-const { isCommitStale } = __nccwpck_require__(3590)
+const { isSomeCommitStale } = __nccwpck_require__(3590)
 
 async function getLatestRelease(token) {
   const octokit = github.getOctokit(token)
@@ -18293,7 +18293,9 @@ async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
       since: latestReleaseDate,
     }
   )
-  return isCommitStale(unreleasedCommits, staleDate) ? unreleasedCommits : []
+  return isSomeCommitStale(unreleasedCommits, staleDate)
+    ? unreleasedCommits
+    : []
 }
 
 module.exports = {
@@ -18320,8 +18322,8 @@ function staleDaysToMs(input) {
   return new Date().getTime() - daysToMs(staleDays)
 }
 
-function isCommitStale(unreleasedCommits, staleDate) {
-  return unreleasedCommits.some((commit) => {
+function isSomeCommitStale(commits, staleDate) {
+  return commits.some((commit) => {
     return isStale(commit.commit.committer.date, staleDate)
   })
 }
@@ -18337,7 +18339,7 @@ function daysToMs(days) {
 
 module.exports = {
   staleDaysToMs,
-  isCommitStale,
+  isSomeCommitStale,
   daysToMs,
   isStale,
 }
