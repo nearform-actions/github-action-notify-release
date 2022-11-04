@@ -1,17 +1,22 @@
 'use strict'
 const github = require('@actions/github')
 const { isSomeCommitStale } = require('./time-utils.js')
+const { logWarning } = require('./log')
 
 async function getLatestRelease(token) {
-  const octokit = github.getOctokit(token)
-  const { owner, repo } = github.context.repo
+  try {
+    const octokit = github.getOctokit(token)
+    const { owner, repo } = github.context.repo
 
-  const { data } = await octokit.rest.repos.getLatestRelease({
-    owner,
-    repo,
-  })
+    const { data } = await octokit.rest.repos.getLatestRelease({
+      owner,
+      repo,
+    })
 
-  return data
+    return data
+  } catch (error) {
+    logWarning('No latest release found')
+  }
 }
 
 async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {

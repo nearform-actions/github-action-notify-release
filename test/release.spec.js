@@ -33,14 +33,10 @@ test('Gets the latest release of the repository', async () => {
 test('return [] if no releases found', async () => {
   getOctokit.mockReturnValue({
     rest: {
-      repos: {
-        getLatestRelease: () => ({
-          data: [],
-        }),
-      },
+      repos: { getLatestRelease: () => Promise.reject(new Error()) },
     },
   })
-  expect(await getLatestRelease(token)).toStrictEqual([])
+  expect(await getLatestRelease(token)).toBeUndefined()
 })
 
 test('Gets the unreleased commits', async () => {

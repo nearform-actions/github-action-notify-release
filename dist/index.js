@@ -18197,7 +18197,7 @@ exports.logWarning = log(warning)
 "use strict";
 
 
-const { logInfo, logWarning } = __nccwpck_require__(653)
+const { logInfo } = __nccwpck_require__(653)
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
@@ -18210,7 +18210,7 @@ async function runAction(token, staleDate, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
-    return logWarning('No latest release found')
+    return
   }
 
   logInfo(`Latest release:
@@ -18268,17 +18268,22 @@ module.exports = {
 
 const github = __nccwpck_require__(5438)
 const { isSomeCommitStale } = __nccwpck_require__(3590)
+const { logWarning } = __nccwpck_require__(653)
 
 async function getLatestRelease(token) {
-  const octokit = github.getOctokit(token)
-  const { owner, repo } = github.context.repo
+  try {
+    const octokit = github.getOctokit(token)
+    const { owner, repo } = github.context.repo
 
-  const { data } = await octokit.rest.repos.getLatestRelease({
-    owner,
-    repo,
-  })
+    const { data } = await octokit.rest.repos.getLatestRelease({
+      owner,
+      repo,
+    })
 
-  return data
+    return data
+  } catch (error) {
+    logWarning('No latest release found')
+  }
 }
 
 async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
