@@ -4,7 +4,7 @@ const { getOctokit } = require('@actions/github')
 
 const issue = require('../src/issue')
 
-const { unreleasedCommitsData1 } = require('./testData')
+const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
 
 const token = 'dummytoken'
 const owner = 'sameer'
@@ -23,21 +23,17 @@ test('Creates an issue', async () => {
   getOctokit.mockReturnValue({
     rest: { issues: { create: async () => ({ data: { number: 9 } }) } },
   })
-  const issueTitle = 'Release pending!'
   const issueBody = 'issue has been created with pending commits'
 
-  const issueResponse = await issue.createIssue(token, issueTitle, issueBody)
+  const issueResponse = await issue.createIssue(token, issueBody)
   expect(issueResponse.data.number).toStrictEqual(9)
 })
 
 test('Throws if something went wrong in creating an issue', async () => {
   getOctokit.mockImplementation(() => null)
-  const issueTitle = 'Release pending!'
   const issueBody = 'issue has been created with pending commits'
 
-  await expect(
-    issue.createIssue(token, issueTitle, issueBody)
-  ).rejects.toThrow()
+  await expect(issue.createIssue(token, issueBody)).rejects.toThrow()
 })
 
 test('Updates an issue', async () => {
@@ -132,8 +128,7 @@ test('Update an issue when exists', async () => {
     token,
     unreleasedCommitsData1,
     { number: '1' },
-    'test-date',
-    1
+    'test-date'
   )
   expect(request).toHaveBeenCalledWith('PATCH /repos/{owner}/{repo}/issues/1', {
     owner,
@@ -160,4 +155,87 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
       ),
     })
   )
+})
+
+test('Get closed notify', async () => {
+  const request = jest.fn()
+
+  request.mockResolvedValue({
+    data: closedNotifyIssues,
+  })
+
+  getOctokit.mockReturnValue({
+    request,
+  })
+
+  const latestRelease = new Date()
+  const staleIssue = await issue.isSnoozed(token, latestRelease, Date.now())
+
+  expect(request).toHaveBeenCalledWith(`GET /repos/{owner}/{repo}/issues`, {
+    owner,
+    repo,
+    creator: 'app/github-actions',
+    state: 'closed',
+    sort: 'created',
+    state_reason: 'not_planned',
+    direction: 'desc',
+    labels: 'notify-release',
+    since: latestRelease,
+  })
+
+  expect(staleIssue).toBe(false)
+
+  const passedStaleDate = new Date('2000').getTime()
+  const nonStaleIssue = await issue.isSnoozed(
+    token,
+    latestRelease,
+    passedStaleDate
+  )
+  expect(nonStaleIssue).toBe(true)
+})
+
+test('', async () => {
+  const request = jest.fn()
+
+  request.mockResolvedValue({
+    data: [],
+  })
+
+  getOctokit.mockReturnValue({
+    request,
+  })
+  const latestRelease = new Date()
+  const res = await issue.isSnoozed(token, latestRelease, Date.now())
+  expect(res).toBe(false)
+})
+
+test('Creates a snooze issue when no pending', async () => {
+  const create = jest.fn()
+  getOctokit.mockReturnValue({ rest: { issues: { create } } })
+
+  await issue.createOrUpdateIssue(
+    token,
+    unreleasedCommitsData1,
+    null,
+    'test-date',
+    'snooze'
+  )
+  expect(create).toHaveBeenCalled()
+})
+
+test('Update a snooze issue when pending', async () => {
+  const request = jest.fn()
+  getOctokit.mockReturnValue({ request })
+  request.mockResolvedValue({
+    data: {},
+  })
+
+  await issue.createOrUpdateIssue(
+    token,
+    unreleasedCommitsData1,
+    { number: '1' },
+    'test-date',
+    'snooze'
+  )
+  expect(request).toHaveBeenCalled()
 })

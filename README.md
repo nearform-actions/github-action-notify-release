@@ -22,13 +22,19 @@ jobs:
 
 ## Usage
 
-Configure this action in your workflows providing the inputs described below in order to get notified in `x` days after the repo has been updated but no release has happened.
+Configure this action in your workflows providing the inputs described below in order to get notified in `x` time after the repo has been updated but no release has happened.
+It is possibile to snooze the notification issue for `x` time by closing it as **not planned**. Once the time has passed a new issue will be created.
 
 ### `github-token`
+
 **Optional** A GitHub token.
 
 ### `stale-days: 7`
-_Optional_ The number of days after which unreleased commits should be considered stale and should notify for a release. Default is `7`.
+
+**Optional** The time after which unreleased commits should be considered stale and should notify for a release. The value can be a number or a string.
+Example: `1 minute`.
+Default is `7` days.
 
 ### `commit-messages-lines: 1`
-_Optional_ Limit the number of first x lines from commit messages that will be added in the issue description. No truncation when set to `0`. Default is `1`.
+
+**Optional** Limit the number of first `x` lines from commit messages that will be added in the issue description. No truncation when set to `0`. Default is `1`.

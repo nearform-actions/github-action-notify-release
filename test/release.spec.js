@@ -1,7 +1,7 @@
 'use strict'
 const { getOctokit } = require('@actions/github')
 const { getLatestRelease, getUnreleasedCommits } = require('../src/release')
-
+const { daysToMs } = require('../src/time-utils.js')
 const {
   allCommitsData: allCommits,
   allReleasesData: allReleases,
@@ -30,48 +30,46 @@ test('Gets the latest release of the repository', async () => {
   expect(latestReleaseResponse).toStrictEqual(allReleases[0])
 })
 
-test('Throws if no releases found', async () => {
+test('throws if no releases found', async () => {
   getOctokit.mockReturnValue({
     rest: {
       repos: { getLatestRelease: () => Promise.reject(new Error()) },
     },
   })
-
-  await expect(getLatestRelease(token)).rejects.toBeDefined()
+  expect(await getLatestRelease(token)).toBeUndefined()
 })
 
-test('Gets the unreleased commits with stale-days as 0', async () => {
+test('Gets the unreleased commits', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
-  const daysToIgnore = 0
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,
-    daysToIgnore
+    Date.now()
   )
   expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1)
 })
 
 test('Gets the unreleased commits with stale-days as non zero', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
-  const daysToIgnore = 3
+  const staleDate = Date.now() - daysToMs(3)
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,
-    daysToIgnore
+    staleDate
   )
   expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1)
 })
 
 test('Gets the unreleased commits and uses default value of stale-days', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
-  const daysToIgnore = undefined
+  const staleDate = new Date('2000').getTime()
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,
-    daysToIgnore
+    staleDate
   )
   expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData0)
 })

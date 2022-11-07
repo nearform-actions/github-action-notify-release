@@ -6,15 +6,14 @@ const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
+  isSnoozed,
 } = require('./issue')
 
-async function runAction(token, staleDays, commitMessageLines) {
-  let latestRelease
+async function runAction(token, staleDate, commitMessageLines) {
+  const latestRelease = await getLatestRelease(token)
 
-  try {
-    latestRelease = await getLatestRelease(token)
-  } catch (err) {
-    return logWarning('Could not find latest release')
+  if (!latestRelease) {
+    return logWarning('No latest release found')
   }
 
   logInfo(`Latest release:
@@ -24,12 +23,18 @@ async function runAction(token, staleDays, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
+  const snoozed = await isSnoozed(token, latestRelease.published_at, staleDate)
+
+  if (snoozed) {
+    return logInfo('Release notify has been snoozed')
+  }
+
   const pendingIssue = await getLastOpenPendingIssue(token)
 
   const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
-    staleDays
+    staleDate
   )
 
   if (unreleasedCommits.length) {
@@ -42,7 +47,7 @@ async function runAction(token, staleDays, commitMessageLines) {
     )
   }
 
-  logInfo('No pending commits found')
+  logInfo('No stale commits or stale closed notify issue found')
 
   if (
     pendingIssue &&
