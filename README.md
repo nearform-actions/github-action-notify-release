@@ -29,7 +29,7 @@ It is possibile to snooze the notification issue for `x` time by closing it as *
 
 **Optional** A GitHub token.
 
-### `stale-days`
+### `stale-days: 7`
 
 **Optional** The time after which unreleased commits should be considered stale and should notify for a release. The value can be a number or a string.
 Example: `1 minute`.
