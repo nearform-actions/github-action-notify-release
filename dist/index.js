@@ -18155,11 +18155,7 @@ async function isSnoozed(token, latestReleaseDate, staleDate) {
     return false
   }
 
-  if (isStale(closedNotifyIssues[0].closed_at, staleDate)) {
-    return false
-  }
-
-  return true
+  return !isStale(closedNotifyIssues[0].closed_at, staleDate)
 }
 
 module.exports = {
