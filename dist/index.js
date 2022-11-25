@@ -18103,7 +18103,8 @@ async function createOrUpdateIssue(
   unreleasedCommits,
   pendingIssue,
   latestRelease,
-  commitMessageLines
+  commitMessageLines,
+  notifyAfter
 ) {
   registerHandlebarHelpers({
     commitMessageLines,
@@ -18111,6 +18112,7 @@ async function createOrUpdateIssue(
   const issueBody = await renderIssueBody({
     commits: unreleasedCommits,
     latestRelease,
+    notifyAfter,
   })
   if (pendingIssue) {
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
@@ -18202,7 +18204,7 @@ const {
   isSnoozed,
 } = __nccwpck_require__(5465)
 
-async function runAction(token, staleDate, commitMessageLines) {
+async function runAction(token, staleDate, commitMessageLines, notifyAfter) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -18236,7 +18238,8 @@ async function runAction(token, staleDate, commitMessageLines) {
       unreleasedCommits,
       pendingIssue,
       latestRelease,
-      commitMessageLines
+      commitMessageLines,
+      notifyAfter
     )
   }
 
@@ -18311,7 +18314,9 @@ module.exports = {
 "use strict";
 
 const ms = __nccwpck_require__(900)
+const { logWarning } = __nccwpck_require__(653)
 
+/** @deprecated */
 function staleDaysToMs(input) {
   const staleDays = Number(input)
   const now = Date.now()
@@ -18320,6 +18325,17 @@ function staleDaysToMs(input) {
     return now - stringToMs
   }
   return now - daysToMs(staleDays)
+}
+
+/** @deprecated */
+function staleDaysToStr(days) {
+  return `${days} day${days > 1 ? 's' : ''}`
+}
+
+function notifyAfterToMs(timeStr) {
+  const stringToMs = ms(timeStr)
+  const now = Date.now()
+  return now - stringToMs
 }
 
 function isSomeCommitStale(commits, staleDate) {
@@ -18332,15 +18348,44 @@ function isStale(date, staleDate) {
   return new Date(date).getTime() < staleDate
 }
 
+/** @deprecated */
 function daysToMs(days) {
   return days * 24 * 60 * 60 * 1000
 }
 
+function parseNotificationSettings(core) {
+  let staleDate, notifyAfter
+
+  if (!core.getInput('notify-after') && !core.getInput('stale-days')) {
+    return { staleDate: notifyAfterToMs('7 days'), notifyAfter: '7 days' }
+  }
+
+  if (core.getInput('notify-after')) {
+    notifyAfter = core.getInput('notify-after')
+    staleDate = notifyAfterToMs(notifyAfter)
+  } else {
+    const staleDays = core.getInput('stale-days')
+    staleDate = staleDaysToMs(staleDays)
+
+    notifyAfter =
+      typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
+
+    logWarning(
+      'stale-days option is deprecated and will be removed in the next major release'
+    )
+  }
+
+  return { staleDate, notifyAfter }
+}
+
 module.exports = {
-  staleDaysToMs,
   isSomeCommitStale,
   daysToMs,
   isStale,
+  parseNotificationSettings,
+  staleDaysToMs,
+  notifyAfterToMs,
+  staleDaysToStr,
 }
 
 
@@ -18527,17 +18572,17 @@ var __webpack_exports__ = {};
 
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
-const { staleDaysToMs } = __nccwpck_require__(3590)
+const { parseNotificationSettings } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const staleDate = staleDaysToMs(core.getInput('stale-days'))
+  const { staleDate, notifyAfter } = parseNotificationSettings(core)
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-  await runAction(token, staleDate, commitMessageLines)
+  await runAction(token, staleDate, commitMessageLines, notifyAfter)
 }
 
 run().catch((err) => core.setFailed(err))

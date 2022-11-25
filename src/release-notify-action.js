@@ -9,7 +9,7 @@ const {
   isSnoozed,
 } = require('./issue')
 
-async function runAction(token, staleDate, commitMessageLines) {
+async function runAction(token, staleDate, commitMessageLines, notifyAfter) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -43,7 +43,8 @@ async function runAction(token, staleDate, commitMessageLines) {
       unreleasedCommits,
       pendingIssue,
       latestRelease,
-      commitMessageLines
+      commitMessageLines,
+      notifyAfter
     )
   }
 

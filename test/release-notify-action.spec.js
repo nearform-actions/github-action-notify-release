@@ -41,7 +41,7 @@ test('Create issue for unreleased commits (no existing issues)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-  await runAction(token, Date.now(), 1)
+  await runAction(token, Date.now(), 1, '1 day')
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
   expect(issue.createOrUpdateIssue).toBeCalledWith(
@@ -49,7 +49,8 @@ test('Create issue for unreleased commits (no existing issues)', async () => {
     unreleasedCommitsData1,
     null,
     allReleases[0],
-    1
+    1,
+    '1 day'
   )
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
@@ -58,7 +59,7 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-  await runAction(token, Date.now(), 1)
+  await runAction(token, Date.now(), 1, '1 day')
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -67,7 +68,8 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
     unreleasedCommitsData1,
     pendingIssues[0],
     allReleases[0],
-    1
+    1,
+    '1 day'
   )
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
@@ -112,14 +114,15 @@ test('Create snooze issue if notify was closed', async () => {
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
 
   const staleDate = new Date('2000').getTime()
-  await runAction(token, staleDate, 1)
+  await runAction(token, staleDate, 1, '20 years')
 
   expect(issue.createOrUpdateIssue).toBeCalledWith(
     token,
     unreleasedCommitsData1,
     null,
     allReleases[0],
-    1
+    1,
+    '20 years'
   )
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })

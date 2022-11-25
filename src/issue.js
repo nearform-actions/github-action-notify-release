@@ -86,7 +86,8 @@ async function createOrUpdateIssue(
   unreleasedCommits,
   pendingIssue,
   latestRelease,
-  commitMessageLines
+  commitMessageLines,
+  notifyAfter
 ) {
   registerHandlebarHelpers({
     commitMessageLines,
@@ -94,6 +95,7 @@ async function createOrUpdateIssue(
   const issueBody = await renderIssueBody({
     commits: unreleasedCommits,
     latestRelease,
+    notifyAfter,
   })
   if (pendingIssue) {
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
