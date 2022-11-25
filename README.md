@@ -35,7 +35,7 @@ It is possibile to snooze the notification issue for `x` time by closing it as *
 Example: `1 minute`.
 Default is `7` days.
 
-### `notify-after: 7 days`
+### `notify-after: '7 days'`
 
 **Optional** The time after which unreleased commits should be considered stale and should notify for a release.
 Example: `1 minute`.
