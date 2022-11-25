@@ -38,6 +38,7 @@ Default is `7` days.
 ### `notify-after: '7 days'`
 
 **Optional** The time after which unreleased commits should be considered stale and should notify for a release.
+This option accepts various time formats as described by the time conversion [library](https://github.com/vercel/ms) used internally.
 Example: `1 minute`.
 Default is `7 days`.
 
