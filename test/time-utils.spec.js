@@ -140,7 +140,8 @@ test('parseNotificationSettings deafult value', () => {
     },
   }
 
-  const { notifyDate, notifyAfter } = parseNotificationSettings(coreStaleDaysStr)
+  const { notifyDate, notifyAfter } =
+    parseNotificationSettings(coreStaleDaysStr)
 
   expect(notifyDate).toEqual(now - daysToMs(7))
   expect(notifyAfter).toEqual('7 days')
