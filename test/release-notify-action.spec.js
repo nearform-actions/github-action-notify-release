@@ -113,8 +113,8 @@ test('Create snooze issue if notify was closed', async () => {
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
 
-  const staleDate = new Date('2000').getTime()
-  await runAction(token, staleDate, 1, '20 years')
+  const notifyDate = new Date('2000').getTime()
+  await runAction(token, notifyDate, 1, '20 years')
 
   expect(issue.createOrUpdateIssue).toBeCalledWith(
     token,
@@ -132,8 +132,8 @@ test('Do not create or update issue if snoozed', async () => {
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   issue.isSnoozed.mockResolvedValue(true)
-  const staleDate = new Date('2000').getTime()
-  await runAction(token, staleDate, 1)
+  const notifyDate = new Date('2000').getTime()
+  await runAction(token, notifyDate, 1)
   expect(issue.createOrUpdateIssue).not.toBeCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })

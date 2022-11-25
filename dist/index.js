@@ -18135,7 +18135,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function isSnoozed(token, latestReleaseDate, staleDate) {
+async function isSnoozed(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
   const { data: closedNotifyIssues } = await octokit.request(
@@ -18157,7 +18157,7 @@ async function isSnoozed(token, latestReleaseDate, staleDate) {
     return false
   }
 
-  return !isStale(closedNotifyIssues[0].closed_at, staleDate)
+  return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
 module.exports = {
@@ -18204,7 +18204,7 @@ const {
   isSnoozed,
 } = __nccwpck_require__(5465)
 
-async function runAction(token, staleDate, commitMessageLines, notifyAfter) {
+async function runAction(token, notifyDate, commitMessageLines, notifyAfter) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -18218,7 +18218,7 @@ async function runAction(token, staleDate, commitMessageLines, notifyAfter) {
   - author:${latestRelease.author.login}
 `)
 
-  const snoozed = await isSnoozed(token, latestRelease.published_at, staleDate)
+  const snoozed = await isSnoozed(token, latestRelease.published_at, notifyDate)
 
   if (snoozed) {
     return logInfo('Release notify has been snoozed')
@@ -18229,7 +18229,7 @@ async function runAction(token, staleDate, commitMessageLines, notifyAfter) {
   const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
-    staleDate
+    notifyDate
   )
 
   if (unreleasedCommits.length) {
@@ -18283,7 +18283,7 @@ async function getLatestRelease(token) {
   }
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
+async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -18295,7 +18295,7 @@ async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
       since: latestReleaseDate,
     }
   )
-  return isSomeCommitStale(unreleasedCommits, staleDate)
+  return isSomeCommitStale(unreleasedCommits, notifyDate)
     ? unreleasedCommits
     : []
 }
@@ -18338,14 +18338,14 @@ function notifyAfterToMs(timeStr) {
   return now - stringToMs
 }
 
-function isSomeCommitStale(commits, staleDate) {
+function isSomeCommitStale(commits, notifyDate) {
   return commits.some((commit) => {
-    return isStale(commit.commit.committer.date, staleDate)
+    return isStale(commit.commit.committer.date, notifyDate)
   })
 }
 
-function isStale(date, staleDate) {
-  return new Date(date).getTime() < staleDate
+function isStale(date, notifyDate) {
+  return new Date(date).getTime() < notifyDate
 }
 
 /** @deprecated */
@@ -18354,18 +18354,18 @@ function daysToMs(days) {
 }
 
 function parseNotificationSettings(core) {
-  let staleDate, notifyAfter
+  let notifyDate, notifyAfter
 
   if (!core.getInput('notify-after') && !core.getInput('stale-days')) {
-    return { staleDate: notifyAfterToMs('7 days'), notifyAfter: '7 days' }
+    return { notifyDate: notifyAfterToMs('7 days'), notifyAfter: '7 days' }
   }
 
   if (core.getInput('notify-after')) {
     notifyAfter = core.getInput('notify-after')
-    staleDate = notifyAfterToMs(notifyAfter)
+    notifyDate = notifyAfterToMs(notifyAfter)
   } else {
     const staleDays = core.getInput('stale-days')
-    staleDate = staleDaysToMs(staleDays)
+    notifyDate = staleDaysToMs(staleDays)
 
     notifyAfter =
       typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
@@ -18375,7 +18375,7 @@ function parseNotificationSettings(core) {
     )
   }
 
-  return { staleDate, notifyAfter }
+  return { notifyDate, notifyAfter }
 }
 
 module.exports = {
@@ -18579,10 +18579,10 @@ async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const { staleDate, notifyAfter } = parseNotificationSettings(core)
+  const { notifyDate, notifyAfter } = parseNotificationSettings(core)
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-  await runAction(token, staleDate, commitMessageLines, notifyAfter)
+  await runAction(token, notifyDate, commitMessageLines, notifyAfter)
 }
 
 run().catch((err) => core.setFailed(err))

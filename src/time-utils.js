@@ -24,14 +24,14 @@ function notifyAfterToMs(timeStr) {
   return now - stringToMs
 }
 
-function isSomeCommitStale(commits, staleDate) {
+function isSomeCommitStale(commits, notifyDate) {
   return commits.some((commit) => {
-    return isStale(commit.commit.committer.date, staleDate)
+    return isStale(commit.commit.committer.date, notifyDate)
   })
 }
 
-function isStale(date, staleDate) {
-  return new Date(date).getTime() < staleDate
+function isStale(date, notifyDate) {
+  return new Date(date).getTime() < notifyDate
 }
 
 /** @deprecated */
@@ -40,18 +40,18 @@ function daysToMs(days) {
 }
 
 function parseNotificationSettings(core) {
-  let staleDate, notifyAfter
+  let notifyDate, notifyAfter
 
   if (!core.getInput('notify-after') && !core.getInput('stale-days')) {
-    return { staleDate: notifyAfterToMs('7 days'), notifyAfter: '7 days' }
+    return { notifyDate: notifyAfterToMs('7 days'), notifyAfter: '7 days' }
   }
 
   if (core.getInput('notify-after')) {
     notifyAfter = core.getInput('notify-after')
-    staleDate = notifyAfterToMs(notifyAfter)
+    notifyDate = notifyAfterToMs(notifyAfter)
   } else {
     const staleDays = core.getInput('stale-days')
-    staleDate = staleDaysToMs(staleDays)
+    notifyDate = staleDaysToMs(staleDays)
 
     notifyAfter =
       typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
@@ -61,7 +61,7 @@ function parseNotificationSettings(core) {
     )
   }
 
-  return { staleDate, notifyAfter }
+  return { notifyDate, notifyAfter }
 }
 
 module.exports = {

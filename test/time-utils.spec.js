@@ -83,8 +83,8 @@ test('parseNotificationSettings parse time correctly when notify after is passed
     },
   }
 
-  const { staleDate, notifyAfter } = parseNotificationSettings(core)
-  expect(staleDate).toEqual(now - 60 * 60 * 1000)
+  const { notifyDate, notifyAfter } = parseNotificationSettings(core)
+  expect(notifyDate).toEqual(now - 60 * 60 * 1000)
   expect(notifyAfter).toEqual('1 hour')
 
   spy.mockRestore()
@@ -102,7 +102,7 @@ test('parseNotificationSettings parse time correctly when notify is undefined', 
     },
   }
 
-  const { staleDate: staleDateFirst, notifyAfter: notifyAfterFirst } =
+  const { notifyDate: staleDateFirst, notifyAfter: notifyAfterFirst } =
     parseNotificationSettings(coreStaleDaysStr)
 
   expect(staleDateFirst).toEqual(now - 60 * 60 * 1000)
@@ -116,7 +116,7 @@ test('parseNotificationSettings parse time correctly when notify is undefined', 
     },
   }
 
-  const { staleDate: staleDateSecond, notifyAfter: notifyAfterSecond } =
+  const { notifyDate: staleDateSecond, notifyAfter: notifyAfterSecond } =
     parseNotificationSettings(coreStaleDaysNumber)
   expect(staleDateSecond).toEqual(now - daysToMs(7))
   expect(notifyAfterSecond).toEqual('7 days')
@@ -140,9 +140,9 @@ test('parseNotificationSettings deafult value', () => {
     },
   }
 
-  const { staleDate, notifyAfter } = parseNotificationSettings(coreStaleDaysStr)
+  const { notifyDate, notifyAfter } = parseNotificationSettings(coreStaleDaysStr)
 
-  expect(staleDate).toEqual(now - daysToMs(7))
+  expect(notifyDate).toEqual(now - daysToMs(7))
   expect(notifyAfter).toEqual('7 days')
 
   spy.mockRestore()

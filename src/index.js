@@ -8,10 +8,10 @@ async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const { staleDate, notifyAfter } = parseNotificationSettings(core)
+  const { notifyDate, notifyAfter } = parseNotificationSettings(core)
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-  await runAction(token, staleDate, commitMessageLines, notifyAfter)
+  await runAction(token, notifyDate, commitMessageLines, notifyAfter)
 }
 
 run().catch((err) => core.setFailed(err))

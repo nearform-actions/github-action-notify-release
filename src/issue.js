@@ -118,7 +118,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function isSnoozed(token, latestReleaseDate, staleDate) {
+async function isSnoozed(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
   const { data: closedNotifyIssues } = await octokit.request(
@@ -140,7 +140,7 @@ async function isSnoozed(token, latestReleaseDate, staleDate) {
     return false
   }
 
-  return !isStale(closedNotifyIssues[0].closed_at, staleDate)
+  return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
 module.exports = {
