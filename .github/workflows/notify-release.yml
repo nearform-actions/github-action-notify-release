@@ -15,4 +15,4 @@ jobs:
         id: notify
         uses: nearform/github-action-notify-release@main
         with:
-          stale-days: 0
+          notify-after: '0'
