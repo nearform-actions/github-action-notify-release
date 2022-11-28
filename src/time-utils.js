@@ -1,33 +1,47 @@
 'use strict'
 const ms = require('ms')
+const { logWarning } = require('./log')
 
-function staleDaysToMs(input) {
-  const staleDays = Number(input)
-  const now = Date.now()
-  if (isNaN(staleDays)) {
-    const stringToMs = ms(input)
-    return now - stringToMs
-  }
-  return now - daysToMs(staleDays)
+function notifyAfterToMs(input) {
+  const stringToMs = ms(input)
+  return Date.now() - stringToMs
 }
 
-function isSomeCommitStale(commits, staleDate) {
+/** @deprecated */
+function staleDaysToStr(days) {
+  return `${days} day${days > 1 ? 's' : ''}`
+}
+
+function isSomeCommitStale(commits, notifyDate) {
   return commits.some((commit) => {
-    return isStale(commit.commit.committer.date, staleDate)
+    return isStale(commit.commit.committer.date, notifyDate)
   })
 }
 
-function isStale(date, staleDate) {
-  return new Date(date).getTime() < staleDate
+function isStale(date, notifyDate) {
+  return new Date(date).getTime() < notifyDate
 }
 
-function daysToMs(days) {
-  return days * 24 * 60 * 60 * 1000
+function parseNotifyAfter(notifyAfter, staleDays) {
+  if (!notifyAfter && !staleDays) {
+    return '7 days'
+  }
+
+  if (notifyAfter) {
+    return notifyAfter
+  }
+
+  logWarning(
+    'stale-days option is deprecated and will be removed in the next major release'
+  )
+
+  return typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
 }
 
 module.exports = {
-  staleDaysToMs,
   isSomeCommitStale,
-  daysToMs,
   isStale,
+  parseNotifyAfter,
+  notifyAfterToMs,
+  staleDaysToStr,
 }

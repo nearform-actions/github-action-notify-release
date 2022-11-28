@@ -1,10 +1,11 @@
 'use strict'
 
 const {
-  staleDaysToMs,
+  notifyAfterToMs,
   isSomeCommitStale,
   isStale,
-  daysToMs,
+  parseNotifyAfter,
+  staleDaysToStr,
 } = require('../src/time-utils.js')
 
 const {
@@ -15,17 +16,13 @@ const {
 
 test('convert stale days correctly', () => {
   const now = Date.now()
-  const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
 
-  const sevenDaysAgo = staleDaysToMs(7)
-  expect(sevenDaysAgo).toEqual(now - daysToMs(7))
-
-  const defaultStaleDate = () => staleDaysToMs()
+  const defaultStaleDate = () => notifyAfterToMs()
   expect(defaultStaleDate).toThrow()
 
-  const oneHourAgo = staleDaysToMs('1 hour')
+  const oneHourAgo = notifyAfterToMs('1 hour')
   expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
-  spy.mockRestore()
 })
 
 test('there are commits before stale date', () => {
@@ -53,4 +50,49 @@ test('there are closed notify before stale date', () => {
   const stale = isStale(closedNotifyIssues[0].closed_at, Date.now())
 
   expect(stale).toBe(true)
+})
+
+test('convert notify after to date', () => {
+  const now = Date.now()
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+  const defaultStaleDate = () => notifyAfterToMs()
+  expect(defaultStaleDate).toThrow()
+
+  const oneHourAgo = notifyAfterToMs('1 hour')
+  expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
+})
+
+test('parseNotifyAfter parse time correctly when notify after is passed', () => {
+  const now = Date.now()
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+  const notifyAfter = parseNotifyAfter('1 hour', 7)
+  expect(notifyAfter).toEqual('1 hour')
+})
+
+test('parseNotifyAfter parse time correctly when notify is undefined', () => {
+  const now = Date.now()
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+  const notifyAfter = parseNotifyAfter(undefined, '1 hour')
+
+  expect(notifyAfter).toEqual('1 hour')
+
+  const notifyAfterSecond = parseNotifyAfter(undefined, 7)
+  expect(notifyAfterSecond).toEqual('7 days')
+})
+
+test('staleDaysToStr converts correctly', () => {
+  expect(staleDaysToStr(7)).toEqual('7 days')
+  expect(staleDaysToStr(1)).toEqual('1 day')
+})
+
+test('parseNotifyAfter default value', () => {
+  const now = Date.now()
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+  const notifyAfter = parseNotifyAfter(undefined, undefined)
+
+  expect(notifyAfter).toEqual('7 days')
 })
