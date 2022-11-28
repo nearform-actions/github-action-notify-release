@@ -4,7 +4,7 @@ const {
   notifyAfterToMs,
   isSomeCommitStale,
   isStale,
-  parseNotificationSettings,
+  parseNotifyAfter,
   staleDaysToStr,
 } = require('../src/time-utils.js')
 
@@ -66,49 +66,25 @@ test('convert notify after to date', () => {
   spy.mockRestore()
 })
 
-test('parseNotificationSettings parse time correctly when notify after is passed', () => {
+test('parseNotifyAfter parse time correctly when notify after is passed', () => {
   const now = Date.now()
   const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
 
-  const core = {
-    'notify-after': '1 hour',
-    'stale-days': 7,
-    getInput: function (input) {
-      return this[input]
-    },
-  }
-
-  const notifyAfter = parseNotificationSettings(core)
+  const notifyAfter = parseNotifyAfter('1 hour', 7)
   expect(notifyAfter).toEqual('1 hour')
 
   spy.mockRestore()
 })
 
-test('parseNotificationSettings parse time correctly when notify is undefined', () => {
+test('parseNotifyAfter parse time correctly when notify is undefined', () => {
   const now = Date.now()
   const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
 
-  const coreStaleDaysStr = {
-    'notify-after': undefined,
-    'stale-days': '1 hour',
-    getInput: function (input) {
-      return this[input]
-    },
-  }
+  const notifyAfter = parseNotifyAfter(undefined, '1 hour')
 
-  const notifyAfterFirst = parseNotificationSettings(coreStaleDaysStr)
+  expect(notifyAfter).toEqual('1 hour')
 
-  expect(notifyAfterFirst).toEqual('1 hour')
-
-  const coreStaleDaysNumber = {
-    'notify-after': undefined,
-    'stale-days': 7,
-    getInput: function (input) {
-      return this[input]
-    },
-  }
-
-  const notifyAfterSecond = parseNotificationSettings(coreStaleDaysNumber)
+  const notifyAfterSecond = parseNotifyAfter(undefined, 7)
   expect(notifyAfterSecond).toEqual('7 days')
   spy.mockRestore()
 })
@@ -118,19 +94,11 @@ test('staleDaysToStr converts correctly', () => {
   expect(staleDaysToStr(1)).toEqual('1 day')
 })
 
-test('parseNotificationSettings default value', () => {
+test('parseNotifyAfter default value', () => {
   const now = Date.now()
   const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
 
-  const coreStaleDaysStr = {
-    'notify-after': undefined,
-    'stale-days': undefined,
-    getInput: function (input) {
-      return this[input]
-    },
-  }
-
-  const notifyAfter = parseNotificationSettings(coreStaleDaysStr)
+  const notifyAfter = parseNotifyAfter(undefined, undefined)
 
   expect(notifyAfter).toEqual('7 days')
 

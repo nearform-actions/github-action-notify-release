@@ -29,18 +29,18 @@ It is possibile to snooze the notification issue for `x` time by closing it as *
 
 **Optional** A GitHub token.
 
+### `notify-after: '7 days'`
+
+**Optional** The time after which unreleased commits should be considered stale and should notify for a release.
+This option accepts various time formats as described by the time conversion library [ms](https://github.com/vercel/ms) used internally.
+Example: `1 minute`.
+Default is `7 days`.
+
 ### **Deprecated** `stale-days: 7`
 
 **Optional** The time after which unreleased commits should be considered stale and should notify for a release. The value can be a number or a string.
 Example: `1 minute`.
 Default is `7` days.
-
-### `notify-after: '7 days'`
-
-**Optional** The time after which unreleased commits should be considered stale and should notify for a release.
-This option accepts various time formats as described by the time conversion [library](https://github.com/vercel/ms) used internally.
-Example: `1 minute`.
-Default is `7 days`.
 
 ### `commit-messages-lines: 1`
 

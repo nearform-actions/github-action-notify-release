@@ -22,27 +22,26 @@ function isStale(date, notifyDate) {
   return new Date(date).getTime() < notifyDate
 }
 
-function parseNotificationSettings(core) {
-  const staleDays = core.getInput('stale-days')
-  const notifyAfter = core.getInput('notify-after')
+function parseNotifyAfter(notifyAfter, staleDays) {
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
 
-  if (!notifyAfter) {
-    logWarning(
-      'stale-days option is deprecated and will be removed in the next major release'
-    )
-    return typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
+  if (notifyAfter) {
+    return notifyAfter
   }
 
-  return notifyAfter
+  logWarning(
+    'stale-days option is deprecated and will be removed in the next major release'
+  )
+
+  return typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
 }
 
 module.exports = {
   isSomeCommitStale,
   isStale,
-  parseNotificationSettings,
+  parseNotifyAfter,
   notifyAfterToMs,
   staleDaysToStr,
 }

@@ -18339,27 +18339,26 @@ function isStale(date, notifyDate) {
   return new Date(date).getTime() < notifyDate
 }
 
-function parseNotificationSettings(core) {
-  const staleDays = core.getInput('stale-days')
-  const notifyAfter = core.getInput('notify-after')
+function parseNotifyAfter(notifyAfter, staleDays) {
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
 
-  if (!notifyAfter) {
-    logWarning(
-      'stale-days option is deprecated and will be removed in the next major release'
-    )
-    return typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
+  if (notifyAfter) {
+    return notifyAfter
   }
 
-  return notifyAfter
+  logWarning(
+    'stale-days option is deprecated and will be removed in the next major release'
+  )
+
+  return typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
 }
 
 module.exports = {
   isSomeCommitStale,
   isStale,
-  parseNotificationSettings,
+  parseNotifyAfter,
   notifyAfterToMs,
   staleDaysToStr,
 }
@@ -18548,14 +18547,19 @@ var __webpack_exports__ = {};
 
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
-const { parseNotificationSettings } = __nccwpck_require__(3590)
+const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const notifyAfter = parseNotificationSettings(core)
+
+  const notifyAfter = parseNotifyAfter(
+    core.getInput('notify-after'),
+    core.getInput('stale-days')
+  )
+
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
   await runAction(token, notifyAfter, commitMessageLines)
