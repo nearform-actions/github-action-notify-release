@@ -16,14 +16,13 @@ const {
 
 test('convert stale days correctly', () => {
   const now = Date.now()
-  const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
 
   const defaultStaleDate = () => notifyAfterToMs()
   expect(defaultStaleDate).toThrow()
 
   const oneHourAgo = notifyAfterToMs('1 hour')
   expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
-  spy.mockRestore()
 })
 
 test('there are commits before stale date', () => {
@@ -55,30 +54,26 @@ test('there are closed notify before stale date', () => {
 
 test('convert notify after to date', () => {
   const now = Date.now()
-  const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
 
   const defaultStaleDate = () => notifyAfterToMs()
   expect(defaultStaleDate).toThrow()
 
   const oneHourAgo = notifyAfterToMs('1 hour')
   expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
-
-  spy.mockRestore()
 })
 
 test('parseNotifyAfter parse time correctly when notify after is passed', () => {
   const now = Date.now()
-  const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
 
   const notifyAfter = parseNotifyAfter('1 hour', 7)
   expect(notifyAfter).toEqual('1 hour')
-
-  spy.mockRestore()
 })
 
 test('parseNotifyAfter parse time correctly when notify is undefined', () => {
   const now = Date.now()
-  const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
 
   const notifyAfter = parseNotifyAfter(undefined, '1 hour')
 
@@ -86,7 +81,6 @@ test('parseNotifyAfter parse time correctly when notify is undefined', () => {
 
   const notifyAfterSecond = parseNotifyAfter(undefined, 7)
   expect(notifyAfterSecond).toEqual('7 days')
-  spy.mockRestore()
 })
 
 test('staleDaysToStr converts correctly', () => {
@@ -96,11 +90,9 @@ test('staleDaysToStr converts correctly', () => {
 
 test('parseNotifyAfter default value', () => {
   const now = Date.now()
-  const spy = jest.spyOn(Date, 'now').mockImplementation(() => now)
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
 
   const notifyAfter = parseNotifyAfter(undefined, undefined)
 
   expect(notifyAfter).toEqual('7 days')
-
-  spy.mockRestore()
 })
