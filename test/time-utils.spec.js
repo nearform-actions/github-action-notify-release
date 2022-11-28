@@ -21,6 +21,9 @@ test('convert stale days correctly', () => {
   const defaultStaleDate = () => notifyAfterToMs()
   expect(defaultStaleDate).toThrow()
 
+  const zeroAsNow = notifyAfterToMs('0')
+  expect(zeroAsNow).toEqual(now)
+
   const oneHourAgo = notifyAfterToMs('1 hour')
   expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
 })
