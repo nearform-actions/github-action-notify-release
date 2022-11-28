@@ -1,7 +1,6 @@
 'use strict'
 const { getOctokit } = require('@actions/github')
 const { getLatestRelease, getUnreleasedCommits } = require('../src/release')
-const { daysToMs } = require('../src/time-utils.js')
 const {
   allCommitsData: allCommits,
   allReleasesData: allReleases,
@@ -52,7 +51,7 @@ test('Gets the unreleased commits', async () => {
 
 test('Gets the unreleased commits with stale-days as non zero', async () => {
   getOctokit.mockReturnValue({ request: async () => allCommits })
-  const notifyDate = Date.now() - daysToMs(3)
+  const notifyDate = Date.now() - 3 * 24 * 60 * 60 * 1000
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,

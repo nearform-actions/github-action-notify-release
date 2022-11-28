@@ -8,8 +8,9 @@ const {
   closeIssue,
   isSnoozed,
 } = require('./issue')
+const { notifyAfterToMs } = require('./time-utils.js')
 
-async function runAction(token, notifyDate, commitMessageLines, notifyAfter) {
+async function runAction(token, notifyAfter, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -22,6 +23,8 @@ async function runAction(token, notifyDate, commitMessageLines, notifyAfter) {
   - tag:${latestRelease.tag_name}
   - author:${latestRelease.author.login}
 `)
+
+  const notifyDate = notifyAfterToMs(notifyAfter)
 
   const snoozed = await isSnoozed(token, latestRelease.published_at, notifyDate)
 

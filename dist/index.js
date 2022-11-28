@@ -18203,8 +18203,9 @@ const {
   closeIssue,
   isSnoozed,
 } = __nccwpck_require__(5465)
+const { notifyAfterToMs } = __nccwpck_require__(3590)
 
-async function runAction(token, notifyDate, commitMessageLines, notifyAfter) {
+async function runAction(token, notifyAfter, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -18217,6 +18218,8 @@ async function runAction(token, notifyDate, commitMessageLines, notifyAfter) {
   - tag:${latestRelease.tag_name}
   - author:${latestRelease.author.login}
 `)
+
+  const notifyDate = notifyAfterToMs(notifyAfter)
 
   const snoozed = await isSnoozed(token, latestRelease.published_at, notifyDate)
 
@@ -18316,26 +18319,14 @@ module.exports = {
 const ms = __nccwpck_require__(900)
 const { logWarning } = __nccwpck_require__(653)
 
-/** @deprecated */
-function staleDaysToMs(input) {
-  const staleDays = Number(input)
-  const now = Date.now()
-  if (isNaN(staleDays)) {
-    const stringToMs = ms(input)
-    return now - stringToMs
-  }
-  return now - daysToMs(staleDays)
+function notifyAfterToMs(input) {
+  const stringToMs = ms(input)
+  return Date.now() - stringToMs
 }
 
 /** @deprecated */
 function staleDaysToStr(days) {
   return `${days} day${days > 1 ? 's' : ''}`
-}
-
-function notifyAfterToMs(timeStr) {
-  const stringToMs = ms(timeStr)
-  const now = Date.now()
-  return now - stringToMs
 }
 
 function isSomeCommitStale(commits, notifyDate) {
@@ -18348,42 +18339,27 @@ function isStale(date, notifyDate) {
   return new Date(date).getTime() < notifyDate
 }
 
-/** @deprecated */
-function daysToMs(days) {
-  return days * 24 * 60 * 60 * 1000
-}
-
 function parseNotificationSettings(core) {
-  let notifyDate, notifyAfter
-
-  if (!core.getInput('notify-after') && !core.getInput('stale-days')) {
-    return { notifyDate: notifyAfterToMs('7 days'), notifyAfter: '7 days' }
+  const staleDays = core.getInput('stale-days')
+  const notifyAfter = core.getInput('notify-after')
+  if (!notifyAfter && !staleDays) {
+    return '7 days'
   }
 
-  if (core.getInput('notify-after')) {
-    notifyAfter = core.getInput('notify-after')
-    notifyDate = notifyAfterToMs(notifyAfter)
-  } else {
-    const staleDays = core.getInput('stale-days')
-    notifyDate = staleDaysToMs(staleDays)
-
-    notifyAfter =
-      typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
-
+  if (!notifyAfter) {
     logWarning(
       'stale-days option is deprecated and will be removed in the next major release'
     )
+    return typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
   }
 
-  return { notifyDate, notifyAfter }
+  return notifyAfter
 }
 
 module.exports = {
   isSomeCommitStale,
-  daysToMs,
   isStale,
   parseNotificationSettings,
-  staleDaysToMs,
   notifyAfterToMs,
   staleDaysToStr,
 }
@@ -18579,10 +18555,10 @@ async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const { notifyDate, notifyAfter } = parseNotificationSettings(core)
+  const notifyAfter = parseNotificationSettings(core)
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-  await runAction(token, notifyDate, commitMessageLines, notifyAfter)
+  await runAction(token, notifyAfter, commitMessageLines)
 }
 
 run().catch((err) => core.setFailed(err))

@@ -41,7 +41,7 @@ test('Create issue for unreleased commits (no existing issues)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-  await runAction(token, Date.now(), 1, '1 day')
+  await runAction(token, '1 day', 1)
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
   expect(issue.createOrUpdateIssue).toBeCalledWith(
@@ -59,7 +59,7 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-  await runAction(token, Date.now(), 1, '1 day')
+  await runAction(token, '1 day', 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -78,7 +78,7 @@ test('Close issue when there is one pending and no unreleased commits', async ()
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue([])
-  await runAction(token, Date.now(), 1)
+  await runAction(token, '1 second', 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -90,7 +90,7 @@ test('Do nothing when there is one issue pending and no new releases', async () 
   release.getLatestRelease.mockResolvedValue(allReleases[1])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue([])
-  await runAction(token, Date.now(), 1)
+  await runAction(token, '1 second', 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
@@ -100,7 +100,7 @@ test('Do nothing when there is one issue pending and no new releases', async () 
 
 test('Do nothing when no releases found', async () => {
   release.getLatestRelease.mockResolvedValue()
-  await runAction(token, Date.now(), 1)
+  await runAction(token, '1 second', 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).not.toHaveBeenCalled()
@@ -113,8 +113,7 @@ test('Create snooze issue if notify was closed', async () => {
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
 
-  const notifyDate = new Date('2000').getTime()
-  await runAction(token, notifyDate, 1, '20 years')
+  await runAction(token, '20 years', 1)
 
   expect(issue.createOrUpdateIssue).toBeCalledWith(
     token,
@@ -132,8 +131,7 @@ test('Do not create or update issue if snoozed', async () => {
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   issue.isSnoozed.mockResolvedValue(true)
-  const notifyDate = new Date('2000').getTime()
-  await runAction(token, notifyDate, 1)
+  await runAction(token, '1 second', 1)
   expect(issue.createOrUpdateIssue).not.toBeCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
