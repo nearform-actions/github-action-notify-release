@@ -8,8 +8,9 @@ const {
   closeIssue,
   isSnoozed,
 } = require('./issue')
+const { notifyAfterToMs } = require('./time-utils.js')
 
-async function runAction(token, staleDate, commitMessageLines) {
+async function runAction(token, notifyAfter, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -23,7 +24,9 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const snoozed = await isSnoozed(token, latestRelease.published_at, staleDate)
+  const notifyDate = notifyAfterToMs(notifyAfter)
+
+  const snoozed = await isSnoozed(token, latestRelease.published_at, notifyDate)
 
   if (snoozed) {
     return logInfo('Release notify has been snoozed')
@@ -34,7 +37,7 @@ async function runAction(token, staleDate, commitMessageLines) {
   const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
-    staleDate
+    notifyDate
   )
 
   if (unreleasedCommits.length) {
@@ -43,7 +46,8 @@ async function runAction(token, staleDate, commitMessageLines) {
       unreleasedCommits,
       pendingIssue,
       latestRelease,
-      commitMessageLines
+      commitMessageLines,
+      notifyAfter
     )
   }
 

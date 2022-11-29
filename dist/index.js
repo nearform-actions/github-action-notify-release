@@ -18103,7 +18103,8 @@ async function createOrUpdateIssue(
   unreleasedCommits,
   pendingIssue,
   latestRelease,
-  commitMessageLines
+  commitMessageLines,
+  notifyAfter
 ) {
   registerHandlebarHelpers({
     commitMessageLines,
@@ -18111,6 +18112,7 @@ async function createOrUpdateIssue(
   const issueBody = await renderIssueBody({
     commits: unreleasedCommits,
     latestRelease,
+    notifyAfter,
   })
   if (pendingIssue) {
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
@@ -18133,7 +18135,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function isSnoozed(token, latestReleaseDate, staleDate) {
+async function isSnoozed(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
   const { data: closedNotifyIssues } = await octokit.request(
@@ -18155,7 +18157,7 @@ async function isSnoozed(token, latestReleaseDate, staleDate) {
     return false
   }
 
-  return !isStale(closedNotifyIssues[0].closed_at, staleDate)
+  return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
 module.exports = {
@@ -18201,8 +18203,9 @@ const {
   closeIssue,
   isSnoozed,
 } = __nccwpck_require__(5465)
+const { notifyAfterToMs } = __nccwpck_require__(3590)
 
-async function runAction(token, staleDate, commitMessageLines) {
+async function runAction(token, notifyAfter, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -18216,7 +18219,9 @@ async function runAction(token, staleDate, commitMessageLines) {
   - author:${latestRelease.author.login}
 `)
 
-  const snoozed = await isSnoozed(token, latestRelease.published_at, staleDate)
+  const notifyDate = notifyAfterToMs(notifyAfter)
+
+  const snoozed = await isSnoozed(token, latestRelease.published_at, notifyDate)
 
   if (snoozed) {
     return logInfo('Release notify has been snoozed')
@@ -18227,7 +18232,7 @@ async function runAction(token, staleDate, commitMessageLines) {
   const unreleasedCommits = await getUnreleasedCommits(
     token,
     latestRelease.published_at,
-    staleDate
+    notifyDate
   )
 
   if (unreleasedCommits.length) {
@@ -18236,7 +18241,8 @@ async function runAction(token, staleDate, commitMessageLines) {
       unreleasedCommits,
       pendingIssue,
       latestRelease,
-      commitMessageLines
+      commitMessageLines,
+      notifyAfter
     )
   }
 
@@ -18280,7 +18286,7 @@ async function getLatestRelease(token) {
   }
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
+async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -18292,7 +18298,7 @@ async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
       since: latestReleaseDate,
     }
   )
-  return isSomeCommitStale(unreleasedCommits, staleDate)
+  return isSomeCommitStale(unreleasedCommits, notifyDate)
     ? unreleasedCommits
     : []
 }
@@ -18311,36 +18317,55 @@ module.exports = {
 "use strict";
 
 const ms = __nccwpck_require__(900)
+const { logWarning } = __nccwpck_require__(653)
 
-function staleDaysToMs(input) {
-  const staleDays = Number(input)
-  const now = Date.now()
-  if (isNaN(staleDays)) {
-    const stringToMs = ms(input)
-    return now - stringToMs
+function notifyAfterToMs(input) {
+  const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
   }
-  return now - daysToMs(staleDays)
+
+  return Date.now() - stringToMs
 }
 
-function isSomeCommitStale(commits, staleDate) {
+/** @deprecated */
+function staleDaysToStr(days) {
+  return `${days} day${days > 1 ? 's' : ''}`
+}
+
+function isSomeCommitStale(commits, notifyDate) {
   return commits.some((commit) => {
-    return isStale(commit.commit.committer.date, staleDate)
+    return isStale(commit.commit.committer.date, notifyDate)
   })
 }
 
-function isStale(date, staleDate) {
-  return new Date(date).getTime() < staleDate
+function isStale(date, notifyDate) {
+  return new Date(date).getTime() < notifyDate
 }
 
-function daysToMs(days) {
-  return days * 24 * 60 * 60 * 1000
+function parseNotifyAfter(notifyAfter, staleDays) {
+  if (!notifyAfter && !staleDays) {
+    return '7 days'
+  }
+
+  if (notifyAfter) {
+    return notifyAfter
+  }
+
+  logWarning(
+    'stale-days option is deprecated and will be removed in the next major release'
+  )
+
+  return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
 }
 
 module.exports = {
-  staleDaysToMs,
   isSomeCommitStale,
-  daysToMs,
   isStale,
+  parseNotifyAfter,
+  notifyAfterToMs,
+  staleDaysToStr,
 }
 
 
@@ -18527,17 +18552,22 @@ var __webpack_exports__ = {};
 
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
-const { staleDaysToMs } = __nccwpck_require__(3590)
+const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
   toolkit.logActionRefWarning()
 
   const token = core.getInput('github-token', { required: true })
-  const staleDate = staleDaysToMs(core.getInput('stale-days'))
+
+  const notifyAfter = parseNotifyAfter(
+    core.getInput('notify-after'),
+    core.getInput('stale-days')
+  )
+
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
-  await runAction(token, staleDate, commitMessageLines)
+  await runAction(token, notifyAfter, commitMessageLines)
 }
 
 run().catch((err) => core.setFailed(err))

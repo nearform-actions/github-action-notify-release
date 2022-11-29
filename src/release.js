@@ -17,7 +17,7 @@ async function getLatestRelease(token) {
   }
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
+async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -29,7 +29,7 @@ async function getUnreleasedCommits(token, latestReleaseDate, staleDate) {
       since: latestReleaseDate,
     }
   )
-  return isSomeCommitStale(unreleasedCommits, staleDate)
+  return isSomeCommitStale(unreleasedCommits, notifyDate)
     ? unreleasedCommits
     : []
 }

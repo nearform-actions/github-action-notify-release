@@ -3,6 +3,7 @@
 module.exports = {
   testEnvironment: 'node',
   collectCoverage: true,
+  clearMocks: true,
   coverageThreshold: {
     global: {
       branches: 100,
