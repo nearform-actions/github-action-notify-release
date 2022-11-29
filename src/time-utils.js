@@ -4,6 +4,11 @@ const { logWarning } = require('./log')
 
 function notifyAfterToMs(input) {
   const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
+  }
+
   return Date.now() - stringToMs
 }
 

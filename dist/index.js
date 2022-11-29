@@ -18321,6 +18321,11 @@ const { logWarning } = __nccwpck_require__(653)
 
 function notifyAfterToMs(input) {
   const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
+  }
+
   return Date.now() - stringToMs
 }
 

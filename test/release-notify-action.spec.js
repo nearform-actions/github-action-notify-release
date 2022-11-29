@@ -135,3 +135,14 @@ test('Do not create or update issue if snoozed', async () => {
   expect(issue.createOrUpdateIssue).not.toBeCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
+
+test('Do to throw if date is invalid', async () => {
+  release.getLatestRelease.mockResolvedValue(allReleases[0])
+  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  issue.getLastOpenPendingIssue.mockResolvedValue(null)
+  issue.isSnoozed.mockResolvedValue(true)
+
+  await expect(
+    async () => await runAction(token, 'invalid date', 1)
+  ).rejects.toThrow()
+})
