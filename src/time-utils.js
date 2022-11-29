@@ -35,7 +35,7 @@ function parseNotifyAfter(notifyAfter, staleDays) {
     'stale-days option is deprecated and will be removed in the next major release'
   )
 
-  return typeof staleDays === 'number' ? staleDaysToStr(staleDays) : staleDays
+  return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
 }
 
 module.exports = {

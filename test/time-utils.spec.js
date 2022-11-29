@@ -70,7 +70,7 @@ test('parseNotifyAfter parse time correctly when notify after is passed', () => 
   const now = Date.now()
   jest.spyOn(Date, 'now').mockImplementation(() => now)
 
-  const notifyAfter = parseNotifyAfter('1 hour', 7)
+  const notifyAfter = parseNotifyAfter('1 hour', '7')
   expect(notifyAfter).toEqual('1 hour')
 })
 
@@ -82,8 +82,17 @@ test('parseNotifyAfter parse time correctly when notify is undefined', () => {
 
   expect(notifyAfter).toEqual('1 hour')
 
-  const notifyAfterSecond = parseNotifyAfter(undefined, 7)
+  const notifyAfterSecond = parseNotifyAfter(undefined, '7')
   expect(notifyAfterSecond).toEqual('7 days')
+})
+
+test('parseNotifyAfter parse time stale days is number', () => {
+  const now = Date.now()
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+  const notifyAfter = parseNotifyAfter(undefined, 7)
+
+  expect(notifyAfter).toEqual('7 days')
 })
 
 test('staleDaysToStr converts correctly', () => {
