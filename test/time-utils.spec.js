@@ -64,6 +64,9 @@ test('convert notify after to date', () => {
 
   expect(() => notifyAfterToMs('invalid string')).toThrow()
 
+  const zeroDays = notifyAfterToMs('0 days')
+  expect(zeroDays).toEqual(now)
+
   const oneHourAgo = notifyAfterToMs('1 hour')
   expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
 })
