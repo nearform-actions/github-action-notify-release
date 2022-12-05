@@ -18345,6 +18345,7 @@ function isStale(date, notifyDate) {
 }
 
 function parseNotifyAfter(notifyAfter, staleDays) {
+  console.log('NOTIFY-AFTER', notifyAfter)
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
