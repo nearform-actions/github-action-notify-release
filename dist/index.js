@@ -18345,7 +18345,6 @@ function isStale(date, notifyDate) {
 }
 
 function parseNotifyAfter(notifyAfter, staleDays) {
-  console.log('NOTIFY-AFTER', notifyAfter)
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
@@ -18566,7 +18565,6 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  console.log('notifyAfterParse', notifyAfter)
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
   await runAction(token, notifyAfter, commitMessageLines)
