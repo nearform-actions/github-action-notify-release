@@ -14,6 +14,7 @@ async function run() {
     core.getInput('stale-days')
   )
 
+  console.log('notifyAfterParse', notifyAfter)
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
   await runAction(token, notifyAfter, commitMessageLines)
