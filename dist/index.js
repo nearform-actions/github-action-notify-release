@@ -18350,7 +18350,7 @@ function parseNotifyAfter(notifyAfter, staleDays) {
   }
 
   if (notifyAfter) {
-    return notifyAfter
+    return isNaN(Number(notifyAfter)) ? notifyAfter : `${notifyAfter} ms`
   }
 
   logWarning(

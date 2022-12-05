@@ -59,13 +59,19 @@ test('convert notify after to date', () => {
   const now = Date.now()
   jest.spyOn(Date, 'now').mockImplementation(() => now)
 
-  const defaultStaleDate = () => notifyAfterToMs()
-  expect(defaultStaleDate).toThrow()
+  expect(() => notifyAfterToMs()).toThrow()
 
   expect(() => notifyAfterToMs('invalid string')).toThrow()
 
-  const oneHourAgo = notifyAfterToMs('1 hour')
-  expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
+  expect(() => notifyAfterToMs('invalid ms')).toThrow()
+
+  expect(notifyAfterToMs('0 days')).toEqual(now)
+
+  expect(notifyAfterToMs('0 ms')).toEqual(now)
+
+  expect(notifyAfterToMs('0')).toEqual(now)
+
+  expect(notifyAfterToMs('1 hour')).toEqual(now - 60 * 60 * 1000)
 })
 
 test('parseNotifyAfter parse time correctly when notify after is passed', () => {
@@ -109,4 +115,15 @@ test('parseNotifyAfter default value', () => {
   const notifyAfter = parseNotifyAfter(undefined, undefined)
 
   expect(notifyAfter).toEqual('7 days')
+})
+
+test('parseNotifyAfter numeric notify-after', () => {
+  const now = Date.now()
+  jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+  expect(parseNotifyAfter('7', undefined)).toEqual('7 ms')
+
+  expect(parseNotifyAfter('0', undefined)).toEqual('0 ms')
+
+  expect(parseNotifyAfter('-1', undefined)).toEqual('-1 ms')
 })
