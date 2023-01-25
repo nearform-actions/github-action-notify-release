@@ -36,4 +36,4 @@ runs:
       uses: actions/github-script@v6
       with:
         script: |
-          const script = require("./dist/index.js")
+          const script = require('${{ github.action_path }}/dist/index.js')
