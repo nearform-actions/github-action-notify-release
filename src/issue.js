@@ -94,7 +94,7 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
 }
 
 async function getAutoBumpedVersion(baseTag) {
-  await execWithOutput('git', ['fetch', '--unshallow']) // by default optic does a shallow clone so we need to do this to get full commit history
+  await execWithOutput('git', ['fetch']) // by default optic does a shallow clone so we need to do this to get full commit history
   await execWithOutput('git', ['fetch', '--tags'])
 
   const tag =
