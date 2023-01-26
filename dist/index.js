@@ -70714,6 +70714,7 @@ module.exports = {
 
 const github = __nccwpck_require__(5438)
 const { isSomeCommitStale } = __nccwpck_require__(3590)
+const { logInfo } = __nccwpck_require__(653)
 
 async function getLatestRelease(token) {
   try {
@@ -70733,6 +70734,8 @@ async function getLatestRelease(token) {
 async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
+
+  logInfo(`/repos/${owner}/${repo}/commits`)
 
   const { data: unreleasedCommits } = await octokit.request(
     `GET /repos/{owner}/{repo}/commits`,
