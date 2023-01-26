@@ -40,6 +40,8 @@ async function runAction(token, notifyAfter, commitMessageLines) {
     notifyDate
   )
 
+  logInfo(`-unreleasedCommits: ${unreleasedCommits}`)
+
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(
       token,
