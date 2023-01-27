@@ -29,6 +29,6 @@ runs:
     - name: Do the fun stuff
       uses: actions/github-script@v6
       with:
-        notify-after: '0'
+        notify-after: ${{inputs.notify-after}}
         script: |
           const script = require('${{ github.action_path }}/dist/index.js')
