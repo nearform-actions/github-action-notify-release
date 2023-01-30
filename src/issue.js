@@ -161,21 +161,22 @@ function getClosingIssueDetails(context) {
   }
 
   const { id, state, state_reason: stateReason, labels } = issue
-  console.log('id: ', id)
-  console.log('state: ', state)
-  console.log('state_reason: ', stateReason)
-  console.log('labels: ', labels)
-  console.log('stringified labels: ', JSON.stringify(labels))
   const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
   const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
-  const isNotifyReleaseIssue = labels.includes(ISSUE_LABEL)
+  const isNotifyReleaseIssue = labels.some(
+    (label) => label.name === ISSUE_LABEL
+  )
 
-  return {
+  const closingIssueDetails = {
     issueId: id,
     isClosing,
     stateClosedNotPlanned,
     isNotifyReleaseIssue,
   }
+
+  logInfo(closingIssueDetails)
+
+  return closingIssueDetails
 }
 
 async function addComment(token, notifyAfter, issueId) {

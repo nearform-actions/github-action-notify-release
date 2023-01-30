@@ -18,8 +18,6 @@ async function run() {
 
   const { isClosing, isNotifyReleaseIssue, stateClosedNotPlanned, issueId } =
     getClosingIssueDetails(context)
-  console.log('isClosing: ', isClosing)
-  console.log('issueId: ', issueId)
   if (isClosing && isNotifyReleaseIssue && stateClosedNotPlanned) {
     await addComment(token, notifyAfter, issueId)
     return
