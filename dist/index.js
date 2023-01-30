@@ -70459,7 +70459,7 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
 }
 
 async function getAutoBumpedVersion(baseTag) {
-  await execWithOutput('git', ['fetch']) // by default optic does a shallow clone so we need to do this to get full commit history
+  await execWithOutput('git', ['fetch'])
   await execWithOutput('git', ['fetch', '--tags'])
 
   const tag =
@@ -70734,8 +70734,6 @@ async function getLatestRelease(token) {
 async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
-
-  logInfo(`/repos/${owner}/${repo}/commits`)
 
   const { data: unreleasedCommits } = await octokit.request(
     `GET /repos/{owner}/{repo}/commits`,
