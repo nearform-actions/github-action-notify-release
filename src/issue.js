@@ -153,14 +153,14 @@ function getClosingIssueDetails(context) {
 
   if (!issue) {
     return {
-      issueId: undefined,
+      issueNumber: undefined,
       isClosing: false,
       stateClosedNotPlanned: false,
       isNotifyReleaseIssue: false,
     }
   }
 
-  const { id, state, state_reason: stateReason, labels } = issue
+  const { number, state, state_reason: stateReason, labels } = issue
   const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
   const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
   const isNotifyReleaseIssue = labels.some(
@@ -168,7 +168,7 @@ function getClosingIssueDetails(context) {
   )
 
   const closingIssueDetails = {
-    issueId: id,
+    issueNumber: number,
     isClosing,
     stateClosedNotPlanned,
     isNotifyReleaseIssue,
@@ -179,7 +179,7 @@ function getClosingIssueDetails(context) {
   return closingIssueDetails
 }
 
-async function addComment(token, notifyAfter, issueId) {
+async function addComment(token, notifyAfter, issueNumber) {
   const notifyDate = notifyAfterToMs(notifyAfter)
 
   const octokit = github.getOctokit(token)
@@ -190,7 +190,7 @@ async function addComment(token, notifyAfter, issueId) {
     {
       owner,
       repo,
-      issue_number: issueId.toString(),
+      issue_number: issueNumber,
       body: `This issue has been snoozed. A new issue will be opened for you on ${new Date(
         notifyDate
       )}.`,

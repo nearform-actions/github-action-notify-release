@@ -16,10 +16,14 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  const { isClosing, isNotifyReleaseIssue, stateClosedNotPlanned, issueId } =
-    getClosingIssueDetails(context)
+  const {
+    isClosing,
+    isNotifyReleaseIssue,
+    stateClosedNotPlanned,
+    issueNumber,
+  } = getClosingIssueDetails(context)
   if (isClosing && isNotifyReleaseIssue && stateClosedNotPlanned) {
-    await addComment(token, notifyAfter, issueId)
+    await addComment(token, notifyAfter, issueNumber)
     return
   } else if (isClosing) {
     return
