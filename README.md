@@ -10,6 +10,8 @@ on:
   workflow_dispatch:
   release:
     types: [published]
+  issues:
+    types: [closed]
   schedule:
     - cron: '30 8 * * *'
 jobs:

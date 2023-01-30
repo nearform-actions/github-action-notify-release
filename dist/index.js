@@ -4287,7 +4287,7 @@ const core = __nccwpck_require__(2186)
  */
 function logActionRefWarning() {
   const actionRef = process.env.GITHUB_ACTION_REF
-  const repoName = process.env.GITHUB_REPOSITORY
+  const repoName = process.env.GITHUB_ACTION_REPOSITORY
 
   if (actionRef === 'main' || actionRef === 'master') {
     core.warning(
@@ -4303,8 +4303,24 @@ function logActionRefWarning() {
   }
 }
 
+/**
+ * Displays warning message if the repository is under the nearform organisation
+ */
+function logRepoWarning() {
+  const repoName = process.env.GITHUB_ACTION_REPOSITORY
+  const repoOrg = repoName.split('/')[0]
+
+  if (repoOrg != 'nearform-actions') {
+    core.warning(
+      `'${repoOrg}' is no longer a valid organisation for this action.` +
+        `Please update it to be under the 'nearform-actions' organisation.`
+    )
+  }
+}
+
 module.exports = {
-  logActionRefWarning
+  logActionRefWarning,
+  logRepoWarning
 }
 
 
@@ -12225,7 +12241,7 @@ exports.implementation = class URLImpl {
 
 /***/ }),
 
-/***/ 4720:
+/***/ 653:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -12435,7 +12451,7 @@ module.exports = {
 "use strict";
 
 
-exports.URL = __nccwpck_require__(4720)["interface"];
+exports.URL = __nccwpck_require__(653)["interface"];
 exports.serializeURL = __nccwpck_require__(33).serializeURL;
 exports.serializeURLOrigin = __nccwpck_require__(33).serializeURLOrigin;
 exports.basicURLParse = __nccwpck_require__(33).basicURLParse;
@@ -18017,7 +18033,7 @@ function wrappy (fn, cb) {
 "use strict";
 
 const github = __nccwpck_require__(5438)
-const { logInfo } = __nccwpck_require__(653)
+const { logInfo } = __nccwpck_require__(4353)
 const { isStale } = __nccwpck_require__(3590)
 const fs = __nccwpck_require__(7147)
 const path = __nccwpck_require__(1017)
@@ -18172,7 +18188,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 653:
+/***/ 4353:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -18195,7 +18211,7 @@ exports.logWarning = log(warning)
 "use strict";
 
 
-const { logInfo, logWarning } = __nccwpck_require__(653)
+const { logInfo, logWarning } = __nccwpck_require__(4353)
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
@@ -18317,7 +18333,7 @@ module.exports = {
 "use strict";
 
 const ms = __nccwpck_require__(900)
-const { logWarning } = __nccwpck_require__(653)
+const { logWarning } = __nccwpck_require__(4353)
 
 function notifyAfterToMs(input) {
   const stringToMs = ms(input)
@@ -18552,6 +18568,7 @@ var __webpack_exports__ = {};
 
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
+const { context } = __nccwpck_require__(5438)
 const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
 
@@ -18564,6 +18581,13 @@ async function run() {
     core.getInput('notify-after'),
     core.getInput('stale-days')
   )
+
+  const isClosingIssue = context.eventName === 'closed'
+  if (isClosingIssue) {
+    console.log('eventName: ', context.eventName)
+    console.log('context: ', context)
+    return
+  }
 
   const commitMessageLines = Number(core.getInput('commit-messages-lines'))
 
