@@ -18213,19 +18213,26 @@ function getClosingIssueDetails(context) {
     return {
       issueId: undefined,
       isClosing: false,
+      stateClosedNotPlanned: false,
+      isNotifyReleaseIssue: false,
     }
   }
 
   const { id, state, state_reason: stateReason, labels } = issue
-  const isClosing =
-    eventName === ISSUES_EVENT_NAME &&
-    state === STATE_CLOSED &&
-    stateReason === STATE_CLOSED_NOT_PLANNED &&
-    labels.includes(ISSUE_LABEL)
+  console.log('id: ', id)
+  console.log('state: ', state)
+  console.log('state_reason: ', stateReason)
+  console.log('labels: ', labels)
+  console.log('stringified labels: ', JSON.stringify(labels))
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+  const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
+  const isNotifyReleaseIssue = labels.includes(ISSUE_LABEL)
 
   return {
     issueId: id,
     isClosing,
+    stateClosedNotPlanned,
+    isNotifyReleaseIssue,
   }
 }
 
@@ -18657,11 +18664,14 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  const { isClosing, issueId } = getClosingIssueDetails(context)
+  const { isClosing, isNotifyReleaseIssue, stateClosedNotPlanned, issueId } =
+    getClosingIssueDetails(context)
   console.log('isClosing: ', isClosing)
   console.log('issueId: ', issueId)
-  if (isClosing) {
+  if (isClosing && isNotifyReleaseIssue && stateClosedNotPlanned) {
     await addComment(token, notifyAfter, issueId)
+    return
+  } else if (isClosing) {
     return
   }
 

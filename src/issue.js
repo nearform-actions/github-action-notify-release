@@ -155,19 +155,26 @@ function getClosingIssueDetails(context) {
     return {
       issueId: undefined,
       isClosing: false,
+      stateClosedNotPlanned: false,
+      isNotifyReleaseIssue: false,
     }
   }
 
   const { id, state, state_reason: stateReason, labels } = issue
-  const isClosing =
-    eventName === ISSUES_EVENT_NAME &&
-    state === STATE_CLOSED &&
-    stateReason === STATE_CLOSED_NOT_PLANNED &&
-    labels.includes(ISSUE_LABEL)
+  console.log('id: ', id)
+  console.log('state: ', state)
+  console.log('state_reason: ', stateReason)
+  console.log('labels: ', labels)
+  console.log('stringified labels: ', JSON.stringify(labels))
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+  const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
+  const isNotifyReleaseIssue = labels.includes(ISSUE_LABEL)
 
   return {
     issueId: id,
     isClosing,
+    stateClosedNotPlanned,
+    isNotifyReleaseIssue,
   }
 }
 
