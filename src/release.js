@@ -22,8 +22,6 @@ async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
-  logInfo(`/repos/${owner}/${repo}/commits`)
-
   const { data: unreleasedCommits } = await octokit.request(
     `GET /repos/{owner}/{repo}/commits`,
     {
