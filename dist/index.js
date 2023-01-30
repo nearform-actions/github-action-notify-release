@@ -18657,6 +18657,7 @@ const { getClosingIssueDetails, addComment } = __nccwpck_require__(5465)
 
 async function run() {
   toolkit.logActionRefWarning()
+  toolkit.logRepoWarning()
 
   const token = core.getInput('github-token', { required: true })
 

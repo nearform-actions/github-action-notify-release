@@ -8,6 +8,7 @@ const { getClosingIssueDetails, addComment } = require('./issue.js')
 
 async function run() {
   toolkit.logActionRefWarning()
+  toolkit.logRepoWarning()
 
   const token = core.getInput('github-token', { required: true })
 
