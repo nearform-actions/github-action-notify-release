@@ -39,23 +39,28 @@ test('Throws with output of the exec command if exit code is not 0', async () =>
   expect(exec).toHaveBeenCalled()
 })
 
-// tap.test('provides cwd to exec function', async () => {
-//   const cwd = './'
+test('provides cwd to exec function', async () => {
+  const cwd = './'
 
-//   execStub.resolves(0)
-//   execWithOutputModule.execWithOutput('command', [], cwd)
-//   execStub.calledWith('command', [], { cwd })
-// })
+  exec.mockImplementation(() => {
+    return Promise.resolve(0)
+  })
+  execWithOutputModule.execWithOutput('command', [], { cwd })
 
-// tap.test('rejects if exit code is not 0', async (t) => {
-//   const errorOutput = 'error output'
+  expect(exec).toHaveBeenCalledWith(
+    'command',
+    [],
+    expect.objectContaining({ cwd })
+  )
+})
 
-//   execStub.callsFake((_, __, options) => {
-//     options.listeners.stderr(Buffer.from(errorOutput, 'utf8'))
+test('rejects if exit code is not 0', async () => {
+  const errorOutput = 'error output'
+  exec.mockImplementation((_, __, options) => {
+    options.listeners.stderr(Buffer.from(errorOutput, 'utf8'))
 
-//     return Promise.resolve(1)
-//   })
+    return Promise.resolve(1)
+  })
 
-//   t.rejects(execWithOutputModule.execWithOutput('command'))
-//   execStub.calledWith('command')
-// })
+  await expect(execWithOutputModule.execWithOutput('command')).rejects.toThrow()
+})
