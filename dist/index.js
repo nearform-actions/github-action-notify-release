@@ -18248,7 +18248,7 @@ async function addComment(token, notifyAfter, issueId) {
     {
       owner,
       repo,
-      issue_number: issueId,
+      issue_number: issueId.toString(),
       body: `This issue has been snoozed. A new issue will be opened for you on ${new Date(
         notifyDate
       )}.`,
