@@ -1,7 +1,6 @@
 'use strict'
 const github = require('@actions/github')
 const { isSomeCommitStale } = require('./time-utils.js')
-const { logInfo } = require('./log.js')
 
 async function getLatestRelease(token) {
   try {
