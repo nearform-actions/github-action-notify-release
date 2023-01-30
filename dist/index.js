@@ -70468,7 +70468,7 @@ async function getAutoBumpedVersion(baseTag) {
 
   logInfo(`Using ${tag} as base release tag for version bump`)
 
-  const { releaseType = 'patch' } = await conventionalRecommendedBumpAsync({
+  const { releaseType } = await conventionalRecommendedBumpAsync({
     baseTag: tag,
     config: conventionalCommitsConfig,
   })
