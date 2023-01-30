@@ -18583,9 +18583,9 @@ async function run() {
   )
 
   const isClosingIssue = context.eventName === 'closed'
+  console.log('eventName: ', context.eventName)
+  console.log('context: ', context)
   if (isClosingIssue) {
-    console.log('eventName: ', context.eventName)
-    console.log('context: ', context)
     return
   }
 
