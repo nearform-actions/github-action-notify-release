@@ -70611,6 +70611,7 @@ module.exports = {
   getIsSnoozingIssue,
   getIsClosingIssue,
   addSnoozingComment,
+  getAutoBumpedVersion,
 }
 
 
@@ -70714,7 +70715,7 @@ module.exports = {
 
 const github = __nccwpck_require__(5438)
 const { isSomeCommitStale } = __nccwpck_require__(3590)
-const { logInfo } = __nccwpck_require__(653)
+const { logInfo } = __nccwpck_require__(4353)
 
 async function getLatestRelease(token) {
   try {

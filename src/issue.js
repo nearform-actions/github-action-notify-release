@@ -246,4 +246,5 @@ module.exports = {
   getIsSnoozingIssue,
   getIsClosingIssue,
   addSnoozingComment,
+  getAutoBumpedVersion,
 }
