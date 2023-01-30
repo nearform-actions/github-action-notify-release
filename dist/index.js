@@ -18557,6 +18557,7 @@ const { runAction } = __nccwpck_require__(1254)
 
 async function run() {
   toolkit.logActionRefWarning()
+  toolkit.logRepoWarning()
 
   const token = core.getInput('github-token', { required: true })
 

@@ -6,6 +6,7 @@ const { runAction } = require('./release-notify-action')
 
 async function run() {
   toolkit.logActionRefWarning()
+  toolkit.logRepoWarning()
 
   const token = core.getInput('github-token', { required: true })
 
