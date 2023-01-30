@@ -18027,6 +18027,31 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 4438:
+/***/ ((module) => {
+
+"use strict";
+
+
+const ISSUE_LABEL = 'notify-release'
+const ISSUE_TITLE = 'Release pending!'
+const STATE_OPEN = 'open'
+const STATE_CLOSED = 'closed'
+const STATE_CLOSED_NOT_PLANNED = 'not_planned'
+const ISSUES_EVENT_NAME = 'issues'
+
+module.exports = {
+  ISSUE_LABEL,
+  ISSUE_TITLE,
+  STATE_OPEN,
+  STATE_CLOSED,
+  STATE_CLOSED_NOT_PLANNED,
+  ISSUES_EVENT_NAME,
+}
+
+
+/***/ }),
+
 /***/ 5465:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -18040,11 +18065,15 @@ const path = __nccwpck_require__(1017)
 const { promisify } = __nccwpck_require__(3837)
 const readFile = promisify(fs.readFile)
 const handlebars = __nccwpck_require__(7492)
-
-const ISSUE_LABEL = 'notify-release'
-const ISSUE_TITLE = 'Release pending!'
-const STATE_OPEN = 'open'
-const STATE_CLOSED = 'closed'
+const {
+  STATE_OPEN,
+  ISSUE_TITLE,
+  STATE_CLOSED,
+  ISSUE_LABEL,
+  ISSUES_EVENT_NAME,
+  STATE_CLOSED_NOT_PLANNED,
+} = __nccwpck_require__(4438)
+const { notifyAfterToMs } = __nccwpck_require__(3590)
 
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
@@ -18176,6 +18205,49 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
   return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
+function getClosingIssueDetails(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return {
+      issueId: undefined,
+      isClosing: false,
+    }
+  }
+
+  const { id, state, state_reason: stateReason, labels } = issue
+  const isClosing =
+    eventName === ISSUES_EVENT_NAME &&
+    state === STATE_CLOSED &&
+    stateReason === STATE_CLOSED_NOT_PLANNED &&
+    labels.includes(ISSUE_LABEL)
+
+  return {
+    issueId: id,
+    isClosing,
+  }
+}
+
+async function addComment(token, notifyAfter, issueId) {
+  const notifyDate = notifyAfterToMs(notifyAfter)
+
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+
+  await octokit.request(
+    `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`,
+    {
+      owner,
+      repo,
+      issue_number: issueId,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${new Date(
+        notifyDate
+      )}.`,
+    }
+  )
+}
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
@@ -18183,6 +18255,8 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   isSnoozed,
+  getClosingIssueDetails,
+  addComment,
 }
 
 
@@ -18571,6 +18645,7 @@ const toolkit = __nccwpck_require__(2020)
 const { context } = __nccwpck_require__(5438)
 const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
+const { getClosingIssueDetails, addComment } = __nccwpck_require__(5465)
 
 async function run() {
   toolkit.logActionRefWarning()
@@ -18582,10 +18657,9 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  const isClosingIssue = context.eventName === 'closed'
-  console.log('eventName: ', context.eventName)
-  console.log('context: ', context)
-  if (isClosingIssue) {
+  const { isClosing, issueId } = getClosingIssueDetails(context)
+  if (isClosing) {
+    await addComment(token, notifyAfter, issueId)
     return
   }
 

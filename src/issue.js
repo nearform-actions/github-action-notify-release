@@ -7,11 +7,15 @@ const path = require('path')
 const { promisify } = require('util')
 const readFile = promisify(fs.readFile)
 const handlebars = require('handlebars')
-
-const ISSUE_LABEL = 'notify-release'
-const ISSUE_TITLE = 'Release pending!'
-const STATE_OPEN = 'open'
-const STATE_CLOSED = 'closed'
+const {
+  STATE_OPEN,
+  ISSUE_TITLE,
+  STATE_CLOSED,
+  ISSUE_LABEL,
+  ISSUES_EVENT_NAME,
+  STATE_CLOSED_NOT_PLANNED,
+} = require('./constants.js')
+const { notifyAfterToMs } = require('./time-utils.js')
 
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
@@ -143,6 +147,49 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
   return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
+function getClosingIssueDetails(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return {
+      issueId: undefined,
+      isClosing: false,
+    }
+  }
+
+  const { id, state, state_reason: stateReason, labels } = issue
+  const isClosing =
+    eventName === ISSUES_EVENT_NAME &&
+    state === STATE_CLOSED &&
+    stateReason === STATE_CLOSED_NOT_PLANNED &&
+    labels.includes(ISSUE_LABEL)
+
+  return {
+    issueId: id,
+    isClosing,
+  }
+}
+
+async function addComment(token, notifyAfter, issueId) {
+  const notifyDate = notifyAfterToMs(notifyAfter)
+
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+
+  await octokit.request(
+    `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`,
+    {
+      owner,
+      repo,
+      issue_number: issueId,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${new Date(
+        notifyDate
+      )}.`,
+    }
+  )
+}
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
@@ -150,4 +197,6 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   isSnoozed,
+  getClosingIssueDetails,
+  addComment,
 }

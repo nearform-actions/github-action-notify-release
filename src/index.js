@@ -4,6 +4,7 @@ const toolkit = require('actions-toolkit')
 const { context } = require('@actions/github')
 const { parseNotifyAfter } = require('./time-utils.js')
 const { runAction } = require('./release-notify-action')
+const { getClosingIssueDetails, addComment } = require('./issue.js')
 
 async function run() {
   toolkit.logActionRefWarning()
@@ -15,10 +16,9 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  const isClosingIssue = context.eventName === 'closed'
-  console.log('eventName: ', context.eventName)
-  console.log('context: ', context)
-  if (isClosingIssue) {
+  const { isClosing, issueId } = getClosingIssueDetails(context)
+  if (isClosing) {
+    await addComment(token, notifyAfter, issueId)
     return
   }
 
