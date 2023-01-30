@@ -22,16 +22,18 @@ async function run() {
     stateClosedNotPlanned,
     issueNumber,
   } = getClosingIssueDetails(context)
-  if (isClosing && isNotifyReleaseIssue && stateClosedNotPlanned) {
-    await addComment(token, notifyAfter, issueNumber)
-    return
-  } else if (isClosing) {
+
+  if (!isClosing) {
+    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+    await runAction(token, notifyAfter, commitMessageLines)
     return
   }
 
-  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+  if (!isNotifyReleaseIssue || !stateClosedNotPlanned) {
+    return
+  }
 
-  await runAction(token, notifyAfter, commitMessageLines)
+  await addComment(token, notifyAfter, issueNumber)
 }
 
 run().catch((err) => core.setFailed(err))
