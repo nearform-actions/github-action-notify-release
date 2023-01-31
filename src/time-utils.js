@@ -1,6 +1,6 @@
 'use strict'
 const ms = require('ms')
-const { logWarning } = require('./log')
+const { logWarning, logInfo } = require('./log')
 
 function notifyAfterToMs(input) {
   const stringToMs = ms(input)
@@ -28,6 +28,8 @@ function isStale(date, notifyDate) {
 }
 
 function parseNotifyAfter(notifyAfter, staleDays) {
+  logInfo(`notify-after: ${notifyAfter}`)
+
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
