@@ -5554,7 +5554,7 @@ const core = __nccwpck_require__(2186)
  */
 function logActionRefWarning() {
   const actionRef = process.env.GITHUB_ACTION_REF
-  const repoName = process.env.GITHUB_REPOSITORY
+  const repoName = process.env.GITHUB_ACTION_REPOSITORY
 
   if (actionRef === 'main' || actionRef === 'master') {
     core.warning(
@@ -5570,8 +5570,29 @@ function logActionRefWarning() {
   }
 }
 
+/**
+ * Displays warning message if the repository is under the nearform organisation
+ */
+function logRepoWarning() {
+  const actionRepo = process.env.GITHUB_ACTION_REPOSITORY
+  const [repoOrg, repoName] = actionRepo.split('/')
+  const newOrg = 'nearform-actions'
+
+  if (repoOrg != newOrg) {
+    core.warning(
+      `The '${repoName}' action, no longer exists under the '${repoOrg}' organisation.\n` +
+        `Please update it to '${newOrg}', you can do this\n` +
+        `by updating your Github Workflow file from:\n\n` +
+        `    uses: '${repoOrg}/${repoName}'\n\n` +
+        `to:\n\n` +
+        `    uses: '${newOrg}/${repoName}'\n\n`
+    )
+  }
+}
+
 module.exports = {
-  logActionRefWarning
+  logActionRefWarning,
+  logRepoWarning
 }
 
 
