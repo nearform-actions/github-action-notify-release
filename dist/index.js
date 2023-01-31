@@ -70479,10 +70479,10 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
   return updatedIssue.data.length ? updatedIssue.data[0] : null
 }
 
-async function getAutoBumpedVersion(baseTag) {
-  const tag =
-    baseTag ||
-    (await execWithOutput('git', ['tag', '--sort=-creatordate'])).split('\n')[0]
+async function getAutoBumpedVersion() {
+  const tag = await execWithOutput('git', ['tag', '--sort=-creatordate']).split(
+    '\n'
+  )[0]
 
   logInfo(`Using ${tag} as base release tag for version bump`)
 
@@ -70490,7 +70490,9 @@ async function getAutoBumpedVersion(baseTag) {
     baseTag: tag,
     config: conventionalCommitsConfig,
   })
-  logInfo(`Auto generated release type is ${JSON.stringify(releaseType)}`)
+
+  logInfo(`Auto generated release type is ${releaseType}`)
+
   return releaseType
 }
 
@@ -70506,13 +70508,13 @@ async function createOrUpdateIssue(
     commitMessageLines,
   })
 
-  const newVersion = await getAutoBumpedVersion()
+  const semVerReleaseType = await getAutoBumpedVersion()
 
   const issueBody = await renderIssueBody({
     commits: unreleasedCommits,
     latestRelease,
     notifyAfter,
-    newVersion,
+    semVerReleaseType,
   })
 
   if (pendingIssue) {
