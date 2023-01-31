@@ -94,9 +94,9 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
 }
 
 async function getAutoBumpedVersion() {
-  const tag = await execWithOutput('git', ['tag', '--sort=-creatordate']).split(
-    '\n'
-  )[0]
+  const tag = (
+    await execWithOutput('git', ['tag', '--sort=-creatordate'])
+  ).split('\n')[0]
 
   logInfo(`Using ${tag} as base release tag for version bump`)
 
