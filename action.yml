@@ -22,12 +22,8 @@ runs:
   steps:
     - name: Checkout the fresh project
       uses: actions/checkout@v3
-
-    - name: Fetch the tags
-      run: |
-        git fetch
-        git fetch --tags
-      shell: bash
+      with:
+        fetch-depth: 0
 
     - name: Run the action javascript
       uses: actions/github-script@v6
