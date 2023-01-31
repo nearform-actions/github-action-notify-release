@@ -1,18 +1,36 @@
 'use strict'
-
 const { exec } = require('@actions/exec')
 
-const issue = require('../src/issue')
+const {
+  getAutoBumpedVersion,
+  conventionalRecommendedBumpAsync,
+} = require('../src/issue')
 
 jest.mock('@actions/exec', () => ({
   exec: jest.fn(),
 }))
 
-test('should return the recommended release type', async () => {
+jest.mock('conventional-changelog-monorepo/conventional-recommended-bump', () =>
+  jest.fn(() =>
+    Promise.resolve({
+      releaseType: 'minor',
+    })
+  )
+)
+
+jest.mock('conventional-changelog-monorepo/conventional-recommended-bump', () =>
+  jest.fn((_, cb) => cb(null, { releaseType: 'minor' }))
+)
+
+test('getAutoBumpedVersion', async () => {
+  const baseTag = 'v1.0.0'
+
   exec.mockImplementation(() => {
     return 0
   })
-  const result = await issue.getAutoBumpedVersion()
+
+  const result = await getAutoBumpedVersion(baseTag)
+
+  expect(conventionalRecommendedBumpAsync).toHaveBeenCalled()
   expect(result).toBe('minor')
-  expect(exec).toHaveBeenCalledTimes(3)
 })

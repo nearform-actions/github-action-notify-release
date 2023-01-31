@@ -247,4 +247,5 @@ module.exports = {
   getIsClosingIssue,
   addSnoozingComment,
   getAutoBumpedVersion,
+  conventionalRecommendedBumpAsync,
 }
