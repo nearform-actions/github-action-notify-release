@@ -104,8 +104,8 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const issueNo = await createIssue(token, issueBody)
-    console.log(issueNo)
+    const { data } = await createIssue(token, issueBody)
+    const { number: issueNo } = data
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
 }
