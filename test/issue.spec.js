@@ -4,14 +4,6 @@ const { getOctokit } = require('@actions/github')
 const issue = require('../src/issue')
 const { getNotifyDate } = require('../src/time-utils')
 
-jest.mock('../src/issue', () => {
-  const original = jest.requireActual('../src/issue')
-  return {
-    ...original,
-    getAutoBumpedVersion: jest.fn(),
-  }
-})
-
 const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
 
 const token = 'dummytoken'
@@ -26,11 +18,6 @@ jest.mock('@actions/github', () => ({
   getOctokit: jest.fn(),
   context: { repo: { owner, repo } },
 }))
-
-test('should return the recommended release type', async () => {
-  issue.getAutoBumpedVersion.mockReturnValue('minor')
-  await expect(issue.getAutoBumpedVersion()).toBe('minor')
-})
 
 test('Creates an issue', async () => {
   getOctokit.mockReturnValue({
