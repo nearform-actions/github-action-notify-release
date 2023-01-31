@@ -6,6 +6,7 @@ const {
   isStale,
   parseNotifyAfter,
   staleDaysToStr,
+  getNotifyDate,
 } = require('../src/time-utils.js')
 
 const {
@@ -126,4 +127,15 @@ test('parseNotifyAfter numeric notify-after', () => {
   expect(parseNotifyAfter('0', undefined)).toEqual('0 ms')
 
   expect(parseNotifyAfter('-1', undefined)).toEqual('-1 ms')
+})
+
+test('getNotifyDate should return a valid date object', () => {
+  const input = '1 day'
+  const result = getNotifyDate(input)
+  expect(result).toBeInstanceOf(Date)
+})
+
+test('getNotifyDate should throw an error when input is a string in an invalid format', () => {
+  const input = 'invalid input'
+  expect(() => getNotifyDate(input)).toThrow('Invalid time value')
 })

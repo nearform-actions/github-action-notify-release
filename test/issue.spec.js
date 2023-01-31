@@ -3,6 +3,7 @@
 const { getOctokit } = require('@actions/github')
 
 const issue = require('../src/issue')
+const { getNotifyDate } = require('../src/time-utils')
 
 const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
 
@@ -107,6 +108,11 @@ test('Close an issue', async () => {
 test('Create an issue when no existing issue exists', async () => {
   const create = jest.fn()
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
 
   await issue.createOrUpdateIssue(
     token,
@@ -141,6 +147,11 @@ test('Update an issue when exists', async () => {
 test('Create issue body that contains commits shortened SHA identifiers', async () => {
   const create = jest.fn()
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
 
   await issue.createOrUpdateIssue(
     token,
@@ -212,6 +223,11 @@ test('', async () => {
 test('Creates a snooze issue when no pending', async () => {
   const create = jest.fn()
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
 
   await issue.createOrUpdateIssue(
     token,
@@ -238,4 +254,122 @@ test('Update a snooze issue when pending', async () => {
     'snooze'
   )
   expect(request).toHaveBeenCalled()
+})
+
+test('getIsSnoozingIssue returns true if the issue is closing as not_planned', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'not_planned',
+        labels: [{ name: 'notify-release' }],
+      },
+    },
+  }
+
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
+
+  expect(isSnoozingIssue).toEqual(true)
+})
+
+test('getIsSnoozingIssue returns false if the issue is closing as complete', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'complete',
+        labels: [{ name: 'notify-release' }],
+      },
+    },
+  }
+
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
+
+  expect(isSnoozingIssue).toEqual(false)
+})
+
+test('getIsSnoozingIssue returns false if the issue is closing without a notify-release label', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'not_planned',
+        labels: [],
+      },
+    },
+  }
+
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
+
+  expect(isSnoozingIssue).toEqual(false)
+})
+
+test('getIsSnoozingIssue returns false if the issue is not closing', () => {
+  const mockedContext = {
+    eventName: 'workflow_dispatch',
+    payload: {},
+  }
+
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
+
+  expect(isSnoozingIssue).toEqual(false)
+})
+
+test('getIsClosingIssue returns true if the issue is closing', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'complete',
+        labels: [],
+      },
+    },
+  }
+
+  const isClosingIssue = issue.getIsClosingIssue(mockedContext)
+
+  expect(isClosingIssue).toEqual(true)
+})
+
+test('getIsClosingIssue returns false if the issue is not closing', () => {
+  const mockedContext = {
+    eventName: 'workflow_dispatch',
+    payload: {},
+  }
+
+  const isClosingIssue = issue.getIsClosingIssue(mockedContext)
+
+  expect(isClosingIssue).toEqual(false)
+})
+
+test('Add a snoozing comment to a closing issue', async () => {
+  const request = jest.fn()
+  getOctokit.mockReturnValue({ request })
+  request.mockResolvedValue({
+    data: {},
+  })
+
+  const notifyAfter = '7 days'
+  const notifyDate = getNotifyDate(notifyAfter)
+  const issueNumber = 1
+
+  await issue.addSnoozingComment(token, notifyAfter, issueNumber)
+
+  expect(request).toHaveBeenCalledWith(
+    `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`,
+    {
+      owner,
+      repo,
+      issue_number: 1,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
+    }
+  )
 })

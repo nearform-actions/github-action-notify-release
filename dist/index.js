@@ -4287,7 +4287,7 @@ const core = __nccwpck_require__(2186)
  */
 function logActionRefWarning() {
   const actionRef = process.env.GITHUB_ACTION_REF
-  const repoName = process.env.GITHUB_REPOSITORY
+  const repoName = process.env.GITHUB_ACTION_REPOSITORY
 
   if (actionRef === 'main' || actionRef === 'master') {
     core.warning(
@@ -4303,8 +4303,24 @@ function logActionRefWarning() {
   }
 }
 
+/**
+ * Displays warning message if the repository is under the nearform organisation
+ */
+function logRepoWarning() {
+  const repoName = process.env.GITHUB_ACTION_REPOSITORY
+  const repoOrg = repoName.split('/')[0]
+
+  if (repoOrg != 'nearform-actions') {
+    core.warning(
+      `'${repoOrg}' is no longer a valid organisation for this action.` +
+        `Please update it to be under the 'nearform-actions' organisation.`
+    )
+  }
+}
+
 module.exports = {
-  logActionRefWarning
+  logActionRefWarning,
+  logRepoWarning
 }
 
 
@@ -12225,7 +12241,7 @@ exports.implementation = class URLImpl {
 
 /***/ }),
 
-/***/ 4720:
+/***/ 653:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -12435,7 +12451,7 @@ module.exports = {
 "use strict";
 
 
-exports.URL = __nccwpck_require__(4720)["interface"];
+exports.URL = __nccwpck_require__(653)["interface"];
 exports.serializeURL = __nccwpck_require__(33).serializeURL;
 exports.serializeURLOrigin = __nccwpck_require__(33).serializeURLOrigin;
 exports.basicURLParse = __nccwpck_require__(33).basicURLParse;
@@ -18011,24 +18027,52 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 4438:
+/***/ ((module) => {
+
+"use strict";
+
+
+const ISSUE_LABEL = 'notify-release'
+const ISSUE_TITLE = 'Release pending!'
+const STATE_OPEN = 'open'
+const STATE_CLOSED = 'closed'
+const STATE_CLOSED_NOT_PLANNED = 'not_planned'
+const ISSUES_EVENT_NAME = 'issues'
+
+module.exports = {
+  ISSUE_LABEL,
+  ISSUE_TITLE,
+  STATE_OPEN,
+  STATE_CLOSED,
+  STATE_CLOSED_NOT_PLANNED,
+  ISSUES_EVENT_NAME,
+}
+
+
+/***/ }),
+
 /***/ 5465:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 const github = __nccwpck_require__(5438)
-const { logInfo } = __nccwpck_require__(653)
-const { isStale } = __nccwpck_require__(3590)
+const { logInfo } = __nccwpck_require__(4353)
+const { isStale, getNotifyDate } = __nccwpck_require__(3590)
 const fs = __nccwpck_require__(7147)
 const path = __nccwpck_require__(1017)
 const { promisify } = __nccwpck_require__(3837)
 const readFile = promisify(fs.readFile)
 const handlebars = __nccwpck_require__(7492)
-
-const ISSUE_LABEL = 'notify-release'
-const ISSUE_TITLE = 'Release pending!'
-const STATE_OPEN = 'open'
-const STATE_CLOSED = 'closed'
+const {
+  STATE_OPEN,
+  ISSUE_TITLE,
+  STATE_CLOSED,
+  ISSUE_LABEL,
+  ISSUES_EVENT_NAME,
+  STATE_CLOSED_NOT_PLANNED,
+} = __nccwpck_require__(4438)
 
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
@@ -18118,7 +18162,8 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const issueNo = await createIssue(token, issueBody)
+    const { data } = await createIssue(token, issueBody)
+    const { number: issueNo } = data
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
 }
@@ -18160,6 +18205,63 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
   return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
+function getIsSnoozingIssue(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return false
+  }
+
+  const { state, state_reason: stateReason, labels } = issue
+
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+  const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
+  const isNotifyReleaseIssue = labels.some(
+    (label) => label.name === ISSUE_LABEL
+  )
+
+  const isSnoozingIssue =
+    isClosing && stateClosedNotPlanned && isNotifyReleaseIssue
+  return isSnoozingIssue
+}
+
+function getIsClosingIssue(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return false
+  }
+
+  const { state } = issue
+
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+
+  return isClosing
+}
+
+async function addSnoozingComment(token, notifyAfter, issueNumber) {
+  logInfo('Adding a snoozing comment to the issue.')
+
+  const notifyDate = getNotifyDate(notifyAfter)
+
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+
+  await octokit.request(
+    `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`,
+    {
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
+    }
+  )
+
+  logInfo('Snoozing comment added to the issue.')
+}
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
@@ -18167,12 +18269,15 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   isSnoozed,
+  getIsSnoozingIssue,
+  getIsClosingIssue,
+  addSnoozingComment,
 }
 
 
 /***/ }),
 
-/***/ 653:
+/***/ 4353:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -18195,7 +18300,7 @@ exports.logWarning = log(warning)
 "use strict";
 
 
-const { logInfo, logWarning } = __nccwpck_require__(653)
+const { logInfo, logWarning } = __nccwpck_require__(4353)
 const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
@@ -18317,7 +18422,7 @@ module.exports = {
 "use strict";
 
 const ms = __nccwpck_require__(900)
-const { logWarning } = __nccwpck_require__(653)
+const { logWarning } = __nccwpck_require__(4353)
 
 function notifyAfterToMs(input) {
   const stringToMs = ms(input)
@@ -18360,11 +18465,22 @@ function parseNotifyAfter(notifyAfter, staleDays) {
   return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
 }
 
+function getNotifyDate(input) {
+  const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
+  }
+
+  return new Date(Date.now() + stringToMs)
+}
+
 module.exports = {
   isSomeCommitStale,
   isStale,
   parseNotifyAfter,
   notifyAfterToMs,
+  getNotifyDate,
   staleDaysToStr,
 }
 
@@ -18552,8 +18668,15 @@ var __webpack_exports__ = {};
 
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
+const { context } = __nccwpck_require__(5438)
 const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
+const {
+  getIsSnoozingIssue,
+  getIsClosingIssue,
+  addSnoozingComment,
+} = __nccwpck_require__(5465)
+const { logInfo } = __nccwpck_require__(4353)
 
 async function run() {
   toolkit.logActionRefWarning()
@@ -18566,8 +18689,22 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+  const isSnoozing = getIsSnoozingIssue(context)
 
+  if (isSnoozing) {
+    logInfo('Snoozing issue ...')
+    const { number } = context.issue
+    return addSnoozingComment(token, notifyAfter, number)
+  }
+
+  const isClosing = getIsClosingIssue(context)
+  if (isClosing) {
+    logInfo('Closing issue. Nothing to do ...')
+    return
+  }
+
+  logInfo('Workflow dispatched or release published ...')
+  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
   await runAction(token, notifyAfter, commitMessageLines)
 }
 

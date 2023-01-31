@@ -1,17 +1,20 @@
 'use strict'
 const github = require('@actions/github')
 const { logInfo } = require('./log')
-const { isStale } = require('./time-utils.js')
+const { isStale, getNotifyDate } = require('./time-utils.js')
 const fs = require('fs')
 const path = require('path')
 const { promisify } = require('util')
 const readFile = promisify(fs.readFile)
 const handlebars = require('handlebars')
-
-const ISSUE_LABEL = 'notify-release'
-const ISSUE_TITLE = 'Release pending!'
-const STATE_OPEN = 'open'
-const STATE_CLOSED = 'closed'
+const {
+  STATE_OPEN,
+  ISSUE_TITLE,
+  STATE_CLOSED,
+  ISSUE_LABEL,
+  ISSUES_EVENT_NAME,
+  STATE_CLOSED_NOT_PLANNED,
+} = require('./constants.js')
 
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
@@ -101,7 +104,8 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const issueNo = await createIssue(token, issueBody)
+    const { data } = await createIssue(token, issueBody)
+    const { number: issueNo } = data
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
 }
@@ -143,6 +147,63 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
   return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
+function getIsSnoozingIssue(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return false
+  }
+
+  const { state, state_reason: stateReason, labels } = issue
+
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+  const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
+  const isNotifyReleaseIssue = labels.some(
+    (label) => label.name === ISSUE_LABEL
+  )
+
+  const isSnoozingIssue =
+    isClosing && stateClosedNotPlanned && isNotifyReleaseIssue
+  return isSnoozingIssue
+}
+
+function getIsClosingIssue(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return false
+  }
+
+  const { state } = issue
+
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+
+  return isClosing
+}
+
+async function addSnoozingComment(token, notifyAfter, issueNumber) {
+  logInfo('Adding a snoozing comment to the issue.')
+
+  const notifyDate = getNotifyDate(notifyAfter)
+
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+
+  await octokit.request(
+    `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`,
+    {
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
+    }
+  )
+
+  logInfo('Snoozing comment added to the issue.')
+}
+
 module.exports = {
   createIssue,
   getLastOpenPendingIssue,
@@ -150,4 +211,7 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   isSnoozed,
+  getIsSnoozingIssue,
+  getIsClosingIssue,
+  addSnoozingComment,
 }
