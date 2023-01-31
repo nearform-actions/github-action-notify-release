@@ -7,7 +7,7 @@ inputs:
     default: ${{ github.token }}
   notify-after:
     description: 'The time after which unreleased commits should be considered stale and should notify for a release'
-    required: false
+    default: 7
   stale-days:
     description: 'Number of days of inactivity before a release becomes stale'
     required: false
