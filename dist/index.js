@@ -70852,6 +70852,8 @@ module.exports = {
 "use strict";
 
 
+// Borrowed from https://github.com/nearform/optic-release-automation-action/blob/main/src/utils/execWithOutput.js
+
 const { StringDecoder } = __nccwpck_require__(6915)
 
 const { exec } = __nccwpck_require__(1514)

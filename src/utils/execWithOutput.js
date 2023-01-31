@@ -1,5 +1,7 @@
 'use strict'
 
+// Borrowed from https://github.com/nearform/optic-release-automation-action/blob/main/src/utils/execWithOutput.js
+
 const { StringDecoder } = require('node:string_decoder')
 
 const { exec } = require('@actions/exec')
