@@ -43,10 +43,21 @@ function parseNotifyAfter(notifyAfter, staleDays) {
   return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
 }
 
+function getNotifyDate(input) {
+  const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
+  }
+
+  return new Date(Date.now() + stringToMs)
+}
+
 module.exports = {
   isSomeCommitStale,
   isStale,
   parseNotifyAfter,
   notifyAfterToMs,
+  getNotifyDate,
   staleDaysToStr,
 }

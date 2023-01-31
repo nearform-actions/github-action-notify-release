@@ -3,6 +3,7 @@
 const { getOctokit } = require('@actions/github')
 
 const issue = require('../src/issue')
+const { getNotifyDate } = require('../src/time-utils')
 
 const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
 
@@ -238,4 +239,67 @@ test('Update a snooze issue when pending', async () => {
     'snooze'
   )
   expect(request).toHaveBeenCalled()
+})
+
+test('Get closing issue details successfully for a closing issue with not_planned reason and notify-release label', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'not_planned',
+        labels: [{ name: 'notify-release' }],
+      },
+    },
+  }
+
+  const closingIssueDetails = issue.getClosingIssueDetails(mockedContext)
+
+  expect(closingIssueDetails).toEqual({
+    issueNumber: 1,
+    isClosing: true,
+    stateClosedNotPlanned: true,
+    isNotifyReleaseIssue: true,
+  })
+})
+
+test('Get closing issue details for a non closing issue', () => {
+  const mockedContext = {
+    eventName: 'workflow_dispatch',
+    payload: {},
+  }
+
+  const closingIssueDetails = issue.getClosingIssueDetails(mockedContext)
+
+  expect(closingIssueDetails).toEqual({
+    issueNumber: undefined,
+    isClosing: false,
+    stateClosedNotPlanned: false,
+    isNotifyReleaseIssue: false,
+  })
+})
+
+test('Add a comment to a closing issue with not_planned reason and notify-release label', async () => {
+  const request = jest.fn()
+  getOctokit.mockReturnValue({ request })
+  request.mockResolvedValue({
+    data: {},
+  })
+
+  const notifyAfter = '7 days'
+  const notifyDate = getNotifyDate(notifyAfter)
+  const issueNumber = 1
+
+  await issue.addComment(token, notifyAfter, issueNumber)
+
+  expect(request).toHaveBeenCalledWith(
+    `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`,
+    {
+      owner,
+      repo,
+      issue_number: 1,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
+    }
+  )
 })

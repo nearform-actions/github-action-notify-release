@@ -18059,7 +18059,7 @@ module.exports = {
 
 const github = __nccwpck_require__(5438)
 const { logInfo } = __nccwpck_require__(4353)
-const { isStale } = __nccwpck_require__(3590)
+const { isStale, getNotifyDate } = __nccwpck_require__(3590)
 const fs = __nccwpck_require__(7147)
 const path = __nccwpck_require__(1017)
 const { promisify } = __nccwpck_require__(3837)
@@ -18073,7 +18073,6 @@ const {
   ISSUES_EVENT_NAME,
   STATE_CLOSED_NOT_PLANNED,
 } = __nccwpck_require__(4438)
-const { notifyAfterToMs } = __nccwpck_require__(3590)
 
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
@@ -18238,7 +18237,7 @@ function getClosingIssueDetails(context) {
 }
 
 async function addComment(token, notifyAfter, issueNumber) {
-  const notifyDate = notifyAfterToMs(notifyAfter)
+  const notifyDate = getNotifyDate(notifyAfter)
 
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
@@ -18249,9 +18248,7 @@ async function addComment(token, notifyAfter, issueNumber) {
       owner,
       repo,
       issue_number: issueNumber,
-      body: `This issue has been snoozed. A new issue will be opened for you on ${new Date(
-        notifyDate
-      )}.`,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
     }
   )
 }
@@ -18458,11 +18455,22 @@ function parseNotifyAfter(notifyAfter, staleDays) {
   return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
 }
 
+function getNotifyDate(input) {
+  const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
+  }
+
+  return new Date(Date.now() + stringToMs)
+}
+
 module.exports = {
   isSomeCommitStale,
   isStale,
   parseNotifyAfter,
   notifyAfterToMs,
+  getNotifyDate,
   staleDaysToStr,
 }
 

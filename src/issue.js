@@ -1,7 +1,7 @@
 'use strict'
 const github = require('@actions/github')
 const { logInfo } = require('./log')
-const { isStale } = require('./time-utils.js')
+const { isStale, getNotifyDate } = require('./time-utils.js')
 const fs = require('fs')
 const path = require('path')
 const { promisify } = require('util')
@@ -15,7 +15,6 @@ const {
   ISSUES_EVENT_NAME,
   STATE_CLOSED_NOT_PLANNED,
 } = require('./constants.js')
-const { notifyAfterToMs } = require('./time-utils.js')
 
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
@@ -180,7 +179,7 @@ function getClosingIssueDetails(context) {
 }
 
 async function addComment(token, notifyAfter, issueNumber) {
-  const notifyDate = notifyAfterToMs(notifyAfter)
+  const notifyDate = getNotifyDate(notifyAfter)
 
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
@@ -191,9 +190,7 @@ async function addComment(token, notifyAfter, issueNumber) {
       owner,
       repo,
       issue_number: issueNumber,
-      body: `This issue has been snoozed. A new issue will be opened for you on ${new Date(
-        notifyDate
-      )}.`,
+      body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
     }
   )
 }
