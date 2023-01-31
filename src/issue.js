@@ -94,8 +94,8 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
 }
 
 async function getAutoBumpedVersion(baseTag) {
-  // await execWithOutput('git', ['fetch'])
-  // await execWithOutput('git', ['fetch', '--tags'])
+  await execWithOutput('git', ['fetch'])
+  await execWithOutput('git', ['fetch', '--tags'])
 
   const tag =
     baseTag ||

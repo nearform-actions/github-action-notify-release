@@ -27,11 +27,11 @@ runs:
     - name: Checkout the fresh project
       uses: actions/checkout@v3
 
-    - name: Fetch the tags
-      run: |
-        git fetch
-        git fetch --tags
-      shell: bash
+    # - name: Fetch the tags
+    #   run: |
+    #     git fetch
+    #     git fetch --tags
+    #   shell: bash
 
     - name: Do the fun stuff
       uses: actions/github-script@v6
