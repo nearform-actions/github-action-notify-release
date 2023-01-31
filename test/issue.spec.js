@@ -108,6 +108,11 @@ test('Close an issue', async () => {
 test('Create an issue when no existing issue exists', async () => {
   const create = jest.fn()
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
 
   await issue.createOrUpdateIssue(
     token,
@@ -142,6 +147,11 @@ test('Update an issue when exists', async () => {
 test('Create issue body that contains commits shortened SHA identifiers', async () => {
   const create = jest.fn()
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
 
   await issue.createOrUpdateIssue(
     token,
@@ -213,6 +223,11 @@ test('', async () => {
 test('Creates a snooze issue when no pending', async () => {
   const create = jest.fn()
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
 
   await issue.createOrUpdateIssue(
     token,
