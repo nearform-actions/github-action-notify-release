@@ -5,6 +5,7 @@ const { context } = require('@actions/github')
 const { parseNotifyAfter } = require('./time-utils.js')
 const { runAction } = require('./release-notify-action')
 const { getClosingIssueDetails, addComment } = require('./issue.js')
+const { logInfo } = require('./log.js')
 
 async function run() {
   toolkit.logActionRefWarning()
@@ -25,12 +26,16 @@ async function run() {
   } = getClosingIssueDetails(context)
 
   if (!isClosing) {
+    logInfo('Workflow dispatched or release published ...')
     const commitMessageLines = Number(core.getInput('commit-messages-lines'))
     await runAction(token, notifyAfter, commitMessageLines)
     return
   }
 
+  logInfo('Issue is closing ...')
+
   if (!isNotifyReleaseIssue || !stateClosedNotPlanned) {
+    logInfo('Nothing to do.')
     return
   }
 

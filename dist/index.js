@@ -18231,12 +18231,14 @@ function getClosingIssueDetails(context) {
     isNotifyReleaseIssue,
   }
 
-  logInfo(closingIssueDetails)
+  logInfo(`Closing issue details: ${closingIssueDetails}`)
 
   return closingIssueDetails
 }
 
 async function addComment(token, notifyAfter, issueNumber) {
+  logInfo('Adding a comment to the issue.')
+
   const notifyDate = getNotifyDate(notifyAfter)
 
   const octokit = github.getOctokit(token)
@@ -18251,6 +18253,8 @@ async function addComment(token, notifyAfter, issueNumber) {
       body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
     }
   )
+
+  logInfo('Comment added to the issue.')
 }
 
 module.exports = {
@@ -18662,6 +18666,7 @@ const { context } = __nccwpck_require__(5438)
 const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
 const { getClosingIssueDetails, addComment } = __nccwpck_require__(5465)
+const { logInfo } = __nccwpck_require__(4353)
 
 async function run() {
   toolkit.logActionRefWarning()
@@ -18682,12 +18687,16 @@ async function run() {
   } = getClosingIssueDetails(context)
 
   if (!isClosing) {
+    logInfo('Workflow dispatched or release published ...')
     const commitMessageLines = Number(core.getInput('commit-messages-lines'))
     await runAction(token, notifyAfter, commitMessageLines)
     return
   }
 
+  logInfo('Issue is closing ...')
+
   if (!isNotifyReleaseIssue || !stateClosedNotPlanned) {
+    logInfo('Nothing to do.')
     return
   }
 

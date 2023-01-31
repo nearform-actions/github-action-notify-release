@@ -173,12 +173,14 @@ function getClosingIssueDetails(context) {
     isNotifyReleaseIssue,
   }
 
-  logInfo(closingIssueDetails)
+  logInfo(`Closing issue details: ${closingIssueDetails}`)
 
   return closingIssueDetails
 }
 
 async function addComment(token, notifyAfter, issueNumber) {
+  logInfo('Adding a comment to the issue.')
+
   const notifyDate = getNotifyDate(notifyAfter)
 
   const octokit = github.getOctokit(token)
@@ -193,6 +195,8 @@ async function addComment(token, notifyAfter, issueNumber) {
       body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
     }
   )
+
+  logInfo('Comment added to the issue.')
 }
 
 module.exports = {
