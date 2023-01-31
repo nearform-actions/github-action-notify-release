@@ -321,6 +321,35 @@ test('getIsSnoozingIssue returns false if the issue is not closing', () => {
   expect(isSnoozingIssue).toEqual(false)
 })
 
+test('getIsClosingIssue returns true if the issue is closing', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'complete',
+        labels: [],
+      },
+    },
+  }
+
+  const isClosingIssue = issue.getIsClosingIssue(mockedContext)
+
+  expect(isClosingIssue).toEqual(true)
+})
+
+test('getIsClosingIssue returns false if the issue is not closing', () => {
+  const mockedContext = {
+    eventName: 'workflow_dispatch',
+    payload: {},
+  }
+
+  const isClosingIssue = issue.getIsClosingIssue(mockedContext)
+
+  expect(isClosingIssue).toEqual(false)
+})
+
 test('Add a snoozing comment to a closing issue', async () => {
   const request = jest.fn()
   getOctokit.mockReturnValue({ request })

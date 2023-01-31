@@ -18226,6 +18226,21 @@ function getIsSnoozingIssue(context) {
   return isSnoozingIssue
 }
 
+function getIsClosingIssue(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return false
+  }
+
+  const { state } = issue
+
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+
+  return isClosing
+}
+
 async function addSnoozingComment(token, notifyAfter, issueNumber) {
   logInfo('Adding a snoozing comment to the issue.')
 
@@ -18255,6 +18270,7 @@ module.exports = {
   closeIssue,
   isSnoozed,
   getIsSnoozingIssue,
+  getIsClosingIssue,
   addSnoozingComment,
 }
 
@@ -18655,7 +18671,11 @@ const toolkit = __nccwpck_require__(2020)
 const { context } = __nccwpck_require__(5438)
 const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
-const { getIsSnoozingIssue, addSnoozingComment } = __nccwpck_require__(5465)
+const {
+  getIsSnoozingIssue,
+  getIsClosingIssue,
+  addSnoozingComment,
+} = __nccwpck_require__(5465)
 const { logInfo } = __nccwpck_require__(4353)
 
 async function run() {
@@ -18675,6 +18695,12 @@ async function run() {
     logInfo('Snoozing issue ...')
     const { number } = context.issue
     return addSnoozingComment(token, notifyAfter, number)
+  }
+
+  const isClosing = getIsClosingIssue(context)
+  if (isClosing) {
+    logInfo('Closing issue. Nothing to do ...')
+    return
   }
 
   logInfo('Workflow dispatched or release published ...')

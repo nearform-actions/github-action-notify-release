@@ -168,6 +168,21 @@ function getIsSnoozingIssue(context) {
   return isSnoozingIssue
 }
 
+function getIsClosingIssue(context) {
+  const { eventName, payload } = context
+  const { issue } = payload
+
+  if (!issue) {
+    return false
+  }
+
+  const { state } = issue
+
+  const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
+
+  return isClosing
+}
+
 async function addSnoozingComment(token, notifyAfter, issueNumber) {
   logInfo('Adding a snoozing comment to the issue.')
 
@@ -197,5 +212,6 @@ module.exports = {
   closeIssue,
   isSnoozed,
   getIsSnoozingIssue,
+  getIsClosingIssue,
   addSnoozingComment,
 }
