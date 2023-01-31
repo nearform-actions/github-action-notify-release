@@ -4,7 +4,7 @@ const toolkit = require('actions-toolkit')
 const { context } = require('@actions/github')
 const { parseNotifyAfter } = require('./time-utils.js')
 const { runAction } = require('./release-notify-action')
-const { getClosingIssueDetails, addComment } = require('./issue.js')
+const { getIsSnoozingIssue, addSnoozingComment } = require('./issue.js')
 const { logInfo } = require('./log.js')
 
 async function run() {
@@ -18,28 +18,17 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  const {
-    isClosing,
-    isNotifyReleaseIssue,
-    stateClosedNotPlanned,
-    issueNumber,
-  } = getClosingIssueDetails(context)
+  const isSnoozing = getIsSnoozingIssue(context)
 
-  if (!isClosing) {
-    logInfo('Workflow dispatched or release published ...')
-    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
-    await runAction(token, notifyAfter, commitMessageLines)
-    return
+  if (isSnoozing) {
+    logInfo('Snoozing issue ...')
+    const { number } = context.issue
+    return addSnoozingComment(token, notifyAfter, number)
   }
 
-  logInfo('Issue is closing ...')
-
-  if (!isNotifyReleaseIssue || !stateClosedNotPlanned) {
-    logInfo('Nothing to do.')
-    return
-  }
-
-  await addComment(token, notifyAfter, issueNumber)
+  logInfo('Workflow dispatched or release published ...')
+  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+  await runAction(token, notifyAfter, commitMessageLines)
 }
 
 run().catch((err) => core.setFailed(err))

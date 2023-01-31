@@ -256,7 +256,7 @@ test('Update a snooze issue when pending', async () => {
   expect(request).toHaveBeenCalled()
 })
 
-test('Get closing issue details successfully for a closing issue with not_planned reason and notify-release label', () => {
+test('getIsSnoozingIssue returns true if the issue is closing as not_planned', () => {
   const mockedContext = {
     eventName: 'issues',
     payload: {
@@ -269,33 +269,59 @@ test('Get closing issue details successfully for a closing issue with not_planne
     },
   }
 
-  const closingIssueDetails = issue.getClosingIssueDetails(mockedContext)
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
 
-  expect(closingIssueDetails).toEqual({
-    issueNumber: 1,
-    isClosing: true,
-    stateClosedNotPlanned: true,
-    isNotifyReleaseIssue: true,
-  })
+  expect(isSnoozingIssue).toEqual(true)
 })
 
-test('Get closing issue details for a non closing issue', () => {
+test('getIsSnoozingIssue returns false if the issue is closing as complete', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'complete',
+        labels: [{ name: 'notify-release' }],
+      },
+    },
+  }
+
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
+
+  expect(isSnoozingIssue).toEqual(false)
+})
+
+test('getIsSnoozingIssue returns false if the issue is closing without a notify-release label', () => {
+  const mockedContext = {
+    eventName: 'issues',
+    payload: {
+      issue: {
+        number: 1,
+        state: 'closed',
+        state_reason: 'not_planned',
+        labels: [],
+      },
+    },
+  }
+
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
+
+  expect(isSnoozingIssue).toEqual(false)
+})
+
+test('getIsSnoozingIssue returns false if the issue is not closing', () => {
   const mockedContext = {
     eventName: 'workflow_dispatch',
     payload: {},
   }
 
-  const closingIssueDetails = issue.getClosingIssueDetails(mockedContext)
+  const isSnoozingIssue = issue.getIsSnoozingIssue(mockedContext)
 
-  expect(closingIssueDetails).toEqual({
-    issueNumber: undefined,
-    isClosing: false,
-    stateClosedNotPlanned: false,
-    isNotifyReleaseIssue: false,
-  })
+  expect(isSnoozingIssue).toEqual(false)
 })
 
-test('Add a comment to a closing issue with not_planned reason and notify-release label', async () => {
+test('Add a snoozing comment to a closing issue', async () => {
   const request = jest.fn()
   getOctokit.mockReturnValue({ request })
   request.mockResolvedValue({
@@ -306,7 +332,7 @@ test('Add a comment to a closing issue with not_planned reason and notify-releas
   const notifyDate = getNotifyDate(notifyAfter)
   const issueNumber = 1
 
-  await issue.addComment(token, notifyAfter, issueNumber)
+  await issue.addSnoozingComment(token, notifyAfter, issueNumber)
 
   expect(request).toHaveBeenCalledWith(
     `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`,

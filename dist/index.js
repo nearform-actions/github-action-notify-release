@@ -4287,7 +4287,7 @@ const core = __nccwpck_require__(2186)
  */
 function logActionRefWarning() {
   const actionRef = process.env.GITHUB_ACTION_REF
-  const repoName = process.env.GITHUB_ACTION_REPOSITORY
+  const repoName = process.env.GITHUB_REPOSITORY
 
   if (actionRef === 'main' || actionRef === 'master') {
     core.warning(
@@ -4303,24 +4303,8 @@ function logActionRefWarning() {
   }
 }
 
-/**
- * Displays warning message if the repository is under the nearform organisation
- */
-function logRepoWarning() {
-  const repoName = process.env.GITHUB_ACTION_REPOSITORY
-  const repoOrg = repoName.split('/')[0]
-
-  if (repoOrg != 'nearform-actions') {
-    core.warning(
-      `'${repoOrg}' is no longer a valid organisation for this action.` +
-        `Please update it to be under the 'nearform-actions' organisation.`
-    )
-  }
-}
-
 module.exports = {
-  logActionRefWarning,
-  logRepoWarning
+  logActionRefWarning
 }
 
 
@@ -18205,40 +18189,29 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
   return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
-function getClosingIssueDetails(context) {
+function getIsSnoozingIssue(context) {
   const { eventName, payload } = context
   const { issue } = payload
 
   if (!issue) {
-    return {
-      issueNumber: undefined,
-      isClosing: false,
-      stateClosedNotPlanned: false,
-      isNotifyReleaseIssue: false,
-    }
+    return false
   }
 
-  const { number, state, state_reason: stateReason, labels } = issue
+  const { state, state_reason: stateReason, labels } = issue
+
   const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
   const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
   const isNotifyReleaseIssue = labels.some(
     (label) => label.name === ISSUE_LABEL
   )
 
-  const closingIssueDetails = {
-    issueNumber: number,
-    isClosing,
-    stateClosedNotPlanned,
-    isNotifyReleaseIssue,
-  }
-
-  logInfo(`Closing issue details: ${JSON.stringify(closingIssueDetails)}`)
-
-  return closingIssueDetails
+  const isSnoozingIssue =
+    isClosing && stateClosedNotPlanned && isNotifyReleaseIssue
+  return isSnoozingIssue
 }
 
-async function addComment(token, notifyAfter, issueNumber) {
-  logInfo('Adding a comment to the issue.')
+async function addSnoozingComment(token, notifyAfter, issueNumber) {
+  logInfo('Adding a snoozing comment to the issue.')
 
   const notifyDate = getNotifyDate(notifyAfter)
 
@@ -18255,7 +18228,7 @@ async function addComment(token, notifyAfter, issueNumber) {
     }
   )
 
-  logInfo('Comment added to the issue.')
+  logInfo('Snoozing comment added to the issue.')
 }
 
 module.exports = {
@@ -18265,8 +18238,8 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   isSnoozed,
-  getClosingIssueDetails,
-  addComment,
+  getIsSnoozingIssue,
+  addSnoozingComment,
 }
 
 
@@ -18666,7 +18639,7 @@ const toolkit = __nccwpck_require__(2020)
 const { context } = __nccwpck_require__(5438)
 const { parseNotifyAfter } = __nccwpck_require__(3590)
 const { runAction } = __nccwpck_require__(1254)
-const { getClosingIssueDetails, addComment } = __nccwpck_require__(5465)
+const { getIsSnoozingIssue, addSnoozingComment } = __nccwpck_require__(5465)
 const { logInfo } = __nccwpck_require__(4353)
 
 async function run() {
@@ -18680,28 +18653,17 @@ async function run() {
     core.getInput('stale-days')
   )
 
-  const {
-    isClosing,
-    isNotifyReleaseIssue,
-    stateClosedNotPlanned,
-    issueNumber,
-  } = getClosingIssueDetails(context)
+  const isSnoozing = getIsSnoozingIssue(context)
 
-  if (!isClosing) {
-    logInfo('Workflow dispatched or release published ...')
-    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
-    await runAction(token, notifyAfter, commitMessageLines)
-    return
+  if (isSnoozing) {
+    logInfo('Snoozing issue ...')
+    const { number } = context.issue
+    return addSnoozingComment(token, notifyAfter, number)
   }
 
-  logInfo('Issue is closing ...')
-
-  if (!isNotifyReleaseIssue || !stateClosedNotPlanned) {
-    logInfo('Nothing to do.')
-    return
-  }
-
-  await addComment(token, notifyAfter, issueNumber)
+  logInfo('Workflow dispatched or release published ...')
+  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+  await runAction(token, notifyAfter, commitMessageLines)
 }
 
 run().catch((err) => core.setFailed(err))

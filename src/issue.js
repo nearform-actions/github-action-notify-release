@@ -147,40 +147,29 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
   return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
-function getClosingIssueDetails(context) {
+function getIsSnoozingIssue(context) {
   const { eventName, payload } = context
   const { issue } = payload
 
   if (!issue) {
-    return {
-      issueNumber: undefined,
-      isClosing: false,
-      stateClosedNotPlanned: false,
-      isNotifyReleaseIssue: false,
-    }
+    return false
   }
 
-  const { number, state, state_reason: stateReason, labels } = issue
+  const { state, state_reason: stateReason, labels } = issue
+
   const isClosing = eventName === ISSUES_EVENT_NAME && state === STATE_CLOSED
   const stateClosedNotPlanned = stateReason === STATE_CLOSED_NOT_PLANNED
   const isNotifyReleaseIssue = labels.some(
     (label) => label.name === ISSUE_LABEL
   )
 
-  const closingIssueDetails = {
-    issueNumber: number,
-    isClosing,
-    stateClosedNotPlanned,
-    isNotifyReleaseIssue,
-  }
-
-  logInfo(`Closing issue details: ${JSON.stringify(closingIssueDetails)}`)
-
-  return closingIssueDetails
+  const isSnoozingIssue =
+    isClosing && stateClosedNotPlanned && isNotifyReleaseIssue
+  return isSnoozingIssue
 }
 
-async function addComment(token, notifyAfter, issueNumber) {
-  logInfo('Adding a comment to the issue.')
+async function addSnoozingComment(token, notifyAfter, issueNumber) {
+  logInfo('Adding a snoozing comment to the issue.')
 
   const notifyDate = getNotifyDate(notifyAfter)
 
@@ -197,7 +186,7 @@ async function addComment(token, notifyAfter, issueNumber) {
     }
   )
 
-  logInfo('Comment added to the issue.')
+  logInfo('Snoozing comment added to the issue.')
 }
 
 module.exports = {
@@ -207,6 +196,6 @@ module.exports = {
   createOrUpdateIssue,
   closeIssue,
   isSnoozed,
-  getClosingIssueDetails,
-  addComment,
+  getIsSnoozingIssue,
+  addSnoozingComment,
 }
