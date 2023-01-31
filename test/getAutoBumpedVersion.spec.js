@@ -11,14 +11,6 @@ jest.mock('@actions/exec', () => ({
 }))
 
 jest.mock('conventional-changelog-monorepo/conventional-recommended-bump', () =>
-  jest.fn(() =>
-    Promise.resolve({
-      releaseType: 'minor',
-    })
-  )
-)
-
-jest.mock('conventional-changelog-monorepo/conventional-recommended-bump', () =>
   jest.fn((_, cb) => cb(null, { releaseType: 'minor' }))
 )
 
