@@ -17,9 +17,6 @@ inputs:
     description: 'Limit the number of first x lines from commit messages that will be added in the issue description. No truncation when set to 0.'
     required: false
     default: 1
-# runs:
-#   using: 'node16'
-#   main: 'dist/index.js'
 
 runs:
   using: 'composite'
