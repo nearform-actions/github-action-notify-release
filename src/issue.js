@@ -104,7 +104,8 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
-    const { number: issueNo } = await createIssue(token, issueBody)
+    const issueNo = await createIssue(token, issueBody)
+    console.log(issueNo)
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
   }
 }
@@ -173,7 +174,7 @@ function getClosingIssueDetails(context) {
     isNotifyReleaseIssue,
   }
 
-  logInfo(`Closing issue details: ${closingIssueDetails}`)
+  logInfo(`Closing issue details: ${JSON.stringify(closingIssueDetails)}`)
 
   return closingIssueDetails
 }
