@@ -70380,6 +70380,62 @@ module.exports = {
 
 /***/ }),
 
+/***/ 4351:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const core = __nccwpck_require__(2186)
+const toolkit = __nccwpck_require__(2020)
+const { context } = __nccwpck_require__(5438)
+const { parseNotifyAfter } = __nccwpck_require__(3590)
+const { runAction } = __nccwpck_require__(1254)
+const {
+  getIsSnoozingIssue,
+  getIsClosingIssue,
+  addSnoozingComment,
+} = __nccwpck_require__(5465)
+const { logInfo } = __nccwpck_require__(4353)
+
+async function run({ inputs }) {
+  toolkit.logActionRefWarning()
+  toolkit.logRepoWarning()
+
+  const token = core.getInput('github-token', { required: true })
+
+  const notifyAfter = parseNotifyAfter(
+    inputs['notify-after'],
+    inputs['stale-days']
+  )
+
+  const isSnoozing = getIsSnoozingIssue(context)
+
+  if (isSnoozing) {
+    logInfo('Snoozing issue ...')
+    const { number } = context.issue
+    return addSnoozingComment(token, notifyAfter, number)
+  }
+
+  const isClosing = getIsClosingIssue(context)
+  if (isClosing) {
+    logInfo('Closing issue. Nothing to do ...')
+    return
+  }
+
+  logInfo('Workflow dispatched or release published ...')
+  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+  await runAction(token, notifyAfter, commitMessageLines)
+}
+
+run().catch((err) => core.setFailed(err))
+
+module.exports = {
+  run,
+}
+
+
+/***/ }),
+
 /***/ 5465:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -71163,57 +71219,12 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
-"use strict";
-
-const core = __nccwpck_require__(2186)
-const toolkit = __nccwpck_require__(2020)
-const { context } = __nccwpck_require__(5438)
-const { parseNotifyAfter } = __nccwpck_require__(3590)
-const { runAction } = __nccwpck_require__(1254)
-const {
-  getIsSnoozingIssue,
-  getIsClosingIssue,
-  addSnoozingComment,
-} = __nccwpck_require__(5465)
-const { logInfo } = __nccwpck_require__(4353)
-
-async function run() {
-  toolkit.logActionRefWarning()
-  toolkit.logRepoWarning()
-
-  const token = core.getInput('github-token', { required: true })
-
-  const notifyAfter = parseNotifyAfter(
-    core.getInput('notify-after'),
-    core.getInput('stale-days')
-  )
-
-  const isSnoozing = getIsSnoozingIssue(context)
-
-  if (isSnoozing) {
-    logInfo('Snoozing issue ...')
-    const { number } = context.issue
-    return addSnoozingComment(token, notifyAfter, number)
-  }
-
-  const isClosing = getIsClosingIssue(context)
-  if (isClosing) {
-    logInfo('Closing issue. Nothing to do ...')
-    return
-  }
-
-  logInfo('Workflow dispatched or release published ...')
-  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
-  await runAction(token, notifyAfter, commitMessageLines)
-}
-
-run().catch((err) => core.setFailed(err))
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(4351);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;
