@@ -70839,7 +70839,7 @@ module.exports = {
 "use strict";
 
 const ms = __nccwpck_require__(900)
-const { logWarning, logInfo } = __nccwpck_require__(4353)
+const { logWarning } = __nccwpck_require__(4353)
 
 function notifyAfterToMs(input) {
   const stringToMs = ms(input)
@@ -70867,8 +70867,6 @@ function isStale(date, notifyDate) {
 }
 
 function parseNotifyAfter(notifyAfter, staleDays) {
-  logInfo(`notify-after: ${notifyAfter}`)
-
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
