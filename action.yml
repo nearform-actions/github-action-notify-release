@@ -28,6 +28,6 @@ runs:
     - name: Run the action javascript
       uses: actions/github-script@v6
       with:
-        notify-after: ${{ inputs.notify-after }}
         script: |
-          const script = require('${{ github.action_path }}/dist/index.js')
+          const { run } = require('${{ github.action_path }}/dist/index.js')
+          await run({inputs: ${{ toJSON(inputs) }} })

@@ -70398,36 +70398,38 @@ const {
 const { logInfo } = __nccwpck_require__(4353)
 
 async function run({ inputs }) {
-  toolkit.logActionRefWarning()
-  toolkit.logRepoWarning()
+  try {
+    toolkit.logActionRefWarning()
+    toolkit.logRepoWarning()
 
-  const token = core.getInput('github-token', { required: true })
+    const token = core.getInput('github-token', { required: true })
 
-  const notifyAfter = parseNotifyAfter(
-    inputs['notify-after'],
-    inputs['stale-days']
-  )
+    const notifyAfter = parseNotifyAfter(
+      inputs['notify-after'],
+      inputs['stale-days']
+    )
 
-  const isSnoozing = getIsSnoozingIssue(context)
+    const isSnoozing = getIsSnoozingIssue(context)
 
-  if (isSnoozing) {
-    logInfo('Snoozing issue ...')
-    const { number } = context.issue
-    return addSnoozingComment(token, notifyAfter, number)
+    if (isSnoozing) {
+      logInfo('Snoozing issue ...')
+      const { number } = context.issue
+      return addSnoozingComment(token, notifyAfter, number)
+    }
+
+    const isClosing = getIsClosingIssue(context)
+    if (isClosing) {
+      logInfo('Closing issue. Nothing to do ...')
+      return
+    }
+
+    logInfo('Workflow dispatched or release published ...')
+    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+    await runAction(token, notifyAfter, commitMessageLines)
+  } catch (err) {
+    core.setFailed(err)
   }
-
-  const isClosing = getIsClosingIssue(context)
-  if (isClosing) {
-    logInfo('Closing issue. Nothing to do ...')
-    return
-  }
-
-  logInfo('Workflow dispatched or release published ...')
-  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
-  await runAction(token, notifyAfter, commitMessageLines)
 }
-
-run().catch((err) => core.setFailed(err))
 
 module.exports = {
   run,
