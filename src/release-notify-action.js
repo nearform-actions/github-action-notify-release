@@ -45,7 +45,7 @@ async function runAction(token, notifyAfter, commitMessageLines) {
   )
 
   const groupedCommits = await groupCommits(token, unreleasedCommits)
-  //console.log(JSON.stringify(groupedCommits, null, 4))
+  console.log(JSON.stringify(groupedCommits, null, 4))
 
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(

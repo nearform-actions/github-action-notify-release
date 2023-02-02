@@ -18352,7 +18352,7 @@ async function runAction(token, notifyAfter, commitMessageLines) {
   )
 
   const groupedCommits = await groupCommits(token, unreleasedCommits)
-  //console.log(JSON.stringify(groupedCommits, null, 4))
+  console.log(JSON.stringify(groupedCommits, null, 4))
 
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(
@@ -18453,29 +18453,20 @@ async function groupCommits(token, commits) {
     map.set(number, [...(map.get(number) || []), commit])
   }
 
-  // DEBUG
-  const obj = Object.fromEntries(map)
-  const json = JSON.stringify(obj, (_, value) => {
-    if (Array.isArray(value)) {
-      return value.map((v) => Object.assign({}, v))
-    }
-    return value
-  })
-  console.log(json)
-  // DEBUG
-
   const retVal = {
     commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
+    // single commit prs includes the merge commit and the single commit -> length 2
     singleCommitPrs: Array.from(map.entries())
       .filter(
         ([key, values]) =>
-          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 1
+          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 2
       )
       .map(([, values]) => values)
       .flat(),
+    // multiple commit prs includes the merge commit and the other commits -> length > 2
     multipleCommitsPrs: Array.from(map.entries())
       .filter(
-        ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 1
+        ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 2
       )
       .map(([, values]) => values)
       .flat(),
