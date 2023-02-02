@@ -9,7 +9,11 @@ async function groupCommits(token, commits) {
     return []
   }
 
-  const commitMap = await getCommitMapForPRs(token, commits)
+  const filteredCommits = commits.filter(
+    (commit) => !commit.commit.message.startsWith('Merge pull request #')
+  )
+
+  const commitMap = await getCommitMapForPRs(token, filteredCommits)
   const groupedCommits = groupCommitsByPRType(commitMap)
 
   return groupedCommits
@@ -46,10 +50,9 @@ async function getCommitMapForPRs(token, commits) {
 }
 
 function groupCommitsByPRType(map) {
-  // multiple commit prs includes the merge commit and the other commits -> length > 2
   const multiCommitPRs = Array.from(map.entries())
     .filter(
-      ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 2
+      ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 1
     )
     .map(([, values]) => values)
     .flat()
@@ -57,11 +60,10 @@ function groupCommitsByPRType(map) {
 
   const groupedCommits = {
     commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY),
-    // single commit prs includes the merge commit and the single commit -> length 2
     singleCommitPRs: Array.from(map.entries())
       .filter(
         ([key, values]) =>
-          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 2
+          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 1
       )
       .map(([, values]) => values)
       .flat(),
