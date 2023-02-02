@@ -18426,29 +18426,20 @@ async function groupCommits(token, commits) {
     return []
   }
 
-  const commitsWithoutPrs = []
-  const commitsWithPrs = commits.reduce((acc, commit) => {
-    if (commit.parents.length < 2) {
-      commitsWithoutPrs.push(commit)
-    } else {
-      acc.push(commit)
-    }
-    return acc
-  }, [])
-
   // I need to fetch the PRs including those commits SHA
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
   const map = new Map()
-  for (const commit of commitsWithPrs) {
+  for (const commit of commits) {
     const { sha } = commit
     const query = `is:pr+repo:${owner}/${repo}+SHA:${sha}`
     const { data } = await octokit.rest.search.issuesAndPullRequests({
       q: query,
     })
     const { total_count: totalCount, items } = data
-    if (totalCount !== 1) {
+    if (totalCount === 0) {
+      map.set(-1, [...(map.get(-1) || []), commit])
       continue
     }
 
@@ -18457,7 +18448,7 @@ async function groupCommits(token, commits) {
   }
 
   const retVal = {
-    commitsWithoutPrs,
+    commitsWithoutPrs: map.get(-1),
     singleCommitPrs: Array.from(map.values())
       .filter((values) => values.length === 1)
       .flat(),
