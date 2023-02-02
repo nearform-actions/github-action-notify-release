@@ -65,6 +65,17 @@ async function groupCommits(token, commits) {
     map.set(number, [...(map.get(number) || []), commit])
   }
 
+  // DEBUG
+  const obj = Object.fromEntries(map)
+  const json = JSON.stringify(obj, (_, value) => {
+    if (Array.isArray(value)) {
+      return value.map((v) => Object.assign({}, v))
+    }
+    return value
+  })
+  console.log(json)
+  // DEBUG
+
   const retVal = {
     commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
     singleCommitPrs: Array.from(map.entries())

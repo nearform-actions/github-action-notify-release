@@ -18352,7 +18352,7 @@ async function runAction(token, notifyAfter, commitMessageLines) {
   )
 
   const groupedCommits = await groupCommits(token, unreleasedCommits)
-  console.log(JSON.stringify(groupedCommits, null, 4))
+  //console.log(JSON.stringify(groupedCommits, null, 4))
 
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(
@@ -18452,6 +18452,17 @@ async function groupCommits(token, commits) {
     const { number } = items[0]
     map.set(number, [...(map.get(number) || []), commit])
   }
+
+  // DEBUG
+  const obj = Object.fromEntries(map)
+  const json = JSON.stringify(obj, (_, value) => {
+    if (Array.isArray(value)) {
+      return value.map((v) => Object.assign({}, v))
+    }
+    return value
+  })
+  console.log(json)
+  // DEBUG
 
   const retVal = {
     commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
