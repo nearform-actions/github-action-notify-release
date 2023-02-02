@@ -29,6 +29,7 @@ async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
       since: latestReleaseDate,
     }
   )
+  console.log('unreleasedCommits: ', unreleasedCommits)
   return isSomeCommitStale(unreleasedCommits, notifyDate)
     ? unreleasedCommits
     : []
