@@ -4,6 +4,7 @@ const { logInfo } = require('./log')
 const { isStale, getNotifyDate } = require('./time-utils.js')
 const fs = require('fs')
 const path = require('path')
+const util = require('util')
 const { promisify } = require('util')
 const readFile = promisify(fs.readFile)
 const handlebars = require('handlebars')
@@ -16,6 +17,14 @@ const {
   STATE_CLOSED_NOT_PLANNED,
 } = require('./constants.js')
 
+const { execWithOutput } = require('./utils/execWithOutput')
+
+const conventionalCommitsConfig = require('conventional-changelog-monorepo/conventional-changelog-conventionalcommits')
+const conventionalRecommendedBump = require('conventional-changelog-monorepo/conventional-recommended-bump')
+
+const conventionalRecommendedBumpAsync = util.promisify(
+  conventionalRecommendedBump
+)
 function registerHandlebarHelpers(config) {
   const { commitMessageLines } = config
   handlebars.registerHelper('commitMessage', function (content) {
@@ -84,6 +93,23 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
   return updatedIssue.data.length ? updatedIssue.data[0] : null
 }
 
+async function getAutoBumpedVersion() {
+  const tag = (
+    await execWithOutput('git', ['tag', '--sort=-creatordate'])
+  ).split('\n')[0]
+
+  logInfo(`Using ${tag} as base release tag for version bump`)
+
+  const { releaseType } = await conventionalRecommendedBumpAsync({
+    baseTag: tag,
+    config: conventionalCommitsConfig,
+  })
+
+  logInfo(`Auto generated release type is ${releaseType}`)
+
+  return releaseType
+}
+
 async function createOrUpdateIssue(
   token,
   unreleasedCommits,
@@ -95,11 +121,16 @@ async function createOrUpdateIssue(
   registerHandlebarHelpers({
     commitMessageLines,
   })
+
+  const semVerReleaseType = await getAutoBumpedVersion()
+
   const issueBody = await renderIssueBody({
     commits: unreleasedCommits,
     latestRelease,
     notifyAfter,
+    semVerReleaseType,
   })
+
   if (pendingIssue) {
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
@@ -214,4 +245,6 @@ module.exports = {
   getIsSnoozingIssue,
   getIsClosingIssue,
   addSnoozingComment,
+  getAutoBumpedVersion,
+  conventionalRecommendedBumpAsync,
 }
