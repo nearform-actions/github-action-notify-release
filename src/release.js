@@ -1,5 +1,6 @@
 'use strict'
 const github = require('@actions/github')
+const { COMMITS_WITHOUT_PRS_KEY } = require('./constants.js')
 const { isSomeCommitStale } = require('./time-utils.js')
 
 async function getLatestRelease(token) {
@@ -53,7 +54,10 @@ async function groupCommits(token, commits) {
     })
     const { total_count: totalCount, items } = data
     if (totalCount === 0) {
-      map.set(-1, [...(map.get(-1) || []), commit])
+      map.set(COMMITS_WITHOUT_PRS_KEY, [
+        ...(map.get(COMMITS_WITHOUT_PRS_KEY) || []),
+        commit,
+      ])
       continue
     }
 
@@ -62,12 +66,19 @@ async function groupCommits(token, commits) {
   }
 
   const retVal = {
-    commitsWithoutPrs: map.get(-1),
-    singleCommitPrs: Array.from(map.values())
-      .filter((values) => values.length === 1)
+    commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
+    singleCommitPrs: Array.from(map.entries())
+      .filter(
+        ([key, values]) =>
+          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 1
+      )
+      .map(([, values]) => values)
       .flat(),
-    multipleCommitsPrs: Array.from(map.values())
-      .filter((values) => values.length > 1)
+    multipleCommitsPrs: Array.from(map.entries())
+      .filter(
+        ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 1
+      )
+      .map(([, values]) => values)
       .flat(),
   }
 

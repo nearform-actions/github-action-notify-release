@@ -18044,6 +18044,7 @@ const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
 const STATE_CLOSED_NOT_PLANNED = 'not_planned'
 const ISSUES_EVENT_NAME = 'issues'
+const COMMITS_WITHOUT_PRS_KEY = -1
 
 module.exports = {
   ISSUE_LABEL,
@@ -18052,6 +18053,7 @@ module.exports = {
   STATE_CLOSED,
   STATE_CLOSED_NOT_PLANNED,
   ISSUES_EVENT_NAME,
+  COMMITS_WITHOUT_PRS_KEY,
 }
 
 
@@ -18386,6 +18388,7 @@ module.exports = {
 "use strict";
 
 const github = __nccwpck_require__(5438)
+const { COMMITS_WITHOUT_PRS_KEY } = __nccwpck_require__(4438)
 const { isSomeCommitStale } = __nccwpck_require__(3590)
 
 async function getLatestRelease(token) {
@@ -18439,7 +18442,10 @@ async function groupCommits(token, commits) {
     })
     const { total_count: totalCount, items } = data
     if (totalCount === 0) {
-      map.set(-1, [...(map.get(-1) || []), commit])
+      map.set(COMMITS_WITHOUT_PRS_KEY, [
+        ...(map.get(COMMITS_WITHOUT_PRS_KEY) || []),
+        commit,
+      ])
       continue
     }
 
@@ -18448,12 +18454,19 @@ async function groupCommits(token, commits) {
   }
 
   const retVal = {
-    commitsWithoutPrs: map.get(-1),
-    singleCommitPrs: Array.from(map.values())
-      .filter((values) => values.length === 1)
+    commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
+    singleCommitPrs: Array.from(map.entries())
+      .filter(
+        ([key, values]) =>
+          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 1
+      )
+      .map(([, values]) => values)
       .flat(),
-    multipleCommitsPrs: Array.from(map.values())
-      .filter((values) => values.length > 1)
+    multipleCommitsPrs: Array.from(map.entries())
+      .filter(
+        ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 1
+      )
+      .map(([, values]) => values)
       .flat(),
   }
 
