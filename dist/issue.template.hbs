@@ -4,24 +4,32 @@ Based on the following commits, a **{{this.semVerReleaseType}}** release is reco
 
 Unreleased commits have been found which are pending release, please publish the changes.
 
+{{#if commits.multipleCommitPRs}}
+#### Pull requests with multiple commits:
+
 {{#each commits.multipleCommitPRs}}
 - #{{@key}}:
   {{#each this}}
   - [{{substring sha 7}}]({{html_url}}) {{commitMessage commit.message}}
   {{/each}}
 {{/each}}
+{{/if}}
 
-#### Commits without a PR:
-
-{{#each commits.commitsWithoutPRs}}
-- [{{substring this.sha 7}}]({{this.html_url}}) {{commitMessage this.commit.message}}
-{{/each}}
-
-#### Commits related to a PR with squashed commits or single commits:
+{{#if commits.singleCommitPRs.length}}
+#### Pull requests with single commits:
 
 {{#each commits.singleCommitPRs}}
 - [{{substring this.sha 7}}]({{this.html_url}}) {{commitMessage this.commit.message}}
 {{/each}}
+{{/if}}
+
+{{#if commits.commitsWithoutPRs.length}}
+#### Commits without a pull request:
+
+{{#each commits.commitsWithoutPRs}}
+- [{{substring this.sha 7}}]({{this.html_url}}) {{commitMessage this.commit.message}}
+{{/each}}
+{{/if}}
 
 #### If you close the issue as **Not Planned**
 
