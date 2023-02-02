@@ -11,34 +11,40 @@ const {
 } = require('./issue.js')
 const { logInfo } = require('./log.js')
 
-async function run() {
-  toolkit.logActionRefWarning()
-  toolkit.logRepoWarning()
+async function run({ inputs }) {
+  try {
+    toolkit.logActionRefWarning()
+    toolkit.logRepoWarning()
 
-  const token = core.getInput('github-token', { required: true })
+    const token = core.getInput('github-token', { required: true })
 
-  const notifyAfter = parseNotifyAfter(
-    core.getInput('notify-after'),
-    core.getInput('stale-days')
-  )
+    const notifyAfter = parseNotifyAfter(
+      inputs['notify-after'],
+      inputs['stale-days']
+    )
 
-  const isSnoozing = getIsSnoozingIssue(context)
+    const isSnoozing = getIsSnoozingIssue(context)
 
-  if (isSnoozing) {
-    logInfo('Snoozing issue ...')
-    const { number } = context.issue
-    return addSnoozingComment(token, notifyAfter, number)
+    if (isSnoozing) {
+      logInfo('Snoozing issue ...')
+      const { number } = context.issue
+      return addSnoozingComment(token, notifyAfter, number)
+    }
+
+    const isClosing = getIsClosingIssue(context)
+    if (isClosing) {
+      logInfo('Closing issue. Nothing to do ...')
+      return
+    }
+
+    logInfo('Workflow dispatched or release published ...')
+    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+    await runAction(token, notifyAfter, commitMessageLines)
+  } catch (err) {
+    core.setFailed(err)
   }
-
-  const isClosing = getIsClosingIssue(context)
-  if (isClosing) {
-    logInfo('Closing issue. Nothing to do ...')
-    return
-  }
-
-  logInfo('Workflow dispatched or release published ...')
-  const commitMessageLines = Number(core.getInput('commit-messages-lines'))
-  await runAction(token, notifyAfter, commitMessageLines)
 }
 
-run().catch((err) => core.setFailed(err))
+module.exports = {
+  run,
+}

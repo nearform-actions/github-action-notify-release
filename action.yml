@@ -6,8 +6,8 @@ inputs:
     required: false
     default: ${{ github.token }}
   notify-after:
-      description: 'The time after which unreleased commits should be considered stale and should notify for a release'
-      required: false
+    description: 'The time after which unreleased commits should be considered stale and should notify for a release'
+    required: false
   stale-days:
     description: 'Number of days of inactivity before a release becomes stale'
     required: false
@@ -16,6 +16,18 @@ inputs:
     description: 'Limit the number of first x lines from commit messages that will be added in the issue description. No truncation when set to 0.'
     required: false
     default: 1
+
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: 'composite'
+  steps:
+    - name: Checkout the fresh project
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Run the action javascript
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { run } = require('${{ github.action_path }}/dist/index.js')
+          await run({inputs: ${{ toJSON(inputs) }} })

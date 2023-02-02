@@ -1,7 +1,6 @@
 'use strict'
 
 const { getOctokit } = require('@actions/github')
-
 const issue = require('../src/issue')
 const { getNotifyDate } = require('../src/time-utils')
 
