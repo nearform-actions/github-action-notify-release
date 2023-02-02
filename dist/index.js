@@ -18433,6 +18433,7 @@ async function groupCommits(token, commits) {
     } else {
       acc.push(commit)
     }
+    return acc
   }, [])
 
   // I need to fetch the PRs including those commits SHA
