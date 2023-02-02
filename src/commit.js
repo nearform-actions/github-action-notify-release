@@ -9,7 +9,13 @@ async function groupCommits(token, commits) {
     return []
   }
 
-  // I need to fetch the PRs including those commits SHA
+  const commitMap = await getCommitMapForPRs(token, commits)
+  const groupedCommits = groupCommitsByPRType(commitMap)
+
+  return groupedCommits
+}
+
+async function getCommitMapForPRs(token, commits) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -30,29 +36,47 @@ async function groupCommits(token, commits) {
     }
 
     const { number } = items[0]
-    map.set(number, [...(map.get(number) || []), commit])
+    map.set(number, [
+      ...(map.get(number) || []),
+      { ...commit, pr_number: number },
+    ])
   }
 
+  return map
+}
+
+function groupCommitsByPRType(map) {
+  // multiple commit prs includes the merge commit and the other commits -> length > 2
+  const multiCommitPRs = Array.from(map.entries())
+    .filter(
+      ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 2
+    )
+    .map(([, values]) => values)
+    .flat()
+  const multipleCommitPRs = groupByPRNumber(multiCommitPRs)
+
   const groupedCommits = {
-    commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
+    commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY),
     // single commit prs includes the merge commit and the single commit -> length 2
-    singleCommitPrs: Array.from(map.entries())
+    singleCommitPRs: Array.from(map.entries())
       .filter(
         ([key, values]) =>
           key !== COMMITS_WITHOUT_PRS_KEY && values.length === 2
       )
       .map(([, values]) => values)
       .flat(),
-    // multiple commit prs includes the merge commit and the other commits -> length > 2
-    multipleCommitsPrs: Array.from(map.entries())
-      .filter(
-        ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 2
-      )
-      .map(([, values]) => values)
-      .flat(),
+    multipleCommitPRs,
   }
-
   return groupedCommits
+}
+
+function groupByPRNumber(commits) {
+  return commits.reduce((groupedCommits, commit) => {
+    const prNumber = commit.pr_number
+    groupedCommits[prNumber] = groupedCommits[prNumber] || []
+    groupedCommits[prNumber].push(commit)
+    return groupedCommits
+  }, {})
 }
 
 module.exports = {
