@@ -194,12 +194,7 @@ const unreleasedCommitsData1 = [
         name: 'Sameer Srivastava',
         date: '2021-04-28T09:27:24Z',
       },
-      message: `variable changed
-    
-    
-this message has multiple lines
-
-`,
+      message: `variable changed this message has multiple lines`,
     },
   },
   {
