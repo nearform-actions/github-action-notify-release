@@ -18032,6 +18032,74 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 6254:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const github = __nccwpck_require__(5438)
+
+const COMMITS_WITHOUT_PRS_KEY = -1
+
+async function groupCommits(token, commits) {
+  if (commits.length === 0) {
+    return []
+  }
+
+  // I need to fetch the PRs including those commits SHA
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+
+  const map = new Map()
+  for (const commit of commits) {
+    const { sha } = commit
+    const query = `is:pr+repo:${owner}/${repo}+SHA:${sha}`
+    const { data } = await octokit.rest.search.issuesAndPullRequests({
+      q: query,
+    })
+    const { total_count: totalCount, items } = data
+    if (totalCount === 0) {
+      map.set(COMMITS_WITHOUT_PRS_KEY, [
+        ...(map.get(COMMITS_WITHOUT_PRS_KEY) || []),
+        commit,
+      ])
+      continue
+    }
+
+    const { number } = items[0]
+    map.set(number, [...(map.get(number) || []), commit])
+  }
+
+  const groupedCommits = {
+    commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
+    // single commit prs includes the merge commit and the single commit -> length 2
+    singleCommitPrs: Array.from(map.entries())
+      .filter(
+        ([key, values]) =>
+          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 2
+      )
+      .map(([, values]) => values)
+      .flat(),
+    // multiple commit prs includes the merge commit and the other commits -> length > 2
+    multipleCommitsPrs: Array.from(map.entries())
+      .filter(
+        ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 2
+      )
+      .map(([, values]) => values)
+      .flat(),
+  }
+
+  return groupedCommits
+}
+
+module.exports = {
+  groupCommits,
+}
+
+
+/***/ }),
+
 /***/ 4438:
 /***/ ((module) => {
 
@@ -18044,7 +18112,6 @@ const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
 const STATE_CLOSED_NOT_PLANNED = 'not_planned'
 const ISSUES_EVENT_NAME = 'issues'
-const COMMITS_WITHOUT_PRS_KEY = -1
 
 module.exports = {
   ISSUE_LABEL,
@@ -18053,7 +18120,6 @@ module.exports = {
   STATE_CLOSED,
   STATE_CLOSED_NOT_PLANNED,
   ISSUES_EVENT_NAME,
-  COMMITS_WITHOUT_PRS_KEY,
 }
 
 
@@ -18308,11 +18374,8 @@ exports.logWarning = log(warning)
 
 
 const { logInfo, logWarning } = __nccwpck_require__(4353)
-const {
-  getLatestRelease,
-  getUnreleasedCommits,
-  groupCommits,
-} = __nccwpck_require__(2026)
+const { groupCommits } = __nccwpck_require__(6254)
+const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
@@ -18388,7 +18451,6 @@ module.exports = {
 "use strict";
 
 const github = __nccwpck_require__(5438)
-const { COMMITS_WITHOUT_PRS_KEY } = __nccwpck_require__(4438)
 const { isSomeCommitStale } = __nccwpck_require__(3590)
 
 async function getLatestRelease(token) {
@@ -18424,61 +18486,9 @@ async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
     : []
 }
 
-async function groupCommits(token, commits) {
-  if (commits.length === 0) {
-    return []
-  }
-
-  // I need to fetch the PRs including those commits SHA
-  const octokit = github.getOctokit(token)
-  const { owner, repo } = github.context.repo
-
-  const map = new Map()
-  for (const commit of commits) {
-    const { sha } = commit
-    const query = `is:pr+repo:${owner}/${repo}+SHA:${sha}`
-    const { data } = await octokit.rest.search.issuesAndPullRequests({
-      q: query,
-    })
-    const { total_count: totalCount, items } = data
-    if (totalCount === 0) {
-      map.set(COMMITS_WITHOUT_PRS_KEY, [
-        ...(map.get(COMMITS_WITHOUT_PRS_KEY) || []),
-        commit,
-      ])
-      continue
-    }
-
-    const { number } = items[0]
-    map.set(number, [...(map.get(number) || []), commit])
-  }
-
-  const retVal = {
-    commitsWithoutPrs: map.get(COMMITS_WITHOUT_PRS_KEY),
-    // single commit prs includes the merge commit and the single commit -> length 2
-    singleCommitPrs: Array.from(map.entries())
-      .filter(
-        ([key, values]) =>
-          key !== COMMITS_WITHOUT_PRS_KEY && values.length === 2
-      )
-      .map(([, values]) => values)
-      .flat(),
-    // multiple commit prs includes the merge commit and the other commits -> length > 2
-    multipleCommitsPrs: Array.from(map.entries())
-      .filter(
-        ([key, values]) => key !== COMMITS_WITHOUT_PRS_KEY && values.length > 2
-      )
-      .map(([, values]) => values)
-      .flat(),
-  }
-
-  return retVal
-}
-
 module.exports = {
   getLatestRelease,
   getUnreleasedCommits,
-  groupCommits,
 }
 
 
