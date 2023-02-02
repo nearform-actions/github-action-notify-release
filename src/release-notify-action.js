@@ -1,7 +1,11 @@
 'use strict'
 
 const { logInfo, logWarning } = require('./log')
-const { getLatestRelease, getUnreleasedCommits } = require('./release')
+const {
+  getLatestRelease,
+  getUnreleasedCommits,
+  groupCommits,
+} = require('./release')
 const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
@@ -39,6 +43,9 @@ async function runAction(token, notifyAfter, commitMessageLines) {
     latestRelease.published_at,
     notifyDate
   )
+
+  const groupedCommits = await groupCommits(token, unreleasedCommits)
+  console.log(JSON.stringify(groupedCommits, null, 4))
 
   if (unreleasedCommits.length) {
     return createOrUpdateIssue(
