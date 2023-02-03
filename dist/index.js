@@ -70362,8 +70362,26 @@ function wrappy (fn, cb) {
 
 
 const github = __nccwpck_require__(5438)
+const { isSomeCommitStale } = __nccwpck_require__(3590)
+const { COMMITS_WITHOUT_PRS_KEY } = __nccwpck_require__(4438)
 
-const COMMITS_WITHOUT_PRS_KEY = -1
+async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+
+  const { data: unreleasedCommits } = await octokit.request(
+    `GET /repos/{owner}/{repo}/commits`,
+    {
+      owner,
+      repo,
+      since: latestReleaseDate,
+    }
+  )
+
+  return isSomeCommitStale(unreleasedCommits, notifyDate)
+    ? unreleasedCommits
+    : []
+}
 
 async function groupCommits(token, commits) {
   if (commits.length === 0) {
@@ -70420,7 +70438,7 @@ function groupCommitsByPRType(map) {
   const multipleCommitPRs = groupByPRNumber(multiCommitPRs)
 
   const groupedCommits = {
-    commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY),
+    commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY) || [],
     singleCommitPRs: Array.from(map.entries())
       .filter(
         ([key, values]) =>
@@ -70443,6 +70461,7 @@ function groupByPRNumber(commits) {
 }
 
 module.exports = {
+  getUnreleasedCommits,
   groupCommits,
 }
 
@@ -70461,6 +70480,7 @@ const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
 const STATE_CLOSED_NOT_PLANNED = 'not_planned'
 const ISSUES_EVENT_NAME = 'issues'
+const COMMITS_WITHOUT_PRS_KEY = -1
 
 module.exports = {
   ISSUE_LABEL,
@@ -70469,6 +70489,47 @@ module.exports = {
   STATE_CLOSED,
   STATE_CLOSED_NOT_PLANNED,
   ISSUES_EVENT_NAME,
+  COMMITS_WITHOUT_PRS_KEY,
+}
+
+
+/***/ }),
+
+/***/ 3455:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const fs = __nccwpck_require__(7147)
+const { promisify } = __nccwpck_require__(3837)
+const path = __nccwpck_require__(1017)
+const readFile = promisify(fs.readFile)
+const handlebars = __nccwpck_require__(7492)
+
+function registerHandlebarHelpers(config) {
+  const { commitMessageLines } = config
+  handlebars.registerHelper('commitMessage', function (content) {
+    if (!commitMessageLines || commitMessageLines < 0) {
+      return content
+    }
+    return content.split('\n').slice(0, commitMessageLines).join('\n').trim()
+  })
+  handlebars.registerHelper('substring', function (content, characters) {
+    return (content || '').substring(0, characters)
+  })
+}
+
+async function renderIssueBody(data) {
+  const templateFilePath = __nccwpck_require__.ab + "issue.template.hbs"
+  const templateStringBuffer = await readFile(__nccwpck_require__.ab + "issue.template.hbs")
+  const template = handlebars.compile(templateStringBuffer.toString())
+  return template(data)
+}
+
+module.exports = {
+  registerHandlebarHelpers,
+  renderIssueBody,
 }
 
 
@@ -70540,12 +70601,7 @@ module.exports = {
 const github = __nccwpck_require__(5438)
 const { logInfo } = __nccwpck_require__(4353)
 const { isStale, getNotifyDate } = __nccwpck_require__(3590)
-const fs = __nccwpck_require__(7147)
-const path = __nccwpck_require__(1017)
 const util = __nccwpck_require__(3837)
-const { promisify } = __nccwpck_require__(3837)
-const readFile = promisify(fs.readFile)
-const handlebars = __nccwpck_require__(7492)
 const {
   STATE_OPEN,
   ISSUE_TITLE,
@@ -70556,6 +70612,7 @@ const {
 } = __nccwpck_require__(4438)
 
 const { execWithOutput } = __nccwpck_require__(8632)
+const { registerHandlebarHelpers, renderIssueBody } = __nccwpck_require__(3455)
 
 const conventionalCommitsConfig = __nccwpck_require__(4369)
 const conventionalRecommendedBump = __nccwpck_require__(7559)
@@ -70563,25 +70620,6 @@ const conventionalRecommendedBump = __nccwpck_require__(7559)
 const conventionalRecommendedBumpAsync = util.promisify(
   conventionalRecommendedBump
 )
-function registerHandlebarHelpers(config) {
-  const { commitMessageLines } = config
-  handlebars.registerHelper('commitMessage', function (content) {
-    if (!commitMessageLines || commitMessageLines < 0) {
-      return content
-    }
-    return content.split('\n').slice(0, commitMessageLines).join('\n').trim()
-  })
-  handlebars.registerHelper('substring', function (content, characters) {
-    return (content || '').substring(0, characters)
-  })
-}
-
-async function renderIssueBody(data) {
-  const templateFilePath = __nccwpck_require__.ab + "issue.template.hbs"
-  const templateStringBuffer = await readFile(__nccwpck_require__.ab + "issue.template.hbs")
-  const template = handlebars.compile(templateStringBuffer.toString())
-  return template(data)
-}
 
 async function createIssue(token, issueBody) {
   const octokit = github.getOctokit(token)
@@ -70814,8 +70852,8 @@ exports.logWarning = log(warning)
 
 
 const { logInfo, logWarning } = __nccwpck_require__(4353)
-const { groupCommits } = __nccwpck_require__(6254)
-const { getLatestRelease, getUnreleasedCommits } = __nccwpck_require__(2026)
+const { groupCommits, getUnreleasedCommits } = __nccwpck_require__(6254)
+const { getLatestRelease } = __nccwpck_require__(2026)
 const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
@@ -70893,7 +70931,6 @@ module.exports = {
 "use strict";
 
 const github = __nccwpck_require__(5438)
-const { isSomeCommitStale } = __nccwpck_require__(3590)
 
 async function getLatestRelease(token) {
   try {
@@ -70910,27 +70947,8 @@ async function getLatestRelease(token) {
   }
 }
 
-async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
-  const octokit = github.getOctokit(token)
-  const { owner, repo } = github.context.repo
-
-  const { data: unreleasedCommits } = await octokit.request(
-    `GET /repos/{owner}/{repo}/commits`,
-    {
-      owner,
-      repo,
-      since: latestReleaseDate,
-    }
-  )
-
-  return isSomeCommitStale(unreleasedCommits, notifyDate)
-    ? unreleasedCommits
-    : []
-}
-
 module.exports = {
   getLatestRelease,
-  getUnreleasedCommits,
 }
 
 

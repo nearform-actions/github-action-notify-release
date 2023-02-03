@@ -2,18 +2,24 @@
 
 const { runAction } = require('../src/release-notify-action')
 const release = require('../src/release')
+const commit = require('../src/commit')
 const issue = require('../src/issue')
 
 const {
   allReleasesData: allReleases,
   unreleasedCommitsData1,
   pendingIssues,
+  groupedUnreleasedCommitsData1,
 } = require('./testData')
 
 jest.mock('../src/log')
 
 jest.mock('../src/release', () => ({
   getLatestRelease: jest.fn(),
+}))
+
+jest.mock('../src/commit', () => ({
+  groupCommits: jest.fn(),
   getUnreleasedCommits: jest.fn(),
 }))
 
@@ -27,7 +33,8 @@ jest.mock('../src/issue', () => ({
 
 beforeEach(() => {
   release.getLatestRelease.mockReset()
-  release.getUnreleasedCommits.mockReset()
+  commit.getUnreleasedCommits.mockReset()
+  commit.groupCommits.mockReset()
   issue.createOrUpdateIssue.mockReset()
   issue.getLastOpenPendingIssue.mockReset()
   issue.closeIssue.mockReset()
@@ -40,13 +47,14 @@ const token = 'dummyToken'
 test('Create issue for unreleased commits (no existing issues)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
-  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.groupCommits.mockResolvedValue(groupedUnreleasedCommitsData1)
   await runAction(token, '1 day', 1)
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
   expect(issue.createOrUpdateIssue).toBeCalledWith(
     token,
-    unreleasedCommitsData1,
+    groupedUnreleasedCommitsData1,
     null,
     allReleases[0],
     1,
@@ -58,14 +66,15 @@ test('Create issue for unreleased commits (no existing issues)', async () => {
 test('Update issue for unreleased commits (issue already exists)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
-  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.groupCommits.mockResolvedValue(groupedUnreleasedCommitsData1)
   await runAction(token, '1 day', 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
   expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
   expect(issue.createOrUpdateIssue).toBeCalledWith(
     token,
-    unreleasedCommitsData1,
+    groupedUnreleasedCommitsData1,
     pendingIssues[0],
     allReleases[0],
     1,
@@ -77,7 +86,7 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
 test('Close issue when there is one pending and no unreleased commits', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
-  release.getUnreleasedCommits.mockResolvedValue([])
+  commit.getUnreleasedCommits.mockResolvedValue([])
   await runAction(token, '1 second', 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
@@ -89,7 +98,7 @@ test('Close issue when there is one pending and no unreleased commits', async ()
 test('Do nothing when there is one issue pending and no new releases', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[1])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
-  release.getUnreleasedCommits.mockResolvedValue([])
+  commit.getUnreleasedCommits.mockResolvedValue([])
   await runAction(token, '1 second', 1)
 
   expect(release.getLatestRelease).toBeCalledWith(token)
@@ -110,14 +119,15 @@ test('Do nothing when no releases found', async () => {
 
 test('Create snooze issue if notify was closed', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
-  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.groupCommits.mockResolvedValue(groupedUnreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
 
   await runAction(token, '20 years', 1)
 
   expect(issue.createOrUpdateIssue).toBeCalledWith(
     token,
-    unreleasedCommitsData1,
+    groupedUnreleasedCommitsData1,
     null,
     allReleases[0],
     1,
@@ -128,7 +138,7 @@ test('Create snooze issue if notify was closed', async () => {
 
 test('Do not create or update issue if snoozed', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
-  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   issue.isSnoozed.mockResolvedValue(true)
   await runAction(token, '1 second', 1)
@@ -138,7 +148,7 @@ test('Do not create or update issue if snoozed', async () => {
 
 test('Throw if date is invalid', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
-  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  commit.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
   issue.isSnoozed.mockResolvedValue(true)
 

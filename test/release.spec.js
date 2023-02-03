@@ -1,6 +1,7 @@
 'use strict'
 const { getOctokit } = require('@actions/github')
-const { getLatestRelease, getUnreleasedCommits } = require('../src/release')
+const { getLatestRelease } = require('../src/release')
+const { getUnreleasedCommits } = require('../src/commit')
 const {
   allCommitsData: allCommits,
   allReleasesData: allReleases,

@@ -1,8 +1,26 @@
 'use strict'
 
 const github = require('@actions/github')
+const { isSomeCommitStale } = require('./time-utils.js')
+const { COMMITS_WITHOUT_PRS_KEY } = require('./constants')
 
-const COMMITS_WITHOUT_PRS_KEY = -1
+async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
+  const octokit = github.getOctokit(token)
+  const { owner, repo } = github.context.repo
+
+  const { data: unreleasedCommits } = await octokit.request(
+    `GET /repos/{owner}/{repo}/commits`,
+    {
+      owner,
+      repo,
+      since: latestReleaseDate,
+    }
+  )
+
+  return isSomeCommitStale(unreleasedCommits, notifyDate)
+    ? unreleasedCommits
+    : []
+}
 
 async function groupCommits(token, commits) {
   if (commits.length === 0) {
@@ -59,7 +77,7 @@ function groupCommitsByPRType(map) {
   const multipleCommitPRs = groupByPRNumber(multiCommitPRs)
 
   const groupedCommits = {
-    commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY),
+    commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY) || [],
     singleCommitPRs: Array.from(map.entries())
       .filter(
         ([key, values]) =>
@@ -82,5 +100,6 @@ function groupByPRNumber(commits) {
 }
 
 module.exports = {
+  getUnreleasedCommits,
   groupCommits,
 }

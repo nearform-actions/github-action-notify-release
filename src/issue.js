@@ -2,12 +2,7 @@
 const github = require('@actions/github')
 const { logInfo } = require('./log')
 const { isStale, getNotifyDate } = require('./time-utils.js')
-const fs = require('fs')
-const path = require('path')
 const util = require('util')
-const { promisify } = require('util')
-const readFile = promisify(fs.readFile)
-const handlebars = require('handlebars')
 const {
   STATE_OPEN,
   ISSUE_TITLE,
@@ -18,6 +13,7 @@ const {
 } = require('./constants.js')
 
 const { execWithOutput } = require('./utils/execWithOutput')
+const { registerHandlebarHelpers, renderIssueBody } = require('./handlebars')
 
 const conventionalCommitsConfig = require('conventional-changelog-monorepo/conventional-changelog-conventionalcommits')
 const conventionalRecommendedBump = require('conventional-changelog-monorepo/conventional-recommended-bump')
@@ -25,25 +21,6 @@ const conventionalRecommendedBump = require('conventional-changelog-monorepo/con
 const conventionalRecommendedBumpAsync = util.promisify(
   conventionalRecommendedBump
 )
-function registerHandlebarHelpers(config) {
-  const { commitMessageLines } = config
-  handlebars.registerHelper('commitMessage', function (content) {
-    if (!commitMessageLines || commitMessageLines < 0) {
-      return content
-    }
-    return content.split('\n').slice(0, commitMessageLines).join('\n').trim()
-  })
-  handlebars.registerHelper('substring', function (content, characters) {
-    return (content || '').substring(0, characters)
-  })
-}
-
-async function renderIssueBody(data) {
-  const templateFilePath = path.resolve(__dirname, 'issue.template.hbs')
-  const templateStringBuffer = await readFile(templateFilePath)
-  const template = handlebars.compile(templateStringBuffer.toString())
-  return template(data)
-}
 
 async function createIssue(token, issueBody) {
   const octokit = github.getOctokit(token)

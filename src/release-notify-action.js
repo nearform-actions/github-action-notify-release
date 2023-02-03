@@ -1,8 +1,8 @@
 'use strict'
 
 const { logInfo, logWarning } = require('./log')
-const { groupCommits } = require('./commit')
-const { getLatestRelease, getUnreleasedCommits } = require('./release')
+const { groupCommits, getUnreleasedCommits } = require('./commit')
+const { getLatestRelease } = require('./release')
 const {
   createOrUpdateIssue,
   getLastOpenPendingIssue,

@@ -1,10 +1,16 @@
 'use strict'
 
 const { getOctokit } = require('@actions/github')
+const handlebars = require('handlebars')
 const issue = require('../src/issue')
 const { getNotifyDate } = require('../src/time-utils')
 
-const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
+const {
+  unreleasedCommitsData1,
+  groupedUnreleasedCommitsData1,
+  closedNotifyIssues,
+  allReleasesData,
+} = require('./testData')
 
 const token = 'dummytoken'
 const owner = 'sameer'
@@ -18,6 +24,11 @@ jest.mock('@actions/github', () => ({
   getOctokit: jest.fn(),
   context: { repo: { owner, repo } },
 }))
+
+beforeEach(() => {
+  handlebars.unregisterHelper('commitMessage')
+  handlebars.unregisterHelper('substring')
+})
 
 test('Creates an issue', async () => {
   getOctokit.mockReturnValue({
@@ -154,14 +165,14 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
 
   await issue.createOrUpdateIssue(
     token,
-    unreleasedCommitsData1,
+    groupedUnreleasedCommitsData1,
     null,
     'test-date'
   )
   expect(create).toHaveBeenCalledWith(
     expect.objectContaining({
       body: expect.stringContaining(
-        unreleasedCommitsData1[0].sha.substring(0, 7)
+        groupedUnreleasedCommitsData1.commitsWithoutPRs[0].sha.substring(0, 7)
       ),
     })
   )
@@ -370,5 +381,36 @@ test('Add a snoozing comment to a closing issue', async () => {
       issue_number: 1,
       body: `This issue has been snoozed. A new issue will be opened for you on ${notifyDate}.`,
     }
+  )
+})
+
+test('Create issue body that contains commits with multiple lines using commitMessageLines', async () => {
+  const create = jest.fn()
+  getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
+  const commitMessageLines = 1
+
+  await issue.createOrUpdateIssue(
+    token,
+    groupedUnreleasedCommitsData1,
+    null,
+    allReleasesData[0],
+    commitMessageLines,
+    'test-date'
+  )
+  expect(create).toHaveBeenCalledWith(
+    expect.objectContaining({
+      body: expect.stringContaining(
+        groupedUnreleasedCommitsData1.commitsWithoutPRs[1].commit.message
+          .split('\n')
+          .slice(0, commitMessageLines)
+          .join('\n')
+          .trim()
+      ),
+    })
   )
 })
