@@ -70402,7 +70402,7 @@ async function run({ inputs }) {
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
 
-    const token = core.getInput('github-token', { required: true })
+    const token = inputs('github-token', { required: true })
 
     const notifyAfter = parseNotifyAfter(
       inputs['notify-after'],
@@ -70424,7 +70424,7 @@ async function run({ inputs }) {
     }
 
     logInfo('Workflow dispatched or release published ...')
-    const commitMessageLines = Number(core.getInput('commit-messages-lines'))
+    const commitMessageLines = Number(inputs('commit-messages-lines'))
     await runAction(token, notifyAfter, commitMessageLines)
   } catch (err) {
     core.setFailed(err)
