@@ -3,6 +3,7 @@
 const github = require('@actions/github')
 const { isSomeCommitStale } = require('./time-utils.js')
 const { COMMITS_WITHOUT_PRS_KEY } = require('./constants')
+const { isEmptyObject } = require('./utils/helper.js')
 
 async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
@@ -76,8 +77,6 @@ function groupCommitsByPRType(map) {
     .flat()
   const multipleCommitPRs = groupByPRNumber(multiCommitPRs)
 
-  console.log('multipleCommitPRs: ', multipleCommitPRs)
-
   const groupedCommits = {
     commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY) || [],
     singleCommitPRs: Array.from(map.entries())
@@ -87,7 +86,9 @@ function groupCommitsByPRType(map) {
       )
       .map(([, values]) => values)
       .flat(),
-    multipleCommitPRs,
+    multipleCommitPRs: isEmptyObject(multipleCommitPRs)
+      ? null
+      : multipleCommitPRs,
   }
   return groupedCommits
 }

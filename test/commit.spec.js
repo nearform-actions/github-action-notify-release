@@ -104,6 +104,6 @@ test('should return grouped commits if multipleCommitPRs are not present', async
   expect(result).toEqual({
     commitsWithoutPRs: groupedUnreleasedCommitsData1.commitsWithoutPRs,
     singleCommitPRs: groupedUnreleasedCommitsData1.singleCommitPRs,
-    multipleCommitPRs: {},
+    multipleCommitPRs: null,
   })
 })

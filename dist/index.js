@@ -70364,6 +70364,7 @@ function wrappy (fn, cb) {
 const github = __nccwpck_require__(5438)
 const { isSomeCommitStale } = __nccwpck_require__(3590)
 const { COMMITS_WITHOUT_PRS_KEY } = __nccwpck_require__(4438)
+const { isEmptyObject } = __nccwpck_require__(9228)
 
 async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
@@ -70437,8 +70438,6 @@ function groupCommitsByPRType(map) {
     .flat()
   const multipleCommitPRs = groupByPRNumber(multiCommitPRs)
 
-  console.log('multipleCommitPRs: ', multipleCommitPRs)
-
   const groupedCommits = {
     commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY) || [],
     singleCommitPRs: Array.from(map.entries())
@@ -70448,7 +70447,9 @@ function groupCommitsByPRType(map) {
       )
       .map(([, values]) => values)
       .flat(),
-    multipleCommitPRs,
+    multipleCommitPRs: isEmptyObject(multipleCommitPRs)
+      ? null
+      : multipleCommitPRs,
   }
   return groupedCommits
 }
@@ -71102,6 +71103,23 @@ async function execWithOutput(cmd, args, { cwd } = {}) {
 }
 
 exports.execWithOutput = execWithOutput
+
+
+/***/ }),
+
+/***/ 9228:
+/***/ ((module) => {
+
+"use strict";
+
+
+function isEmptyObject(obj) {
+  return JSON.stringify(obj) == JSON.stringify({})
+}
+
+module.exports = {
+  isEmptyObject,
+}
 
 
 /***/ }),
