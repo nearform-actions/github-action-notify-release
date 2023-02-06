@@ -70437,6 +70437,8 @@ function groupCommitsByPRType(map) {
     .flat()
   const multipleCommitPRs = groupByPRNumber(multiCommitPRs)
 
+  console.log('multipleCommitPRs: ', multipleCommitPRs)
+
   const groupedCommits = {
     commitsWithoutPRs: map.get(COMMITS_WITHOUT_PRS_KEY) || [],
     singleCommitPRs: Array.from(map.entries())
