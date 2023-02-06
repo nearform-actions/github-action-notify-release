@@ -2,7 +2,7 @@
 const core = require('@actions/core')
 const toolkit = require('actions-toolkit')
 const { context } = require('@actions/github')
-const { parseNotifyAfter } = require('./time-utils.js')
+const { parseNotifyAfter } = require('./utils/time-utils.js')
 const { runAction } = require('./release-notify-action')
 const {
   getIsSnoozingIssue,

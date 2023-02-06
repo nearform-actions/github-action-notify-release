@@ -1,6 +1,6 @@
 'use strict'
 const ms = require('ms')
-const { logWarning } = require('./log')
+const { logWarning } = require('../log')
 
 function notifyAfterToMs(input) {
   const stringToMs = ms(input)

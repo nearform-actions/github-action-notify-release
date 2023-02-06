@@ -7,7 +7,7 @@ const {
   parseNotifyAfter,
   staleDaysToStr,
   getNotifyDate,
-} = require('../src/time-utils.js')
+} = require('../src/utils/time-utils.js')
 
 const {
   allCommitsData: allCommits,

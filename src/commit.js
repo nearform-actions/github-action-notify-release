@@ -1,9 +1,10 @@
 'use strict'
 
 const github = require('@actions/github')
-const { isSomeCommitStale } = require('./time-utils.js')
-const { COMMITS_WITHOUT_PRS_KEY } = require('./constants')
+const { isSomeCommitStale } = require('./utils/time-utils.js')
 const { isEmptyObject } = require('./utils/helper.js')
+
+const COMMITS_WITHOUT_PRS_KEY = -1
 
 async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)

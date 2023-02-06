@@ -3,7 +3,7 @@
 const { getOctokit } = require('@actions/github')
 const handlebars = require('handlebars')
 const issue = require('../src/issue')
-const { getNotifyDate } = require('../src/time-utils')
+const { getNotifyDate } = require('../src/utils/time-utils')
 
 const {
   unreleasedCommitsData1,

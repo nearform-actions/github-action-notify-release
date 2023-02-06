@@ -1,7 +1,7 @@
 'use strict'
 const github = require('@actions/github')
 const { logInfo } = require('./log')
-const { isStale, getNotifyDate } = require('./time-utils.js')
+const { isStale, getNotifyDate } = require('./utils/time-utils.js')
 const util = require('util')
 const {
   STATE_OPEN,

@@ -70362,9 +70362,10 @@ function wrappy (fn, cb) {
 
 
 const github = __nccwpck_require__(5438)
-const { isSomeCommitStale } = __nccwpck_require__(3590)
-const { COMMITS_WITHOUT_PRS_KEY } = __nccwpck_require__(4438)
+const { isSomeCommitStale } = __nccwpck_require__(2804)
 const { isEmptyObject } = __nccwpck_require__(9228)
+
+const COMMITS_WITHOUT_PRS_KEY = -1
 
 async function getUnreleasedCommits(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
@@ -70483,7 +70484,6 @@ const STATE_OPEN = 'open'
 const STATE_CLOSED = 'closed'
 const STATE_CLOSED_NOT_PLANNED = 'not_planned'
 const ISSUES_EVENT_NAME = 'issues'
-const COMMITS_WITHOUT_PRS_KEY = -1
 
 module.exports = {
   ISSUE_LABEL,
@@ -70492,7 +70492,6 @@ module.exports = {
   STATE_CLOSED,
   STATE_CLOSED_NOT_PLANNED,
   ISSUES_EVENT_NAME,
-  COMMITS_WITHOUT_PRS_KEY,
 }
 
 
@@ -70546,7 +70545,7 @@ module.exports = {
 const core = __nccwpck_require__(2186)
 const toolkit = __nccwpck_require__(2020)
 const { context } = __nccwpck_require__(5438)
-const { parseNotifyAfter } = __nccwpck_require__(3590)
+const { parseNotifyAfter } = __nccwpck_require__(2804)
 const { runAction } = __nccwpck_require__(1254)
 const {
   getIsSnoozingIssue,
@@ -70603,7 +70602,7 @@ module.exports = {
 
 const github = __nccwpck_require__(5438)
 const { logInfo } = __nccwpck_require__(4353)
-const { isStale, getNotifyDate } = __nccwpck_require__(3590)
+const { isStale, getNotifyDate } = __nccwpck_require__(2804)
 const util = __nccwpck_require__(3837)
 const {
   STATE_OPEN,
@@ -70863,7 +70862,7 @@ const {
   closeIssue,
   isSnoozed,
 } = __nccwpck_require__(5465)
-const { notifyAfterToMs } = __nccwpck_require__(3590)
+const { notifyAfterToMs } = __nccwpck_require__(2804)
 
 async function runAction(token, notifyAfter, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)
@@ -70952,77 +70951,6 @@ async function getLatestRelease(token) {
 
 module.exports = {
   getLatestRelease,
-}
-
-
-/***/ }),
-
-/***/ 3590:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const ms = __nccwpck_require__(900)
-const { logWarning } = __nccwpck_require__(4353)
-
-function notifyAfterToMs(input) {
-  const stringToMs = ms(input)
-
-  if (isNaN(stringToMs)) {
-    throw new Error('Invalid time value')
-  }
-
-  return Date.now() - stringToMs
-}
-
-/** @deprecated */
-function staleDaysToStr(days) {
-  return `${days} day${days > 1 ? 's' : ''}`
-}
-
-function isSomeCommitStale(commits, notifyDate) {
-  return commits.some((commit) => {
-    return isStale(commit.commit.committer.date, notifyDate)
-  })
-}
-
-function isStale(date, notifyDate) {
-  return new Date(date).getTime() < notifyDate
-}
-
-function parseNotifyAfter(notifyAfter, staleDays) {
-  if (!notifyAfter && !staleDays) {
-    return '7 days'
-  }
-
-  if (notifyAfter) {
-    return isNaN(Number(notifyAfter)) ? notifyAfter : `${notifyAfter} ms`
-  }
-
-  logWarning(
-    'stale-days option is deprecated and will be removed in the next major release'
-  )
-
-  return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
-}
-
-function getNotifyDate(input) {
-  const stringToMs = ms(input)
-
-  if (isNaN(stringToMs)) {
-    throw new Error('Invalid time value')
-  }
-
-  return new Date(Date.now() + stringToMs)
-}
-
-module.exports = {
-  isSomeCommitStale,
-  isStale,
-  parseNotifyAfter,
-  notifyAfterToMs,
-  getNotifyDate,
-  staleDaysToStr,
 }
 
 
@@ -71119,6 +71047,77 @@ function isEmptyObject(obj) {
 
 module.exports = {
   isEmptyObject,
+}
+
+
+/***/ }),
+
+/***/ 2804:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const ms = __nccwpck_require__(900)
+const { logWarning } = __nccwpck_require__(4353)
+
+function notifyAfterToMs(input) {
+  const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
+  }
+
+  return Date.now() - stringToMs
+}
+
+/** @deprecated */
+function staleDaysToStr(days) {
+  return `${days} day${days > 1 ? 's' : ''}`
+}
+
+function isSomeCommitStale(commits, notifyDate) {
+  return commits.some((commit) => {
+    return isStale(commit.commit.committer.date, notifyDate)
+  })
+}
+
+function isStale(date, notifyDate) {
+  return new Date(date).getTime() < notifyDate
+}
+
+function parseNotifyAfter(notifyAfter, staleDays) {
+  if (!notifyAfter && !staleDays) {
+    return '7 days'
+  }
+
+  if (notifyAfter) {
+    return isNaN(Number(notifyAfter)) ? notifyAfter : `${notifyAfter} ms`
+  }
+
+  logWarning(
+    'stale-days option is deprecated and will be removed in the next major release'
+  )
+
+  return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
+}
+
+function getNotifyDate(input) {
+  const stringToMs = ms(input)
+
+  if (isNaN(stringToMs)) {
+    throw new Error('Invalid time value')
+  }
+
+  return new Date(Date.now() + stringToMs)
+}
+
+module.exports = {
+  isSomeCommitStale,
+  isStale,
+  parseNotifyAfter,
+  notifyAfterToMs,
+  getNotifyDate,
+  staleDaysToStr,
 }
 
 
