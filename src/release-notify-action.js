@@ -9,7 +9,7 @@ const {
   closeIssue,
   isSnoozed,
 } = require('./issue')
-const { notifyAfterToMs } = require('./utils/time-utils')
+const { notifyAfterToMs } = require('./utils/time')
 
 async function runAction(token, notifyAfter, commitMessageLines) {
   const latestRelease = await getLatestRelease(token)

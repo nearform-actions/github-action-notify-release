@@ -1,7 +1,7 @@
 'use strict'
 
 const github = require('@actions/github')
-const { isSomeCommitStale } = require('./utils/time-utils.js')
+const { isSomeCommitStale } = require('./utils/time.js')
 const { isEmptyObject } = require('./utils/helper.js')
 
 const COMMITS_WITHOUT_PRS_KEY = -1
