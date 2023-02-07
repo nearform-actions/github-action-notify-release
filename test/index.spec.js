@@ -18,7 +18,7 @@ jest.mock('../src/log', () => ({
   logInfo: jest.fn(),
 }))
 
-test('confirm it uses to inputs', async () => {
+test('confirm it uses the inputs passed as props', async () => {
   const inputs = {
     'github-token': 'token',
     'notify-after': 'notify-after',
