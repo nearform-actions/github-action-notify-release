@@ -70401,6 +70401,7 @@ async function run({ inputs }) {
   try {
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
+    console.log('something')
 
     const token = inputs['github-token']
 
@@ -70869,6 +70870,7 @@ function isStale(date, notifyDate) {
 }
 
 function parseNotifyAfter(notifyAfter, staleDays) {
+  console.log('hello world')
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
