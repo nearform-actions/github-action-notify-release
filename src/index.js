@@ -11,8 +11,9 @@ const {
 } = require('./issue.js')
 const { logInfo } = require('./log.js')
 
-async function run({ inputs }) {
+async function run(props) {
   try {
+    const { inputs } = props
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
 

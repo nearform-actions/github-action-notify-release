@@ -70397,8 +70397,9 @@ const {
 } = __nccwpck_require__(5465)
 const { logInfo } = __nccwpck_require__(4353)
 
-async function run({ inputs }) {
+async function run(props) {
   try {
+    const { inputs } = props
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
 
