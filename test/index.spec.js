@@ -10,6 +10,8 @@ const {
   getIsClosingIssue,
 } = require('../src/issue.js')
 
+const core = require('@actions/core')
+
 jest.mock('actions-toolkit')
 
 jest.mock('../src/time-utils.js', () => ({
@@ -80,4 +82,16 @@ test('it should not call runAction if isClosing is true', async () => {
   getIsClosingIssue.mockImplementation(() => true)
   await run({ inputs })
   expect(runAction).not.toHaveBeenCalled()
+})
+
+test('it should throw if there is an error', async () => {
+  const error = new Error('error')
+  parseNotifyAfter.mockImplementation(() => {
+    throw error
+  })
+
+  jest.spyOn(core, 'setFailed')
+
+  await run({ inputs })
+  expect(core.setFailed).toHaveBeenCalledWith(error)
 })
