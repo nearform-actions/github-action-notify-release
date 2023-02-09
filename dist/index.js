@@ -71042,7 +71042,7 @@ exports.execWithOutput = execWithOutput
 
 
 function isEmptyObject(obj) {
-  return JSON.stringify(obj) == JSON.stringify({})
+  return JSON.stringify(obj) === JSON.stringify({})
 }
 
 module.exports = {
