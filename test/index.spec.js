@@ -1,7 +1,7 @@
 'use strict'
 
 const { run } = require('../src')
-const { parseNotifyAfter } = require('../src/time-utils.js')
+const { parseNotifyAfter } = require('../src/utils/time')
 const { runAction } = require('../src/release-notify-action')
 
 const {
@@ -14,7 +14,7 @@ const core = require('@actions/core')
 
 jest.mock('actions-toolkit')
 
-jest.mock('../src/time-utils.js', () => ({
+jest.mock('../src/utils/time', () => ({
   parseNotifyAfter: jest.fn(),
 }))
 
