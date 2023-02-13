@@ -2,7 +2,7 @@
 
 const github = require('@actions/github')
 const { isSomeCommitStale } = require('./utils/time.js')
-const { isEmptyObject } = require('./utils/helper.js')
+const { isEmptyObject } = require('./utils/isEmptyObject.js')
 
 const COMMITS_WITHOUT_PRS_KEY = -1
 

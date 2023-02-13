@@ -70363,7 +70363,7 @@ function wrappy (fn, cb) {
 
 const github = __nccwpck_require__(5438)
 const { isSomeCommitStale } = __nccwpck_require__(169)
-const { isEmptyObject } = __nccwpck_require__(9228)
+const { isEmptyObject } = __nccwpck_require__(5462)
 
 const COMMITS_WITHOUT_PRS_KEY = -1
 
@@ -71035,7 +71035,7 @@ exports.execWithOutput = execWithOutput
 
 /***/ }),
 
-/***/ 9228:
+/***/ 5462:
 /***/ ((module) => {
 
 "use strict";

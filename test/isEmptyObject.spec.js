@@ -1,6 +1,6 @@
 'use strict'
 
-const { isEmptyObject } = require('../src/utils/helper')
+const { isEmptyObject } = require('../src/utils/isEmptyObject')
 
 test('isEmptyObject: returns true for an empty object', () => {
   const obj = {}
