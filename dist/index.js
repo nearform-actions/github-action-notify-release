@@ -70135,6 +70135,8 @@ async function run({ inputs }) {
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
 
+    logInfo('Context eventName', context.eventName)
+
     const token = inputs['github-token']
 
     const notifyAfter = parseNotifyAfter(
