@@ -16,8 +16,6 @@ async function run({ inputs }) {
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
 
-    logInfo(`Context eventName ${context.eventName}`)
-
     const token = inputs['github-token']
 
     const notifyAfter = parseNotifyAfter(
@@ -40,8 +38,14 @@ async function run({ inputs }) {
     }
 
     logInfo('Workflow dispatched or release published ...')
+
     const commitMessageLines = Number(inputs['commit-messages-lines'])
-    await runAction(token, notifyAfter, commitMessageLines)
+    await runAction({
+      token,
+      ignoreSnoozed: context.eventName === 'workflow_dispatch',
+      notifyAfter,
+      commitMessageLines,
+    })
   } catch (err) {
     core.setFailed(err)
   }

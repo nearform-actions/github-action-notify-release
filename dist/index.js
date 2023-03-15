@@ -70135,8 +70135,6 @@ async function run({ inputs }) {
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
 
-    logInfo(`Context eventName ${context.eventName}`)
-
     const token = inputs['github-token']
 
     const notifyAfter = parseNotifyAfter(
@@ -70159,8 +70157,14 @@ async function run({ inputs }) {
     }
 
     logInfo('Workflow dispatched or release published ...')
+
     const commitMessageLines = Number(inputs['commit-messages-lines'])
-    await runAction(token, notifyAfter, commitMessageLines)
+    await runAction({
+      token,
+      ignoreSnoozed: context.eventName === 'workflow_dispatch',
+      notifyAfter,
+      commitMessageLines,
+    })
   } catch (err) {
     core.setFailed(err)
   }
@@ -70342,8 +70346,8 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
       repo,
       creator: 'app/github-actions',
       state: STATE_CLOSED,
-      sort: 'created',
       state_reason: 'not_planned',
+      sort: 'created',
       direction: 'desc',
       labels: ISSUE_LABEL,
       since: latestReleaseDate,
@@ -70464,7 +70468,12 @@ const {
 } = __nccwpck_require__(5465)
 const { notifyAfterToMs } = __nccwpck_require__(3590)
 
-async function runAction(token, notifyAfter, commitMessageLines) {
+async function runAction({
+  token,
+  ignoreSnoozed = false,
+  notifyAfter,
+  commitMessageLines,
+} = {}) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -70480,10 +70489,16 @@ async function runAction(token, notifyAfter, commitMessageLines) {
 
   const notifyDate = notifyAfterToMs(notifyAfter)
 
-  const snoozed = await isSnoozed(token, latestRelease.published_at, notifyDate)
+  if (!ignoreSnoozed) {
+    const snoozed = await isSnoozed(
+      token,
+      latestRelease.published_at,
+      notifyDate
+    )
 
-  if (snoozed) {
-    return logInfo('Release notify has been snoozed')
+    if (snoozed) {
+      return logInfo('Release notify has been snoozed')
+    }
   }
 
   const pendingIssue = await getLastOpenPendingIssue(token)

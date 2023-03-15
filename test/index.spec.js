@@ -60,16 +60,18 @@ test('confirm it uses the inputs passed as props', async () => {
   parseNotifyAfter.mockImplementation(() => parseNotifyAfterRes)
 
   await run({ inputs })
+
   expect(parseNotifyAfter).toHaveBeenCalledWith(
     inputs['notify-after'],
     inputs['stale-days']
   )
 
-  expect(runAction).toHaveBeenCalledWith(
-    inputs['github-token'],
-    parseNotifyAfterRes,
-    Number(inputs['commit-messages-lines'])
-  )
+  expect(runAction).toHaveBeenCalledWith({
+    token: inputs['github-token'],
+    ignoreSnoozed: false,
+    notifyAfter: parseNotifyAfterRes,
+    commitMessageLines: Number(inputs['commit-messages-lines']),
+  })
 })
 
 test('it should run addSnoozingComment if isSnoozing is true', async () => {
