@@ -31,7 +31,9 @@ async function runAction({
 
   const notifyDate = notifyAfterToMs(notifyAfter)
 
-  if (!ignoreSnoozed) {
+  const pendingIssue = await getLastOpenPendingIssue(token)
+
+  if (!pendingIssue && !ignoreSnoozed) {
     const snoozed = await isSnoozed(
       token,
       latestRelease.published_at,
@@ -42,8 +44,6 @@ async function runAction({
       return logInfo('Release notify has been snoozed')
     }
   }
-
-  const pendingIssue = await getLastOpenPendingIssue(token)
 
   const unreleasedCommits = await getUnreleasedCommits(
     token,

@@ -157,6 +157,7 @@ async function closeIssue(token, issueNo) {
 async function isSnoozed(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
+
   const { data: closedNotifyIssues } = await octokit.request(
     `GET /repos/{owner}/{repo}/issues`,
     {
