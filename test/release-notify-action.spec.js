@@ -137,7 +137,12 @@ test('Ignore snoozed issue if there is a pending issue', async () => {
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
 
-  await runAction({ token, notifyAfter: '1 second', commitMessageLines: 1 })
+  await runAction({
+    token,
+    ignoreSnoozed: false,
+    notifyAfter: '1 second',
+    commitMessageLines: 1,
+  })
 
   expect(issue.isSnoozed).not.toHaveBeenCalled()
   expect(issue.createOrUpdateIssue).toBeCalled()
@@ -167,6 +172,7 @@ test('Check non existing snoozed issue if no pending issue and ignore snoozed no
 
   await runAction({
     token,
+    ignoreSnoozed: false,
     notifyAfter: '1 second',
     commitMessageLines: 1,
   })
@@ -183,6 +189,7 @@ test('Check existing snoozed issue if no pending issue and ignore snoozed not sp
 
   await runAction({
     token,
+    ignoreSnoozed: false,
     notifyAfter: '1 second',
     commitMessageLines: 1,
   })

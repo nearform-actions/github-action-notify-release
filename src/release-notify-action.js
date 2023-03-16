@@ -15,7 +15,7 @@ async function runAction({
   ignoreSnoozed = false,
   notifyAfter,
   commitMessageLines,
-} = {}) {
+}) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
