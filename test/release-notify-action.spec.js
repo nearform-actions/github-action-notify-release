@@ -61,6 +61,7 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
+  issue.isSnoozed.mockResolvedValue(true)
 
   await runAction({ token, notifyAfter: '1 day', commitMessageLines: 1 })
 
@@ -133,33 +134,11 @@ test('Create snooze issue if notify was closed', async () => {
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
 
-test('Update pending issue if there is a pending issue, ignoring any snoozed issue', async () => {
-  release.getLatestRelease.mockResolvedValue(allReleases[0])
-  release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
-  issue.getLastOpenPendingIssue.mockResolvedValue(pendingIssues[0])
-
-  await runAction({
-    token,
-    ignoreSnoozed: false,
-    notifyAfter: '1 second',
-    commitMessageLines: 1,
-  })
-
-  expect(issue.isSnoozed).not.toHaveBeenCalled()
-  expect(issue.createOrUpdateIssue).toBeCalledWith(
-    token,
-    unreleasedCommitsData1,
-    pendingIssues[0],
-    allReleases[0],
-    1,
-    '1 second'
-  )
-})
-
-test('Create a new issue if ignore snoozed specified and no pending issue', async () => {
+test('Create a new issue if ignore snoozed specified and no open issue', async () => {
   release.getLatestRelease.mockResolvedValue(allReleases[0])
   release.getUnreleasedCommits.mockResolvedValue(unreleasedCommitsData1)
   issue.getLastOpenPendingIssue.mockResolvedValue(null)
+  issue.isSnoozed.mockResolvedValue(true)
 
   await runAction({
     token,
