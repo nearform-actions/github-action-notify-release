@@ -135,6 +135,7 @@ async function createOrUpdateIssue(
     await updateLastOpenPendingIssue(token, issueBody, pendingIssue.number)
     logInfo(`Issue ${pendingIssue.number} has been updated`)
   } else {
+    logInfo(`Creating new notify release issue...`)
     const { data } = await createIssue(token, issueBody)
     const { number: issueNo } = data
     logInfo(`New issue has been created. Issue No. - ${issueNo}`)
@@ -156,6 +157,7 @@ async function closeIssue(token, issueNo) {
 async function isSnoozed(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
+
   const { data: closedNotifyIssues } = await octokit.request(
     `GET /repos/{owner}/{repo}/issues`,
     {
@@ -163,8 +165,8 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
       repo,
       creator: 'app/github-actions',
       state: STATE_CLOSED,
-      sort: 'created',
       state_reason: 'not_planned',
+      sort: 'created',
       direction: 'desc',
       labels: ISSUE_LABEL,
       since: latestReleaseDate,

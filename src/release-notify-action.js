@@ -10,7 +10,12 @@ const {
 } = require('./issue')
 const { notifyAfterToMs } = require('./time-utils.js')
 
-async function runAction(token, notifyAfter, commitMessageLines) {
+async function runAction({
+  token,
+  ignoreSnoozed = false,
+  notifyAfter,
+  commitMessageLines,
+}) {
   const latestRelease = await getLatestRelease(token)
 
   if (!latestRelease) {
@@ -26,13 +31,19 @@ async function runAction(token, notifyAfter, commitMessageLines) {
 
   const notifyDate = notifyAfterToMs(notifyAfter)
 
-  const snoozed = await isSnoozed(token, latestRelease.published_at, notifyDate)
-
-  if (snoozed) {
-    return logInfo('Release notify has been snoozed')
-  }
-
   const pendingIssue = await getLastOpenPendingIssue(token)
+
+  if (!pendingIssue && !ignoreSnoozed) {
+    const snoozed = await isSnoozed(
+      token,
+      latestRelease.published_at,
+      notifyDate
+    )
+
+    if (snoozed) {
+      return logInfo('Release notify has been snoozed')
+    }
+  }
 
   const unreleasedCommits = await getUnreleasedCommits(
     token,
