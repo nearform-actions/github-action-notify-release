@@ -12,6 +12,8 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Check if there's a release pending
         id: notify
