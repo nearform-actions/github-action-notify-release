@@ -18,17 +18,12 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
-      - name: Node.js runtime on build
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
       - uses: nearform/optic-release-automation-action@v4
         with:
-          github-token: ${{ github.token }}
           semver: ${{ github.event.inputs.semver }}
           sync-semver-tags: true
-          build-command: |
-            echo 'installing husky hooks..'
-            npm ci
+          build-command: npm ci
