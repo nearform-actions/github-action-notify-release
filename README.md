@@ -21,7 +21,7 @@ jobs:
       issues: write
     steps:
       - name: Notify release
-        uses: nearform/github-action-notify-release@v1
+        uses: nearform-actions/github-action-notify-release@v1
 ```
 
 ## Usage

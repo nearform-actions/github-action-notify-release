@@ -22,7 +22,7 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - uses: nearform/optic-release-automation-action@v4
+      - uses: nearform-actions/optic-release-automation-action@v4
         with:
           semver: ${{ github.event.inputs.semver }}
           sync-semver-tags: true
