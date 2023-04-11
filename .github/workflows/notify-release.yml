@@ -1,22 +1,25 @@
 name: notify-release
-on:
+'on':
   workflow_dispatch:
     branches:
       - main
   release:
-    types: [published]
+    types:
+      - published
   issues:
-    types: [closed]
+    types:
+      - closed
   schedule:
-    - cron: '30 8 * * *'
+    - cron: 30 8 * * *
 jobs:
   setup:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      contents: read
     steps:
       - name: Check if there's a release pending
         id: notify
-        uses: nearform-actions/github-action-notify-release@main
+        uses: nearform-actions/github-action-notify-release@v1
         with:
           notify-after: '0'
