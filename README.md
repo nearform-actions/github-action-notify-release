@@ -2,6 +2,19 @@
 
 GitHub Action that automatically creates an issue with an overview of the commits that are waiting to be released. After a new release is published, the issue will be automatically closed.
 
+## Permissions
+
+This action requires the following permissions:
+
+```
+permissions:
+  issues: write
+  contents: read
+```
+
+💡 `contents:read` is required because the action is using a `actions/checkout@v3` action to download the repository content.
+
+
 ## Example
 
 ```yaml
@@ -19,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      contents: read
     steps:
       - name: Notify release
         uses: nearform-actions/github-action-notify-release@v1
