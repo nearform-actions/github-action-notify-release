@@ -21,8 +21,8 @@ It is possible to snooze the notification issue for `x` time by closing it as **
 |--------------------------|----------|-----------------------|-------------|
 | `github-token`           | no       | `${{ github.token }}` | A github token. |
 | `notify-after`           | no       |                       | The time after which unreleased commits should be considered stale and should notify for a release.<br />This option accepts various time formats as described by the time conversion library [ms](https://github.com/vercel/ms). |
-| `stale-days`             | no       | `7`                   | ⚠️ **Deprecated** Number of days of inactivity before a release becomes stale. The value can be a number or a string. |
-| `commit-messages-lines:` | no       | `1`                   | Limit the number of first `x` lines from commit messages that will be added in the issue description. No truncation when set to `0`. |
+| `stale-days`             | no       | `7`                   | ⚠️ **Deprecated** ⚠️ Number of days of inactivity before a release becomes stale. The value can be a number or a string. |
+| `commit-messages-lines`  | no       | `1`                   | Limit the number of first `x` lines from commit messages that will be added in the issue description. No truncation when set to `0`. |
 
 ## Example
 
