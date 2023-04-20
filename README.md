@@ -13,6 +13,7 @@ This action requires the following permissions:
 ## Usage
 
 Configure this action in your workflows providing the inputs described below in order to get notified in `x` time after the repo has been updated but no release has happened.
+
 It is possible to snooze the notification issue for `x` time by closing it as **not planned**. Once the time has passed a new issue will be created.
 
 ## Inputs
