@@ -1,6 +1,6 @@
 {
   "name": "github-action-notify-release",
-  "version": "1.10.57",
+  "version": "1.10.58",
   "description": "Github action for notifying of a pending release",
   "main": "dist/index.js",
   "scripts": {
