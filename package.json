@@ -1,13 +1,13 @@
 {
   "name": "github-action-notify-release",
-  "version": "1.10.21",
+  "version": "1.10.58",
   "description": "Github action for notifying of a pending release",
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src --license licenses.txt",
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -24,22 +24,22 @@
   },
   "homepage": "https://github.com/nearform-actions/github-action-notify-release#readme",
   "dependencies": {
-    "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1",
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
     "@actions/exec": "^1.1.1",
     "actions-toolkit": "github:nearform/actions-toolkit",
-    "date-fns": "^2.30.0",
-    "handlebars": "^4.7.7",
+    "date-fns": "^3.6.0",
+    "handlebars": "^4.7.8",
     "ms": "^2.1.3",
     "conventional-changelog-monorepo": "github:nearform/conventional-changelog"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.36.1",
-    "eslint": "^8.42.0",
-    "eslint-config-prettier": "^8.8.0",
+    "@vercel/ncc": "^0.38.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "husky": "^8.0.3",
-    "jest": "^29.5.0",
+    "husky": "^9.0.11",
+    "jest": "^29.7.0",
     "prettier": "^2.8.8"
   }
 }
