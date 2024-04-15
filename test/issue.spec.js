@@ -167,6 +167,24 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
   )
 })
 
+test('Creates issue body that contains suggested semver release type', async () => {
+  const create = jest.fn()
+  getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
+  await issue.createOrUpdateIssue(token, unreleasedCommitsData1)
+  expect(create).toHaveBeenCalledWith(
+    expect.objectContaining({
+      body: expect.stringContaining(
+        '<release-meta>{"semVerReleaseType":"minor"}</release-meta>'
+      ),
+    })
+  )
+})
+
 test('Get closed notify', async () => {
   const request = jest.fn()
 
