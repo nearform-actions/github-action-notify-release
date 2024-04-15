@@ -26,7 +26,7 @@ const conventionalRecommendedBumpAsync = util.promisify(
   conventionalRecommendedBump
 )
 function registerHandlebarHelpers(config) {
-  const { commitMessageLines } = config
+  const { commitMessageLines, semVerReleaseType } = config
   handlebars.registerHelper('commitMessage', function (content) {
     if (!commitMessageLines || commitMessageLines < 0) {
       return content
@@ -35,6 +35,11 @@ function registerHandlebarHelpers(config) {
   })
   handlebars.registerHelper('substring', function (content, characters) {
     return (content || '').substring(0, characters)
+  })
+  handlebars.registerHelper('releaseMeta', function () {
+    return JSON.stringify({
+      semVerReleaseType,
+    })
   })
 }
 
@@ -118,11 +123,12 @@ async function createOrUpdateIssue(
   commitMessageLines,
   notifyAfter
 ) {
+  const semVerReleaseType = await getAutoBumpedVersion()
+
   registerHandlebarHelpers({
     commitMessageLines,
+    semVerReleaseType,
   })
-
-  const semVerReleaseType = await getAutoBumpedVersion()
 
   const issueBody = await renderIssueBody({
     commits: unreleasedCommits,

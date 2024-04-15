@@ -1,6 +1,7 @@
 'use strict'
 
 const { getOctokit } = require('@actions/github')
+const { exec } = require('@actions/exec')
 const issue = require('../src/issue')
 const { getNotifyDate } = require('../src/time-utils')
 
@@ -18,6 +19,14 @@ jest.mock('@actions/github', () => ({
   getOctokit: jest.fn(),
   context: { repo: { owner, repo } },
 }))
+
+jest.mock('@actions/exec', () => ({
+  exec: jest.fn(),
+}))
+
+jest.mock('conventional-changelog-monorepo/conventional-recommended-bump', () =>
+  jest.fn((_, cb) => cb(null, { releaseType: 'minor' }))
+)
 
 test('Creates an issue', async () => {
   getOctokit.mockReturnValue({
@@ -106,6 +115,9 @@ test('Close an issue', async () => {
 
 test('Create an issue when no existing issue exists', async () => {
   const create = jest.fn()
+  exec.mockImplementation(() => {
+    return 0
+  })
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
   create.mockResolvedValue({
     data: {
@@ -124,6 +136,9 @@ test('Create an issue when no existing issue exists', async () => {
 
 test('Update an issue when exists', async () => {
   const request = jest.fn()
+  exec.mockImplementation(() => {
+    return 0
+  })
   getOctokit.mockReturnValue({ request })
   request.mockResolvedValue({
     data: {},
@@ -145,6 +160,9 @@ test('Update an issue when exists', async () => {
 
 test('Create issue body that contains commits shortened SHA identifiers', async () => {
   const create = jest.fn()
+  exec.mockImplementation(() => {
+    return 0
+  })
   getOctokit.mockReturnValue({ rest: { issues: { create } } })
   create.mockResolvedValue({
     data: {
@@ -162,6 +180,27 @@ test('Create issue body that contains commits shortened SHA identifiers', async 
     expect.objectContaining({
       body: expect.stringContaining(
         unreleasedCommitsData1[0].sha.substring(0, 7)
+      ),
+    })
+  )
+})
+
+test('Creates issue body that contains suggested semver release type', async () => {
+  const create = jest.fn()
+  exec.mockImplementation(() => {
+    return 0
+  })
+  getOctokit.mockReturnValue({ rest: { issues: { create } } })
+  create.mockResolvedValue({
+    data: {
+      number: 1,
+    },
+  })
+  await issue.createOrUpdateIssue(token, unreleasedCommitsData1)
+  expect(create).toHaveBeenCalledWith(
+    expect.objectContaining({
+      body: expect.stringContaining(
+        '<release-meta>{"semVerReleaseType":"minor"}</release-meta>'
       ),
     })
   )
@@ -226,6 +265,10 @@ test('Creates a snooze issue when no pending', async () => {
     data: {
       number: 1,
     },
+  })
+
+  exec.mockImplementation(() => {
+    return 0
   })
 
   await issue.createOrUpdateIssue(
