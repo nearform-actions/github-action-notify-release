@@ -1,6 +1,8 @@
 # github-action-notify-release
 
-GitHub Action that automatically creates an issue with an overview of the commits that are waiting to be released. After a new release is published, the issue will be automatically closed.
+A GitHub Action that automatically creates an issue with an overview of the commits that are waiting to be released. After a new release is published, the issue will be automatically closed.
+
+This GitHub Action operates based on GitHub Releases, so the staleness of commits is determined by the repository's most recent release.
 
 ## Permissions
 
