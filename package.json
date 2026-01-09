@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/nearform-actions/github-action-notify-release#readme",
   "dependencies": {
-    "@actions/core": "^2.0.1",
+    "@actions/core": "^2.0.2",
     "@actions/github": "^7.0.0",
     "@actions/exec": "^2.0.0",
     "actions-toolkit": "github:nearform/actions-toolkit",
