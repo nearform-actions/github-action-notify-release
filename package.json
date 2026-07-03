@@ -3,8 +3,9 @@
   "version": "1.12.2",
   "description": "Github action for notifying of a pending release",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
-    "build": "ncc build src --license licenses.txt",
+    "build": "ncc build src --license licenses.txt && node scripts/patch-dist-require.js",
     "test": "node --test --experimental-test-module-mocks --experimental-test-coverage --test-coverage-exclude=test/** --test-coverage-exclude=dist/** --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100",
     "lint": "eslint .",
     "prepare": "husky"
@@ -24,9 +25,9 @@
   },
   "homepage": "https://github.com/nearform-actions/github-action-notify-release#readme",
   "dependencies": {
-    "@actions/core": "^2.0.2",
-    "@actions/github": "^8.0.1",
-    "@actions/exec": "^2.0.0",
+    "@actions/core": "^3.0.0",
+    "@actions/github": "^9.1.1",
+    "@actions/exec": "^3.0.0",
     "actions-toolkit": "github:nearform/actions-toolkit",
     "date-fns": "^4.1.0",
     "handlebars": "^4.7.9",

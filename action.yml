@@ -29,5 +29,5 @@ runs:
       uses: actions/github-script@v9
       with:
         script: |
-          const { run } = require('${{ github.action_path }}/dist/index.js')
+          const { run } = await import('${{ github.action_path }}/dist/index.js')
           await run({inputs: ${{ toJSON(inputs) }} })

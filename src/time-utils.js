@@ -1,8 +1,7 @@
-'use strict'
-const ms = require('ms')
-const { logWarning } = require('./log')
+import ms from 'ms'
+import { logWarning } from './log.js'
 
-function notifyAfterToMs(input) {
+export function notifyAfterToMs(input) {
   const stringToMs = ms(input)
 
   if (isNaN(stringToMs)) {
@@ -13,21 +12,21 @@ function notifyAfterToMs(input) {
 }
 
 /** @deprecated */
-function staleDaysToStr(days) {
+export function staleDaysToStr(days) {
   return `${days} day${days > 1 ? 's' : ''}`
 }
 
-function isSomeCommitStale(commits, notifyDate) {
+export function isSomeCommitStale(commits, notifyDate) {
   return commits.some((commit) => {
     return isStale(commit.commit.committer.date, notifyDate)
   })
 }
 
-function isStale(date, notifyDate) {
+export function isStale(date, notifyDate) {
   return new Date(date).getTime() < notifyDate
 }
 
-function parseNotifyAfter(notifyAfter, staleDays) {
+export function parseNotifyAfter(notifyAfter, staleDays) {
   if (!notifyAfter && !staleDays) {
     return '7 days'
   }
@@ -43,7 +42,7 @@ function parseNotifyAfter(notifyAfter, staleDays) {
   return isNaN(Number(staleDays)) ? staleDays : staleDaysToStr(staleDays)
 }
 
-function getNotifyDate(input) {
+export function getNotifyDate(input) {
   const stringToMs = ms(input)
 
   if (isNaN(stringToMs)) {
@@ -51,13 +50,4 @@ function getNotifyDate(input) {
   }
 
   return new Date(Date.now() + stringToMs)
-}
-
-module.exports = {
-  isSomeCommitStale,
-  isStale,
-  parseNotifyAfter,
-  notifyAfterToMs,
-  getNotifyDate,
-  staleDaysToStr,
 }

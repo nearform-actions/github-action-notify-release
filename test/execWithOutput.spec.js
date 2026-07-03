@@ -1,7 +1,5 @@
-'use strict'
-
-const { test, mock } = require('node:test')
-const assert = require('node:assert/strict')
+import { test, mock } from 'node:test'
+import assert from 'node:assert/strict'
 
 const exec = mock.fn()
 
@@ -11,7 +9,7 @@ mock.module('@actions/exec', {
   },
 })
 
-const execWithOutputModule = require('../src/utils/execWithOutput')
+const execWithOutputModule = await import('../src/utils/execWithOutput.js')
 
 test('resolves with output of the exec command if exit code is 0', async () => {
   const output = 'output'

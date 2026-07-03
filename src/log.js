@@ -1,9 +1,8 @@
-'use strict'
-const { debug, error, info, warning } = require('@actions/core')
+import { debug, error, info, warning } from '@actions/core'
 
 const log = (logger) => (message) => logger(JSON.stringify(message))
 
-exports.logDebug = log(debug)
-exports.logError = log(error)
-exports.logInfo = log(info)
-exports.logWarning = log(warning)
+export const logDebug = log(debug)
+export const logError = log(error)
+export const logInfo = log(info)
+export const logWarning = log(warning)

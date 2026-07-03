@@ -1,7 +1,12 @@
-'use strict'
+import { test, mock } from 'node:test'
+import assert from 'node:assert/strict'
 
-const { test, mock } = require('node:test')
-const assert = require('node:assert/strict')
+import {
+  allCommitsData as allCommits,
+  allReleasesData as allReleases,
+  unreleasedCommitsData0,
+  unreleasedCommitsData1,
+} from './testData.js'
 
 const getOctokit = mock.fn()
 
@@ -12,13 +17,8 @@ mock.module('@actions/github', {
   },
 })
 
-const { getLatestRelease, getUnreleasedCommits } = require('../src/release')
-const {
-  allCommitsData: allCommits,
-  allReleasesData: allReleases,
-  unreleasedCommitsData0,
-  unreleasedCommitsData1,
-} = require('./testData')
+const { getLatestRelease, getUnreleasedCommits } =
+  await import('../src/release.js')
 
 const token = 'dummytoken'
 

@@ -1,5 +1,4 @@
-'use strict'
-const allCommitsData = {
+export const allCommitsData = {
   data: [
     {
       sha: '000001abcd',
@@ -163,7 +162,7 @@ this message has multiple lines
   ],
 }
 
-const allReleasesData = [
+export const allReleasesData = [
   {
     name: 'Release 2.0',
     created_at: '2021-03-27T07:37:09Z',
@@ -180,9 +179,9 @@ const allReleasesData = [
   },
 ]
 
-const unreleasedCommitsData0 = []
+export const unreleasedCommitsData0 = []
 
-const unreleasedCommitsData1 = [
+export const unreleasedCommitsData1 = [
   {
     sha: '000001abcd',
     commit: {
@@ -344,14 +343,14 @@ this message has multiple lines
   },
 ]
 
-const pendingIssues = [
+export const pendingIssues = [
   {
     number: '1',
     updated_at: '2021-04-26T07:37:09Z',
   },
 ]
 
-const closedNotifyIssues = [
+export const closedNotifyIssues = [
   {
     id: 1,
     number: 1347,
@@ -372,7 +371,7 @@ const closedNotifyIssues = [
   },
 ]
 
-const closedNotifyIssuesNeverStale = [
+export const closedNotifyIssuesNeverStale = [
   {
     id: 1,
     number: 1347,
@@ -392,13 +391,3 @@ const closedNotifyIssuesNeverStale = [
     state_reason: 'not_planned',
   },
 ]
-
-module.exports = {
-  allCommitsData,
-  allReleasesData,
-  unreleasedCommitsData0,
-  unreleasedCommitsData1,
-  pendingIssues,
-  closedNotifyIssues,
-  closedNotifyIssuesNeverStale,
-}
