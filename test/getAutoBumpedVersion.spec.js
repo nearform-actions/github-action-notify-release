@@ -6,6 +6,11 @@ const {
   conventionalRecommendedBumpAsync,
 } = require('../src/issue')
 
+jest.mock('@actions/github', () => ({
+  getOctokit: jest.fn(),
+  context: { repo: {} },
+}))
+
 jest.mock('@actions/exec', () => ({
   exec: jest.fn(),
 }))
