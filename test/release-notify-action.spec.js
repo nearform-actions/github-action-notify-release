@@ -44,9 +44,9 @@ test('Create issue for unreleased commits (no existing issues)', async () => {
 
   await runAction({ token, notifyAfter: '1 day', commitMessageLines: 1 })
 
-  expect(release.getLatestRelease).toBeCalledWith(token)
-  expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
-  expect(issue.createOrUpdateIssue).toBeCalledWith(
+  expect(release.getLatestRelease).toHaveBeenCalledWith(token)
+  expect(issue.getLastOpenPendingIssue).toHaveBeenCalledWith(token)
+  expect(issue.createOrUpdateIssue).toHaveBeenCalledWith(
     token,
     unreleasedCommitsData1,
     null,
@@ -65,9 +65,9 @@ test('Update issue for unreleased commits (issue already exists)', async () => {
 
   await runAction({ token, notifyAfter: '1 day', commitMessageLines: 1 })
 
-  expect(release.getLatestRelease).toBeCalledWith(token)
-  expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
-  expect(issue.createOrUpdateIssue).toBeCalledWith(
+  expect(release.getLatestRelease).toHaveBeenCalledWith(token)
+  expect(issue.getLastOpenPendingIssue).toHaveBeenCalledWith(token)
+  expect(issue.createOrUpdateIssue).toHaveBeenCalledWith(
     token,
     unreleasedCommitsData1,
     pendingIssues[0],
@@ -86,8 +86,8 @@ test('Close issue when there is one pending and no unreleased commits', async ()
 
   await runAction({ token, notifyAfter: '1 second', commitMessageLines: 1 })
 
-  expect(release.getLatestRelease).toBeCalledWith(token)
-  expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
+  expect(release.getLatestRelease).toHaveBeenCalledWith(token)
+  expect(issue.getLastOpenPendingIssue).toHaveBeenCalledWith(token)
   expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
   expect(issue.closeIssue).toHaveBeenCalledWith(token, pendingIssues[0].number)
 })
@@ -99,8 +99,8 @@ test('Do nothing when there is one issue pending and no new releases', async () 
 
   await runAction({ token, notifyAfter: '1 second', commitMessageLines: 1 })
 
-  expect(release.getLatestRelease).toBeCalledWith(token)
-  expect(issue.getLastOpenPendingIssue).toBeCalledWith(token)
+  expect(release.getLatestRelease).toHaveBeenCalledWith(token)
+  expect(issue.getLastOpenPendingIssue).toHaveBeenCalledWith(token)
   expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
@@ -110,7 +110,7 @@ test('Do nothing when no releases found', async () => {
 
   await runAction({ token, notifyAfter: '1 second', commitMessageLines: 1 })
 
-  expect(release.getLatestRelease).toBeCalledWith(token)
+  expect(release.getLatestRelease).toHaveBeenCalledWith(token)
   expect(issue.getLastOpenPendingIssue).not.toHaveBeenCalled()
   expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
@@ -123,7 +123,7 @@ test('Create snooze issue if notify was closed', async () => {
 
   await runAction({ token, notifyAfter: '20 years', commitMessageLines: 1 })
 
-  expect(issue.createOrUpdateIssue).toBeCalledWith(
+  expect(issue.createOrUpdateIssue).toHaveBeenCalledWith(
     token,
     unreleasedCommitsData1,
     null,
@@ -148,7 +148,7 @@ test('Create a new issue if ignore snoozed specified, no open issue, and snoozed
   })
 
   expect(issue.isSnoozed).not.toHaveBeenCalled()
-  expect(issue.createOrUpdateIssue).toBeCalledWith(
+  expect(issue.createOrUpdateIssue).toHaveBeenCalledWith(
     token,
     unreleasedCommitsData1,
     null,
@@ -172,7 +172,7 @@ test('Update existing open issue if ignore snoozed specified and snoozed issue',
   })
 
   expect(issue.isSnoozed).not.toHaveBeenCalled()
-  expect(issue.createOrUpdateIssue).toBeCalledWith(
+  expect(issue.createOrUpdateIssue).toHaveBeenCalledWith(
     token,
     unreleasedCommitsData1,
     pendingIssues[0],
@@ -191,7 +191,7 @@ test('Do not create or update issue if snoozed', async () => {
   await runAction({ token, notifyAfter: '1 second', commitMessageLines: 1 })
 
   expect(issue.isSnoozed).toHaveBeenCalled()
-  expect(issue.createOrUpdateIssue).not.toBeCalled()
+  expect(issue.createOrUpdateIssue).not.toHaveBeenCalled()
   expect(issue.closeIssue).not.toHaveBeenCalled()
 })
 
