@@ -1,22 +1,20 @@
-'use strict'
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
 
-const { test } = require('node:test')
-const assert = require('node:assert/strict')
-
-const {
+import {
   notifyAfterToMs,
   isSomeCommitStale,
   isStale,
   parseNotifyAfter,
   staleDaysToStr,
   getNotifyDate,
-} = require('../src/time-utils.js')
+} from '../src/time-utils.js'
 
-const {
-  allCommitsData: allCommits,
+import {
+  allCommitsData as allCommits,
   closedNotifyIssuesNeverStale,
   closedNotifyIssues,
-} = require('./testData')
+} from './testData.js'
 
 test('convert stale days correctly', (t) => {
   const now = Date.now()

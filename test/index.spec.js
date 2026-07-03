@@ -1,8 +1,5 @@
-'use strict'
-
-const { test, beforeEach, mock } = require('node:test')
-const assert = require('node:assert/strict')
-const { pathToFileURL } = require('node:url')
+import { test, beforeEach, mock } from 'node:test'
+import assert from 'node:assert/strict'
 
 const parseNotifyAfter = mock.fn()
 const runAction = mock.fn()
@@ -12,23 +9,25 @@ const getIsSnoozingIssue = mock.fn()
 const addSnoozingComment = mock.fn()
 const logActionRefWarning = mock.fn()
 const logRepoWarning = mock.fn()
+const setFailed = mock.fn()
 
 mock.module('actions-toolkit', {
   defaultExport: { logActionRefWarning, logRepoWarning },
 })
 
-mock.module(pathToFileURL(require.resolve('../src/time-utils.js')).href, {
+mock.module('@actions/core', {
+  namedExports: { setFailed },
+})
+
+mock.module(import.meta.resolve('../src/time-utils.js'), {
   namedExports: { parseNotifyAfter },
 })
 
-mock.module(
-  pathToFileURL(require.resolve('../src/release-notify-action')).href,
-  {
-    namedExports: { runAction },
-  }
-)
+mock.module(import.meta.resolve('../src/release-notify-action.js'), {
+  namedExports: { runAction },
+})
 
-mock.module(pathToFileURL(require.resolve('../src/log')).href, {
+mock.module(import.meta.resolve('../src/log.js'), {
   namedExports: { logInfo },
 })
 
@@ -45,7 +44,7 @@ mock.module('@actions/github', {
   },
 })
 
-mock.module(pathToFileURL(require.resolve('../src/issue.js')).href, {
+mock.module(import.meta.resolve('../src/issue.js'), {
   namedExports: {
     getIsClosingIssue,
     getIsSnoozingIssue,
@@ -53,8 +52,7 @@ mock.module(pathToFileURL(require.resolve('../src/issue.js')).href, {
   },
 })
 
-const { run } = require('../src')
-const core = require('@actions/core')
+const { run } = await import('../src/index.js')
 
 const inputs = {
   'github-token': 'token',
@@ -73,6 +71,7 @@ beforeEach(() => {
     addSnoozingComment,
     logActionRefWarning,
     logRepoWarning,
+    setFailed,
   ]) {
     fn.mock.restore()
     fn.mock.resetCalls()
@@ -113,14 +112,12 @@ test('it should not call runAction if isClosing is true', async () => {
   assert.strictEqual(runAction.mock.callCount(), 0)
 })
 
-test('it should throw if there is an error', async (t) => {
+test('it should throw if there is an error', async () => {
   const error = new Error('error')
   parseNotifyAfter.mock.mockImplementation(() => {
     throw error
   })
 
-  t.mock.method(core, 'setFailed', () => {})
-
   await run({ inputs })
-  assert.deepEqual(core.setFailed.mock.calls.at(-1).arguments, [error])
+  assert.deepEqual(setFailed.mock.calls.at(-1).arguments, [error])
 })

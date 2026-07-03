@@ -1,17 +1,16 @@
-'use strict'
-const core = require('@actions/core')
-const toolkit = require('actions-toolkit')
-const { context } = require('@actions/github')
-const { parseNotifyAfter } = require('./time-utils.js')
-const { runAction } = require('./release-notify-action')
-const {
+import * as core from '@actions/core'
+import toolkit from 'actions-toolkit'
+import { context } from '@actions/github'
+import { parseNotifyAfter } from './time-utils.js'
+import { runAction } from './release-notify-action.js'
+import {
   getIsSnoozingIssue,
   getIsClosingIssue,
   addSnoozingComment,
-} = require('./issue.js')
-const { logInfo } = require('./log.js')
+} from './issue.js'
+import { logInfo } from './log.js'
 
-async function run({ inputs }) {
+export async function run({ inputs }) {
   try {
     toolkit.logActionRefWarning()
     toolkit.logRepoWarning()
@@ -49,8 +48,4 @@ async function run({ inputs }) {
   } catch (err) {
     core.setFailed(err)
   }
-}
-
-module.exports = {
-  run,
 }

@@ -1,15 +1,17 @@
-'use strict'
+import { test, mock } from 'node:test'
+import assert from 'node:assert/strict'
 
-const { test, mock } = require('node:test')
-const assert = require('node:assert/strict')
-const { pathToFileURL } = require('node:url')
+import { unreleasedCommitsData1, closedNotifyIssues } from './testData.js'
 
 const getOctokit = mock.fn()
 const exec = mock.fn()
 
-mock.module(pathToFileURL(require.resolve('../src/log')).href, {
+mock.module(import.meta.resolve('../src/log.js'), {
   namedExports: {
+    logDebug: mock.fn(),
+    logError: mock.fn(),
     logInfo: mock.fn(),
+    logWarning: mock.fn(),
   },
 })
 
@@ -33,10 +35,8 @@ mock.module('conventional-changelog-monorepo/conventional-recommended-bump', {
   defaultExport: mock.fn((_, cb) => cb(null, { releaseType: 'minor' })),
 })
 
-const issue = require('../src/issue')
-const { getNotifyDate } = require('../src/time-utils')
-
-const { unreleasedCommitsData1, closedNotifyIssues } = require('./testData')
+const issue = await import('../src/issue.js')
+const { getNotifyDate } = await import('../src/time-utils.js')
 
 const token = 'dummytoken'
 

@@ -1,6 +1,4 @@
-'use strict'
-
-const { describe, test, mock } = require('node:test')
+import { describe, test, mock } from 'node:test'
 
 mock.module('@actions/core', {
   namedExports: {
@@ -11,7 +9,7 @@ mock.module('@actions/core', {
   },
 })
 
-const log = require('../src/log')
+const log = await import('../src/log.js')
 
 describe('log', () => {
   for (const method of ['logDebug', 'logInfo', 'logWarning', 'logError']) {

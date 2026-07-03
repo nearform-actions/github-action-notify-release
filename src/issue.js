@@ -1,28 +1,30 @@
-'use strict'
-const github = require('@actions/github')
-const { logInfo } = require('./log')
-const { isStale, getNotifyDate } = require('./time-utils.js')
-const fs = require('fs')
-const path = require('path')
-const util = require('util')
-const { promisify } = require('util')
-const readFile = promisify(fs.readFile)
-const handlebars = require('handlebars')
-const {
+import * as github from '@actions/github'
+import { logInfo } from './log.js'
+import { isStale, getNotifyDate } from './time-utils.js'
+import fs from 'fs'
+import path from 'path'
+import util from 'util'
+import { promisify } from 'util'
+import { fileURLToPath } from 'url'
+import handlebars from 'handlebars'
+import {
   STATE_OPEN,
   ISSUE_TITLE,
   STATE_CLOSED,
   ISSUE_LABEL,
   ISSUES_EVENT_NAME,
   STATE_CLOSED_NOT_PLANNED,
-} = require('./constants.js')
+} from './constants.js'
 
-const { execWithOutput } = require('./utils/execWithOutput')
+import { execWithOutput } from './utils/execWithOutput.js'
 
-const conventionalCommitsConfig = require('conventional-changelog-monorepo/conventional-changelog-conventionalcommits')
-const conventionalRecommendedBump = require('conventional-changelog-monorepo/conventional-recommended-bump')
+import conventionalCommitsConfig from 'conventional-changelog-monorepo/conventional-changelog-conventionalcommits'
+import conventionalRecommendedBump from 'conventional-changelog-monorepo/conventional-recommended-bump'
 
-const conventionalRecommendedBumpAsync = util.promisify(
+const readFile = promisify(fs.readFile)
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+export const conventionalRecommendedBumpAsync = util.promisify(
   conventionalRecommendedBump
 )
 function registerHandlebarHelpers(config) {
@@ -50,7 +52,7 @@ async function renderIssueBody(data) {
   return template(data)
 }
 
-async function createIssue(token, issueBody) {
+export async function createIssue(token, issueBody) {
   const octokit = github.getOctokit(token)
 
   return octokit.rest.issues.create({
@@ -61,7 +63,7 @@ async function createIssue(token, issueBody) {
   })
 }
 
-async function getLastOpenPendingIssue(token) {
+export async function getLastOpenPendingIssue(token) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -81,7 +83,7 @@ async function getLastOpenPendingIssue(token) {
   return pendingIssues.data.length ? pendingIssues.data[0] : null
 }
 
-async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
+export async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -98,7 +100,7 @@ async function updateLastOpenPendingIssue(token, issueBody, issueNo) {
   return updatedIssue.data.length ? updatedIssue.data[0] : null
 }
 
-async function getAutoBumpedVersion() {
+export async function getAutoBumpedVersion() {
   const tag = (
     await execWithOutput('git', ['tag', '--sort=-creatordate'])
   ).split('\n')[0]
@@ -115,7 +117,7 @@ async function getAutoBumpedVersion() {
   return releaseType
 }
 
-async function createOrUpdateIssue(
+export async function createOrUpdateIssue(
   token,
   unreleasedCommits,
   pendingIssue,
@@ -148,7 +150,7 @@ async function createOrUpdateIssue(
   }
 }
 
-async function closeIssue(token, issueNo) {
+export async function closeIssue(token, issueNo) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -160,7 +162,7 @@ async function closeIssue(token, issueNo) {
   logInfo(`Closed issue no. - ${issueNo}`)
 }
 
-async function isSnoozed(token, latestReleaseDate, notifyDate) {
+export async function isSnoozed(token, latestReleaseDate, notifyDate) {
   const octokit = github.getOctokit(token)
   const { owner, repo } = github.context.repo
 
@@ -186,7 +188,7 @@ async function isSnoozed(token, latestReleaseDate, notifyDate) {
   return !isStale(closedNotifyIssues[0].closed_at, notifyDate)
 }
 
-function getIsSnoozingIssue(context) {
+export function getIsSnoozingIssue(context) {
   const { eventName, payload } = context
   const { issue } = payload
 
@@ -207,7 +209,7 @@ function getIsSnoozingIssue(context) {
   return isSnoozingIssue
 }
 
-function getIsClosingIssue(context) {
+export function getIsClosingIssue(context) {
   const { eventName, payload } = context
   const { issue } = payload
 
@@ -222,7 +224,7 @@ function getIsClosingIssue(context) {
   return isClosing
 }
 
-async function addSnoozingComment(token, notifyAfter, issueNumber) {
+export async function addSnoozingComment(token, notifyAfter, issueNumber) {
   logInfo('Adding a snoozing comment to the issue.')
 
   const notifyDate = getNotifyDate(notifyAfter)
@@ -241,18 +243,4 @@ async function addSnoozingComment(token, notifyAfter, issueNumber) {
   )
 
   logInfo('Snoozing comment added to the issue.')
-}
-
-module.exports = {
-  createIssue,
-  getLastOpenPendingIssue,
-  updateLastOpenPendingIssue,
-  createOrUpdateIssue,
-  closeIssue,
-  isSnoozed,
-  getIsSnoozingIssue,
-  getIsClosingIssue,
-  addSnoozingComment,
-  getAutoBumpedVersion,
-  conventionalRecommendedBumpAsync,
 }

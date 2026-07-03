@@ -1,10 +1,13 @@
-'use strict'
+import { test, beforeEach, mock } from 'node:test'
+import assert from 'node:assert/strict'
 
-const { test, beforeEach, mock } = require('node:test')
-const assert = require('node:assert/strict')
-const { pathToFileURL } = require('node:url')
+import {
+  allReleasesData as allReleases,
+  unreleasedCommitsData1,
+  pendingIssues,
+} from './testData.js'
 
-mock.module(pathToFileURL(require.resolve('../src/log')).href, {
+mock.module(import.meta.resolve('../src/log.js'), {
   namedExports: {
     logDebug: mock.fn(),
     logError: mock.fn(),
@@ -13,14 +16,14 @@ mock.module(pathToFileURL(require.resolve('../src/log')).href, {
   },
 })
 
-mock.module(pathToFileURL(require.resolve('../src/release')).href, {
+mock.module(import.meta.resolve('../src/release.js'), {
   namedExports: {
     getLatestRelease: mock.fn(),
     getUnreleasedCommits: mock.fn(),
   },
 })
 
-mock.module(pathToFileURL(require.resolve('../src/issue')).href, {
+mock.module(import.meta.resolve('../src/issue.js'), {
   namedExports: {
     createOrUpdateIssue: mock.fn(),
     getLastOpenPendingIssue: mock.fn(),
@@ -30,15 +33,9 @@ mock.module(pathToFileURL(require.resolve('../src/issue')).href, {
   },
 })
 
-const { runAction } = require('../src/release-notify-action')
-const release = require('../src/release')
-const issue = require('../src/issue')
-
-const {
-  allReleasesData: allReleases,
-  unreleasedCommitsData1,
-  pendingIssues,
-} = require('./testData')
+const { runAction } = await import('../src/release-notify-action.js')
+const release = await import('../src/release.js')
+const issue = await import('../src/issue.js')
 
 const resolved = (value) => (fn) =>
   fn.mock.mockImplementation(() => Promise.resolve(value))

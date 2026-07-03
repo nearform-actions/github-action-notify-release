@@ -1,16 +1,14 @@
-'use strict'
-
-const { logInfo, logWarning } = require('./log')
-const { getLatestRelease, getUnreleasedCommits } = require('./release')
-const {
+import { logInfo, logWarning } from './log.js'
+import { getLatestRelease, getUnreleasedCommits } from './release.js'
+import {
   createOrUpdateIssue,
   getLastOpenPendingIssue,
   closeIssue,
   isSnoozed,
-} = require('./issue')
-const { notifyAfterToMs } = require('./time-utils.js')
+} from './issue.js'
+import { notifyAfterToMs } from './time-utils.js'
 
-async function runAction({
+export async function runAction({
   token,
   ignoreSnoozed = false,
   notifyAfter,
@@ -70,8 +68,4 @@ async function runAction({
   ) {
     return closeIssue(token, pendingIssue.number)
   }
-}
-
-module.exports = {
-  runAction,
 }

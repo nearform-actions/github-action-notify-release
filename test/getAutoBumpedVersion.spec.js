@@ -1,7 +1,5 @@
-'use strict'
-
-const { test, mock } = require('node:test')
-const assert = require('node:assert/strict')
+import { test, mock } from 'node:test'
+import assert from 'node:assert/strict'
 
 const exec = mock.fn()
 const conventionalRecommendedBump = mock.fn((_, cb) =>
@@ -25,7 +23,7 @@ mock.module('conventional-changelog-monorepo/conventional-recommended-bump', {
   defaultExport: conventionalRecommendedBump,
 })
 
-const { getAutoBumpedVersion } = require('../src/issue')
+const { getAutoBumpedVersion } = await import('../src/issue.js')
 
 test('getAutoBumpedVersion', async () => {
   const baseTag = 'v1.0.0'

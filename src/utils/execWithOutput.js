@@ -1,19 +1,10 @@
-'use strict'
-
 // Borrowed from https://github.com/nearform-actions/optic-release-automation-action/blob/main/src/utils/execWithOutput.js
 
-const { StringDecoder } = require('node:string_decoder')
+import { StringDecoder } from 'node:string_decoder'
 
-const { exec } = require('@actions/exec')
+import { exec } from '@actions/exec'
 
-/**
- *
- * @param {string} cmd
- * @param {string[]} args
- * @param {{cwd?: string}} options
- * @returns Promise<string>
- */
-async function execWithOutput(cmd, args, { cwd } = {}) {
+export async function execWithOutput(cmd, args, { cwd } = {}) {
   let output = ''
   let errorOutput = ''
 
@@ -30,17 +21,9 @@ async function execWithOutput(cmd, args, { cwd } = {}) {
   }
 
   options.listeners = {
-    /**
-     *
-     * @param {Buffer} data
-     */
     stdout: (data) => {
       output += stdoutDecoder.write(data)
     },
-    /**
-     *
-     * @param {Buffer} data
-     */
     stderr: (data) => {
       errorOutput += stderrDecoder.write(data)
     },
@@ -50,7 +33,6 @@ async function execWithOutput(cmd, args, { cwd } = {}) {
   try {
     code = await exec(cmd, args, options)
   } catch {
-    //the actual error does not matter, because it does not contain any relevant information. The actual exec output is collected bellow in output and errorOutput
     code = 1
   }
 
@@ -67,5 +49,3 @@ async function execWithOutput(cmd, args, { cwd } = {}) {
     )} returned code ${code} \nSTDOUT: ${output}\nSTDERR: ${errorOutput}`
   )
 }
-
-exports.execWithOutput = execWithOutput
