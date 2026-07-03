@@ -1,33 +1,41 @@
 'use strict'
-const { exec } = require('@actions/exec')
 
-const {
-  getAutoBumpedVersion,
-  conventionalRecommendedBumpAsync,
-} = require('../src/issue')
+const { test, mock } = require('node:test')
+const assert = require('node:assert/strict')
 
-jest.mock('@actions/github', () => ({
-  getOctokit: jest.fn(),
-  context: { repo: {} },
-}))
-
-jest.mock('@actions/exec', () => ({
-  exec: jest.fn(),
-}))
-
-jest.mock('conventional-changelog-monorepo/conventional-recommended-bump', () =>
-  jest.fn((_, cb) => cb(null, { releaseType: 'minor' }))
+const exec = mock.fn()
+const conventionalRecommendedBump = mock.fn((_, cb) =>
+  cb(null, { releaseType: 'minor' })
 )
+
+mock.module('@actions/github', {
+  namedExports: {
+    getOctokit: mock.fn(),
+    context: { repo: {} },
+  },
+})
+
+mock.module('@actions/exec', {
+  namedExports: {
+    exec,
+  },
+})
+
+mock.module('conventional-changelog-monorepo/conventional-recommended-bump', {
+  defaultExport: conventionalRecommendedBump,
+})
+
+const { getAutoBumpedVersion } = require('../src/issue')
 
 test('getAutoBumpedVersion', async () => {
   const baseTag = 'v1.0.0'
 
-  exec.mockImplementation(() => {
+  exec.mock.mockImplementation(() => {
     return 0
   })
 
   const result = await getAutoBumpedVersion(baseTag)
 
-  expect(conventionalRecommendedBumpAsync).toHaveBeenCalled()
-  expect(result).toBe('minor')
+  assert.ok(conventionalRecommendedBump.mock.callCount() > 0)
+  assert.strictEqual(result, 'minor')
 })

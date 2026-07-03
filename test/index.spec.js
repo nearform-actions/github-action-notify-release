@@ -1,47 +1,60 @@
 'use strict'
 
-const { run } = require('../src')
-const { parseNotifyAfter } = require('../src/time-utils.js')
-const { runAction } = require('../src/release-notify-action')
+const { test, beforeEach, mock } = require('node:test')
+const assert = require('node:assert/strict')
+const { pathToFileURL } = require('node:url')
 
-const {
-  getIsSnoozingIssue,
-  addSnoozingComment,
-  getIsClosingIssue,
-} = require('../src/issue.js')
+const parseNotifyAfter = mock.fn()
+const runAction = mock.fn()
+const logInfo = mock.fn()
+const getIsClosingIssue = mock.fn()
+const getIsSnoozingIssue = mock.fn()
+const addSnoozingComment = mock.fn()
+const logActionRefWarning = mock.fn()
+const logRepoWarning = mock.fn()
 
-const core = require('@actions/core')
+mock.module('actions-toolkit', {
+  defaultExport: { logActionRefWarning, logRepoWarning },
+})
 
-jest.mock('actions-toolkit')
+mock.module(pathToFileURL(require.resolve('../src/time-utils.js')).href, {
+  namedExports: { parseNotifyAfter },
+})
 
-jest.mock('../src/time-utils.js', () => ({
-  parseNotifyAfter: jest.fn(),
-}))
+mock.module(
+  pathToFileURL(require.resolve('../src/release-notify-action')).href,
+  {
+    namedExports: { runAction },
+  }
+)
 
-jest.mock('../src/release-notify-action', () => ({
-  runAction: jest.fn(),
-}))
+mock.module(pathToFileURL(require.resolve('../src/log')).href, {
+  namedExports: { logInfo },
+})
 
-jest.mock('../src/log', () => ({
-  logInfo: jest.fn(),
-}))
-
-jest.mock('@actions/github', () => ({
-  context: {
-    payload: {
-      issue: {},
-    },
-    issue: {
-      number: 1,
+mock.module('@actions/github', {
+  namedExports: {
+    context: {
+      payload: {
+        issue: {},
+      },
+      issue: {
+        number: 1,
+      },
     },
   },
-}))
+})
 
-jest.mock('../src/issue.js', () => ({
-  getIsClosingIssue: jest.fn(),
-  getIsSnoozingIssue: jest.fn(),
-  addSnoozingComment: jest.fn(),
-}))
+mock.module(pathToFileURL(require.resolve('../src/issue.js')).href, {
+  namedExports: {
+    getIsClosingIssue,
+    getIsSnoozingIssue,
+    addSnoozingComment,
+  },
+})
+
+const { run } = require('../src')
+const core = require('@actions/core')
 
 const inputs = {
   'github-token': 'token',
@@ -51,49 +64,63 @@ const inputs = {
 }
 
 beforeEach(() => {
-  jest.resetAllMocks()
+  for (const fn of [
+    parseNotifyAfter,
+    runAction,
+    logInfo,
+    getIsClosingIssue,
+    getIsSnoozingIssue,
+    addSnoozingComment,
+    logActionRefWarning,
+    logRepoWarning,
+  ]) {
+    fn.mock.restore()
+    fn.mock.resetCalls()
+  }
 })
 
 test('confirm it uses the inputs passed as props', async () => {
   const parseNotifyAfterRes = '0 days'
 
-  parseNotifyAfter.mockImplementation(() => parseNotifyAfterRes)
+  parseNotifyAfter.mock.mockImplementation(() => parseNotifyAfterRes)
 
   await run({ inputs })
 
-  expect(parseNotifyAfter).toHaveBeenCalledWith(
+  assert.deepEqual(parseNotifyAfter.mock.calls.at(-1).arguments, [
     inputs['notify-after'],
-    inputs['stale-days']
-  )
+    inputs['stale-days'],
+  ])
 
-  expect(runAction).toHaveBeenCalledWith({
-    token: inputs['github-token'],
-    ignoreSnoozed: false,
-    notifyAfter: parseNotifyAfterRes,
-    commitMessageLines: Number(inputs['commit-messages-lines']),
-  })
+  assert.deepEqual(runAction.mock.calls.at(-1).arguments, [
+    {
+      token: inputs['github-token'],
+      ignoreSnoozed: false,
+      notifyAfter: parseNotifyAfterRes,
+      commitMessageLines: Number(inputs['commit-messages-lines']),
+    },
+  ])
 })
 
 test('it should run addSnoozingComment if isSnoozing is true', async () => {
-  getIsSnoozingIssue.mockImplementation(() => true)
+  getIsSnoozingIssue.mock.mockImplementation(() => true)
   await run({ inputs })
-  expect(addSnoozingComment).toHaveBeenCalled()
+  assert.ok(addSnoozingComment.mock.callCount() > 0)
 })
 
 test('it should not call runAction if isClosing is true', async () => {
-  getIsClosingIssue.mockImplementation(() => true)
+  getIsClosingIssue.mock.mockImplementation(() => true)
   await run({ inputs })
-  expect(runAction).not.toHaveBeenCalled()
+  assert.strictEqual(runAction.mock.callCount(), 0)
 })
 
-test('it should throw if there is an error', async () => {
+test('it should throw if there is an error', async (t) => {
   const error = new Error('error')
-  parseNotifyAfter.mockImplementation(() => {
+  parseNotifyAfter.mock.mockImplementation(() => {
     throw error
   })
 
-  jest.spyOn(core, 'setFailed')
+  t.mock.method(core, 'setFailed', () => {})
 
   await run({ inputs })
-  expect(core.setFailed).toHaveBeenCalledWith(error)
+  assert.deepEqual(core.setFailed.mock.calls.at(-1).arguments, [error])
 })
