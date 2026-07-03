@@ -1,5 +1,8 @@
 'use strict'
 
+const { test } = require('node:test')
+const assert = require('node:assert/strict')
+
 const {
   notifyAfterToMs,
   isSomeCommitStale,
@@ -15,18 +18,18 @@ const {
   closedNotifyIssues,
 } = require('./testData')
 
-test('convert stale days correctly', () => {
+test('convert stale days correctly', (t) => {
   const now = Date.now()
-  jest.spyOn(Date, 'now').mockImplementation(() => now)
+  t.mock.method(Date, 'now', () => now)
 
   const defaultStaleDate = () => notifyAfterToMs()
-  expect(defaultStaleDate).toThrow()
+  assert.throws(defaultStaleDate)
 
   const zeroAsNow = notifyAfterToMs('0')
-  expect(zeroAsNow).toEqual(now)
+  assert.deepEqual(zeroAsNow, now)
 
   const oneHourAgo = notifyAfterToMs('1 hour')
-  expect(oneHourAgo).toEqual(now - 60 * 60 * 1000)
+  assert.deepEqual(oneHourAgo, now - 60 * 60 * 1000)
 })
 
 test('there are commits before stale date', () => {
@@ -34,13 +37,13 @@ test('there are commits before stale date', () => {
     allCommits.data,
     new Date('2000').getTime()
   )
-  expect(noStaleCommit).toBe(false)
+  assert.strictEqual(noStaleCommit, false)
 
-  expect(isSomeCommitStale([], Date.now())).toBe(false)
+  assert.strictEqual(isSomeCommitStale([], Date.now()), false)
 
   const stale = isSomeCommitStale(allCommits.data, Date.now())
 
-  expect(stale).toBe(true)
+  assert.strictEqual(stale, true)
 })
 
 test('there are closed notify before stale date', () => {
@@ -49,93 +52,93 @@ test('there are closed notify before stale date', () => {
     new Date('2000').getTime()
   )
 
-  expect(noStaleIssues).toBe(false)
+  assert.strictEqual(noStaleIssues, false)
 
   const stale = isStale(closedNotifyIssues[0].closed_at, Date.now())
 
-  expect(stale).toBe(true)
+  assert.strictEqual(stale, true)
 })
 
-test('convert notify after to date', () => {
+test('convert notify after to date', (t) => {
   const now = Date.now()
-  jest.spyOn(Date, 'now').mockImplementation(() => now)
+  t.mock.method(Date, 'now', () => now)
 
-  expect(() => notifyAfterToMs()).toThrow()
+  assert.throws(() => notifyAfterToMs())
 
-  expect(() => notifyAfterToMs('invalid string')).toThrow()
+  assert.throws(() => notifyAfterToMs('invalid string'))
 
-  expect(() => notifyAfterToMs('invalid ms')).toThrow()
+  assert.throws(() => notifyAfterToMs('invalid ms'))
 
-  expect(notifyAfterToMs('0 days')).toEqual(now)
+  assert.deepEqual(notifyAfterToMs('0 days'), now)
 
-  expect(notifyAfterToMs('0 ms')).toEqual(now)
+  assert.deepEqual(notifyAfterToMs('0 ms'), now)
 
-  expect(notifyAfterToMs('0')).toEqual(now)
+  assert.deepEqual(notifyAfterToMs('0'), now)
 
-  expect(notifyAfterToMs('1 hour')).toEqual(now - 60 * 60 * 1000)
+  assert.deepEqual(notifyAfterToMs('1 hour'), now - 60 * 60 * 1000)
 })
 
-test('parseNotifyAfter parse time correctly when notify after is passed', () => {
+test('parseNotifyAfter parse time correctly when notify after is passed', (t) => {
   const now = Date.now()
-  jest.spyOn(Date, 'now').mockImplementation(() => now)
+  t.mock.method(Date, 'now', () => now)
 
   const notifyAfter = parseNotifyAfter('1 hour', '7')
-  expect(notifyAfter).toEqual('1 hour')
+  assert.deepEqual(notifyAfter, '1 hour')
 })
 
-test('parseNotifyAfter parse time correctly when notify is undefined', () => {
+test('parseNotifyAfter parse time correctly when notify is undefined', (t) => {
   const now = Date.now()
-  jest.spyOn(Date, 'now').mockImplementation(() => now)
+  t.mock.method(Date, 'now', () => now)
 
   const notifyAfter = parseNotifyAfter(undefined, '1 hour')
 
-  expect(notifyAfter).toEqual('1 hour')
+  assert.deepEqual(notifyAfter, '1 hour')
 
   const notifyAfterSecond = parseNotifyAfter(undefined, '7')
-  expect(notifyAfterSecond).toEqual('7 days')
+  assert.deepEqual(notifyAfterSecond, '7 days')
 })
 
-test('parseNotifyAfter parse time stale days is number', () => {
+test('parseNotifyAfter parse time stale days is number', (t) => {
   const now = Date.now()
-  jest.spyOn(Date, 'now').mockImplementation(() => now)
+  t.mock.method(Date, 'now', () => now)
 
   const notifyAfter = parseNotifyAfter(undefined, 7)
 
-  expect(notifyAfter).toEqual('7 days')
+  assert.deepEqual(notifyAfter, '7 days')
 })
 
 test('staleDaysToStr converts correctly', () => {
-  expect(staleDaysToStr(7)).toEqual('7 days')
-  expect(staleDaysToStr(1)).toEqual('1 day')
+  assert.deepEqual(staleDaysToStr(7), '7 days')
+  assert.deepEqual(staleDaysToStr(1), '1 day')
 })
 
-test('parseNotifyAfter default value', () => {
+test('parseNotifyAfter default value', (t) => {
   const now = Date.now()
-  jest.spyOn(Date, 'now').mockImplementation(() => now)
+  t.mock.method(Date, 'now', () => now)
 
   const notifyAfter = parseNotifyAfter(undefined, undefined)
 
-  expect(notifyAfter).toEqual('7 days')
+  assert.deepEqual(notifyAfter, '7 days')
 })
 
-test('parseNotifyAfter numeric notify-after', () => {
+test('parseNotifyAfter numeric notify-after', (t) => {
   const now = Date.now()
-  jest.spyOn(Date, 'now').mockImplementation(() => now)
+  t.mock.method(Date, 'now', () => now)
 
-  expect(parseNotifyAfter('7', undefined)).toEqual('7 ms')
+  assert.deepEqual(parseNotifyAfter('7', undefined), '7 ms')
 
-  expect(parseNotifyAfter('0', undefined)).toEqual('0 ms')
+  assert.deepEqual(parseNotifyAfter('0', undefined), '0 ms')
 
-  expect(parseNotifyAfter('-1', undefined)).toEqual('-1 ms')
+  assert.deepEqual(parseNotifyAfter('-1', undefined), '-1 ms')
 })
 
 test('getNotifyDate should return a valid date object', () => {
   const input = '1 day'
   const result = getNotifyDate(input)
-  expect(result).toBeInstanceOf(Date)
+  assert.ok(result instanceof Date)
 })
 
 test('getNotifyDate should throw an error when input is a string in an invalid format', () => {
   const input = 'invalid input'
-  expect(() => getNotifyDate(input)).toThrow('Invalid time value')
+  assert.throws(() => getNotifyDate(input), { message: 'Invalid time value' })
 })

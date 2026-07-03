@@ -1,66 +1,71 @@
 'use strict'
 
-const { exec } = require('@actions/exec')
+const { test, mock } = require('node:test')
+const assert = require('node:assert/strict')
+
+const exec = mock.fn()
+
+mock.module('@actions/exec', {
+  namedExports: {
+    exec,
+  },
+})
 
 const execWithOutputModule = require('../src/utils/execWithOutput')
-
-jest.mock('@actions/exec', () => ({
-  exec: jest.fn(),
-}))
 
 test('resolves with output of the exec command if exit code is 0', async () => {
   const output = 'output'
 
-  exec.mockImplementation((_, __, options) => {
+  exec.mock.mockImplementation((_, __, options) => {
     options.listeners.stdout(Buffer.from('output', 'utf8'))
 
     return Promise.resolve(0)
   })
 
-  await expect(
-    execWithOutputModule.execWithOutput('ls', ['-al'])
-  ).resolves.toBe(output)
+  assert.strictEqual(
+    await execWithOutputModule.execWithOutput('ls', ['-al']),
+    output
+  )
 
-  expect(exec).toHaveBeenCalled()
+  assert.ok(exec.mock.callCount() > 0)
 })
 
 test('Throws with output of the exec command if exit code is not 0', async () => {
   const output = 'output'
 
-  exec.mockImplementation((_, __, options) => {
+  exec.mock.mockImplementation((_, __, options) => {
     options.listeners.stderr(Buffer.from(output, 'utf8'))
     return Promise.reject(new Error())
   })
 
-  await expect(
-    execWithOutputModule.execWithOutput('ls', ['-al'])
-  ).rejects.toThrow(`ls -al returned code 1 \nSTDOUT: \nSTDERR: ${output}`)
+  await assert.rejects(execWithOutputModule.execWithOutput('ls', ['-al']), {
+    message: `ls -al returned code 1 \nSTDOUT: \nSTDERR: ${output}`,
+  })
 
-  expect(exec).toHaveBeenCalled()
+  assert.ok(exec.mock.callCount() > 0)
 })
 
 test('provides cwd to exec function', async () => {
   const cwd = './'
 
-  exec.mockImplementation(() => {
+  exec.mock.mockImplementation(() => {
     return Promise.resolve(0)
   })
   execWithOutputModule.execWithOutput('command', [], { cwd })
 
-  expect(exec).toHaveBeenCalledWith(
-    'command',
-    [],
-    expect.objectContaining({ cwd })
-  )
+  const lastCall = exec.mock.calls.at(-1)
+  assert.strictEqual(lastCall.arguments[0], 'command')
+  assert.deepEqual(lastCall.arguments[1], [])
+  assert.strictEqual(lastCall.arguments[2].cwd, cwd)
 })
 
 test('rejects if exit code is not 0', async () => {
   const errorOutput = 'error output'
-  exec.mockImplementation((_, __, options) => {
+  exec.mock.mockImplementation((_, __, options) => {
     options.listeners.stderr(Buffer.from(errorOutput, 'utf8'))
 
     return Promise.resolve(1)
   })
 
-  await expect(execWithOutputModule.execWithOutput('command')).rejects.toThrow()
+  await assert.rejects(execWithOutputModule.execWithOutput('command'))
 })

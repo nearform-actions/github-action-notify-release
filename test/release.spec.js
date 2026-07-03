@@ -1,5 +1,17 @@
 'use strict'
-const { getOctokit } = require('@actions/github')
+
+const { test, mock } = require('node:test')
+const assert = require('node:assert/strict')
+
+const getOctokit = mock.fn()
+
+mock.module('@actions/github', {
+  namedExports: {
+    getOctokit,
+    context: { repo: { owner: 'sameer', repo: 'testrepo' } },
+  },
+})
+
 const { getLatestRelease, getUnreleasedCommits } = require('../src/release')
 const {
   allCommitsData: allCommits,
@@ -10,13 +22,8 @@ const {
 
 const token = 'dummytoken'
 
-jest.mock('@actions/github', () => ({
-  getOctokit: jest.fn(),
-  context: { repo: { owner: 'sameer', repo: 'testrepo' } },
-}))
-
 test('Gets the latest release of the repository', async () => {
-  getOctokit.mockReturnValue({
+  getOctokit.mock.mockImplementation(() => ({
     rest: {
       repos: {
         getLatestRelease: async () => ({
@@ -24,33 +31,37 @@ test('Gets the latest release of the repository', async () => {
         }),
       },
     },
-  })
+  }))
   const latestReleaseResponse = await getLatestRelease(token)
-  expect(latestReleaseResponse).toStrictEqual(allReleases[0])
+  assert.deepStrictEqual(latestReleaseResponse, allReleases[0])
 })
 
 test('throws if no releases found', async () => {
-  getOctokit.mockReturnValue({
+  getOctokit.mock.mockImplementation(() => ({
     rest: {
       repos: { getLatestRelease: () => Promise.reject(new Error()) },
     },
-  })
-  expect(await getLatestRelease(token)).toBeUndefined()
+  }))
+  assert.strictEqual(await getLatestRelease(token), undefined)
 })
 
 test('Gets the unreleased commits', async () => {
-  getOctokit.mockReturnValue({ request: async () => allCommits })
+  getOctokit.mock.mockImplementation(() => ({
+    request: async () => allCommits,
+  }))
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
     token,
     latestReleaseDate,
     Date.now()
   )
-  expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1)
+  assert.deepStrictEqual(allCommitsResponse, unreleasedCommitsData1)
 })
 
 test('Gets the unreleased commits with stale-days as non zero', async () => {
-  getOctokit.mockReturnValue({ request: async () => allCommits })
+  getOctokit.mock.mockImplementation(() => ({
+    request: async () => allCommits,
+  }))
   const notifyDate = Date.now() - 3 * 24 * 60 * 60 * 1000
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
@@ -58,11 +69,13 @@ test('Gets the unreleased commits with stale-days as non zero', async () => {
     latestReleaseDate,
     notifyDate
   )
-  expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData1)
+  assert.deepStrictEqual(allCommitsResponse, unreleasedCommitsData1)
 })
 
 test('Gets the unreleased commits and uses default value of stale-days', async () => {
-  getOctokit.mockReturnValue({ request: async () => allCommits })
+  getOctokit.mock.mockImplementation(() => ({
+    request: async () => allCommits,
+  }))
   const notifyDate = new Date('2000').getTime()
   const latestReleaseDate = allReleases[0].created_at
   const allCommitsResponse = await getUnreleasedCommits(
@@ -70,5 +83,5 @@ test('Gets the unreleased commits and uses default value of stale-days', async (
     latestReleaseDate,
     notifyDate
   )
-  expect(allCommitsResponse).toStrictEqual(unreleasedCommitsData0)
+  assert.deepStrictEqual(allCommitsResponse, unreleasedCommitsData0)
 })
