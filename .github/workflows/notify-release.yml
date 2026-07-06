@@ -20,6 +20,6 @@ jobs:
     steps:
       - name: Check if there's a release pending
         id: notify
-        uses: nearform-actions/github-action-notify-release@v1
+        uses: nearform-actions/github-action-notify-release@v2
         with:
           notify-after: '0'
