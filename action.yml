@@ -21,13 +21,16 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout the fresh project
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         fetch-depth: 0
 
     - name: Run the action javascript
-      uses: actions/github-script@v9
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        ACTION_INPUTS: ${{ toJSON(inputs) }}
       with:
         script: |
-          const { run } = await import('${{ github.action_path }}/dist/index.js')
-          await run({inputs: ${{ toJSON(inputs) }} })
+          const { run } = await import(`${process.env.ACTION_PATH}/dist/index.js`)
+          await run({inputs: JSON.parse(process.env.ACTION_INPUTS) })
